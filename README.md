@@ -1,14 +1,14 @@
 # Testing WordPress releases
 
-*How to test a WordPress beta so that your "it works!" means something, and your "it's
+*How to test a WordPress Beta or RC so that your "it works!" means something, and your "it's
 broken!" gets fixed.*
 
 [![License: GPL v2+](https://img.shields.io/badge/License-GPLv2%2B-blue.svg)](LICENSE)
 [![WordPress](https://img.shields.io/badge/WordPress-testing-21759B.svg)](https://make.wordpress.org/test/)
 [![Contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-Anyone can install a beta, click around, and report "seems fine." That takes an hour and
-helps approximately no one. This is the other thing — testing where a pass is evidence and a
+Anyone can install a Beta or RC, click around, and report "seems fine." That takes an hour
+and helps approximately no one. This is the other thing — testing where a pass is evidence and a
 failure is actionable.
 
 ```mermaid
@@ -32,12 +32,12 @@ flowchart LR
 ## Who this is for
 
 You run WordPress sites. You can follow instructions in a terminal. You've offered to help
-test a beta — or you'd like to, and you're not sure what "helping" actually looks like.
+test a Beta or RC — or you'd like to, and you're not sure what "helping" actually looks like.
 
 You are **not** expected to read WordPress core code, write PHP, or know what a changeset is.
 
 > [!NOTE]
-> If you've ever thought *"I tested the beta and it seemed fine, but I don't think that
+> If you've ever thought *"I tested the Beta or RC and it seemed fine, but I don't think that
 > helped anyone"* — you were probably right, and this is the fix.
 
 ## Contents
@@ -114,8 +114,8 @@ bash scripts/fast-triage.sh ~/Downloads/wordpress-7.2-RC1.zip ~/Downloads/wordpr
 ## Step 2: Get a test site
 
 > [!CAUTION]
-> **Never test a beta on a real site.** Not "a small one." Not "just to look." Betas eat
-> databases.
+> **Never test a Beta or RC on a real site.** Not "a small one." Not "just to look."
+> Prereleases eat databases.
 
 ```mermaid
 flowchart TD
@@ -140,9 +140,9 @@ flowchart TD
 ### Option A — the Beta Tester plugin *(how most people do it)*
 
 The [**WordPress Beta Tester**](https://wordpress.org/plugins/wordpress-beta-tester/) plugin
-puts the beta on a site you already have. Staging site at your host, a subdomain on shared
-hosting, a local install — anywhere you can install a plugin. No Docker, no terminal, no
-Node.
+puts a Beta or RC on a site you already have. Staging site at your host, a subdomain on
+shared hosting, a local install — anywhere you can install a plugin. No Docker, no terminal,
+no Node.
 
 It's maintained by Andy Fragen, Colin Stewart, Paul Biron, Mel Choyce-Dwan, and Peter
 Westwood ([GitHub](https://github.com/afragen/wordpress-beta-tester)), and it's the path the
@@ -163,7 +163,7 @@ Test team assumes in most [calls for testing](https://make.wordpress.org/test/).
 > [!CAUTION]
 > **Back up first, and don't do this on a site that matters.** The plugin's own advice is
 > "don't forget to backup before you start" — take it literally. There's no supported
-> downgrade path from a beta; going back means restoring your backup.
+> downgrade path from a Beta or RC; going back means restoring your backup.
 >
 > A staging copy of a real site is ideal, because your plugins, theme, and content are the
 > thing most likely to expose a regression that a clean install never will.
@@ -185,9 +185,9 @@ Nothing to install; throw it away by closing the tab.
 
 **There's an official blueprint built for exactly this job:**
 
-### ▶ [Launch a loaded beta test site](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/WordPress/blueprints/trunk/blueprints/beta-rc/blueprint.json)
+### ▶ [Launch a loaded Beta or RC test site](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/WordPress/blueprints/trunk/blueprints/beta-rc/blueprint.json)
 
-One click gets you a running beta with everything already set up. The
+One click gets you a running Beta or RC with everything already set up. The
 [**beta-rc blueprint**](https://github.com/WordPress/blueprints/tree/trunk/blueprints/beta-rc)
 lives in the official [WordPress blueprints collection](https://github.com/WordPress/blueprints)
 and is maintained by this repo's author.
@@ -196,7 +196,7 @@ What you get, without configuring anything:
 
 | | |
 |---|---|
-| **PHP 8.3**, WordPress **beta** channel | Falls back to stable outside a beta period |
+| **PHP 8.3**, WordPress **beta** channel | Falls back to stable outside a Beta/RC period |
 | Logged in as admin | No setup screen |
 | [theme-test-data](https://github.com/WordPress/theme-test-data) | The canonical content corpus — markup edge cases, nested menus, embeds, unicode, sticky and password-protected posts |
 | [a11y-theme-unit-test](https://github.com/wpaccessibility/a11y-theme-unit-test) | Accessibility-focused test content |
@@ -268,7 +268,7 @@ them; on a Beta Tester or local site, install them yourself.
 > define( 'SCRIPT_DEBUG', true );   // unminified core JS and CSS
 > ```
 >
-> `SCRIPT_DEBUG` matters more than people expect during a beta — a minified bundle can hide
+> `SCRIPT_DEBUG` matters more than people expect during a Beta or RC — a minified bundle can hide
 > which script actually threw.
 
 > [!WARNING]
@@ -398,13 +398,13 @@ Act I happens **ahead of the build you're going to test.** That ordering isn't a
 scheduling preference — it's structural.
 
 To test an upgrade, you need a site running the **current** release, with content on it,
-that you then upgrade. You cannot build that after the beta drops and still be testing the
+that you then upgrade. You cannot build that after the Beta or RC drops and still be testing the
 same thing: a site you install today, on today's stable, with content added and settings
 changed, is a fundamentally different animal from one you spin up in five minutes during the
 party. The realistic upgrade sources are the ones that have been sitting there.
 
 So Act I is: build environments on the current release, put real content in them, write down
-exactly what you built — all *before* there's a beta to point them at.
+exactly what you built — all *before* there's a Beta or RC to point them at.
 
 > [!TIP]
 > Watch the [Make/Core release schedule](https://make.wordpress.org/core/) and start Act I a
@@ -821,12 +821,12 @@ Hand this guide to an AI instead of reading it. Works in ChatGPT, Claude, Gemini
 that fetches URLs.
 
 <details>
-<summary><b>Get started testing a beta</b></summary>
+<summary><b>Get started testing a Beta or RC</b></summary>
 
 ```
 Read https://raw.githubusercontent.com/courtneyr-dev/wp-release-audit-method/main/README.md
 
-I want to help test the WordPress 7.2 beta. Walk me through it step by step.
+I want to help test the WordPress 7.2 Beta or RC. Walk me through it step by step.
 I can use a terminal but I'm not a developer.
 ```
 
@@ -961,7 +961,7 @@ lands.
 
 - [`courtneyr-dev/wp7-test-automation`](https://github.com/courtneyr-dev/wp7-test-automation) —
   Playwright runner, 123 steps across 14 areas
-- [`courtneyr-dev/WP7-testing`](https://github.com/courtneyr-dev/WP7-testing) — beta launcher
+- [`courtneyr-dev/WP7-testing`](https://github.com/courtneyr-dev/WP7-testing) — Beta/RC launcher
   and Playground blueprint
 
 ### The official tools underneath

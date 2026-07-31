@@ -36,7 +36,7 @@ build you think?), creates single-site, multisite, and PHP-variant fixtures, imp
 test data, asserts the state is what you expect, and calibrates controls.
 
 Trigger: *"prep for the release party"*, *"get environments ready"*, *"set up test sites for
-the beta"*.
+the Beta or RC"*.
 
 ### [`wp-release-party`](wp-release-party/) — during
 
