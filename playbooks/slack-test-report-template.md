@@ -31,7 +31,7 @@ python3 $WP_AUDIT_ROOT/scripts/render_slack_checklist.py --from-results --tier T
 
 **Three rules before posting.** The header must name the build *actually tested* (beta is not RC) and the upgrade lane used (Beta Tester / WP-CLI / manual zip produce different results — the stale-file finding exists only because Core and WP-CLI differ). Invalid batches are counted and excluded, never reported as findings. No local paths, no credentials; confidential findings reduce to a bare acknowledgment.
 
-**Claude drafts; Courtney posts.** Making WordPress Slack is read-only under the standing source rules.
+**The assistant drafts; you post.** Making WordPress Slack is read-only under the standing source rules.
 
 Smoke verdicts are `PASS`/`FAIL`/`PARTIAL`/`BLOCKED`/`SKIP`/`INVALID`. The `CONFIRMED`/`REFUTED`/`INCONCLUSIVE` vocabulary belongs to findings and chains, reported separately — mixing them makes "I couldn't create a post" sound like "I confirmed a defect".
 

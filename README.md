@@ -386,10 +386,34 @@ adapter](https://developer.wordpress.org/news/2026/02/from-abilities-to-ai-agent
 and the [Make/Core AI team](https://make.wordpress.org/ai/). Worth watching, and worth
 testing when it lands in a release.
 
+### Agent skills for release testing
+
+[`skills/`](skills/) contains the release workflow as skills an AI assistant loads
+automatically. **Optional** — everything they do can be done by hand with the scripts and
+playbooks.
+
+| Skill | When |
+|---|---|
+| [`wp-release-prep`](skills/wp-release-prep/) | Before testing day — build environments, verify identity, calibrate controls |
+| [`wp-release-party`](skills/wp-release-party/) | During — the fast breadth sweep, ending in a Slack-ready report |
+| [`wp-release-followup`](skills/wp-release-followup/) | After — recheck filed tickets, retest fixes, run the deep audit, **draft** new tickets |
+| [`wordpress-audit-handoff`](skills/wordpress-audit-handoff/) | Package findings into one file a colleague can read |
+| [`wp-screenshots`](skills/wp-screenshots/) | Capture clean admin and front-end screenshots |
+
+Install by copying into your skills directory:
+
+```bash
+cp -R skills/wp-release-* ~/.claude/skills/
+```
+
+See [`skills/README.md`](skills/README.md) for details — including why running several AI
+skills over the same question gives you less independent confirmation than it looks like.
+
 ### Prompt collections
 
 - [`courtneyr-dev/wp-dev-prompts`](https://github.com/courtneyr-dev/wp-dev-prompts) —
-  prompts for WordPress development work
+  WordPress development skills: security, block and theme development, testing and QA,
+  performance, accessibility, Playground, UI/UX audit
 - [`courtneyr-dev/developer-education-prompts`](https://github.com/courtneyr-dev/developer-education-prompts) —
   prompts for writing documentation and training material
 - [`prompts/`](prompts/) in this repository — prompts that make an AI assistant read source
@@ -418,6 +442,7 @@ testing when it lands in a release.
 |---|---|
 | [`scripts/`](scripts/) | The test scripts from Step 3 |
 | [`sources/`](sources/) | Where official WordPress information lives |
+| [`skills/`](skills/) | The release workflow as AI assistant skills (optional) |
 | [`playbooks/`](playbooks/) | Longer runbooks: security, performance, content, release-day sweep, and a template for the next release |
 | [`examples/chains/`](examples/chains/) | Four worked investigations with evidence and cleanup |
 | [`prompts/`](prompts/) | Prompts for AI-assisted testing |

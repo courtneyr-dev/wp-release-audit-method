@@ -35,8 +35,10 @@ w core version | tail -1
 say "1. Site identity"
 w option update blogname "Ridgeline Cabins" >/dev/null
 w option update blogdescription "Four seasons in the high country" >/dev/null
-w user update 1 --display_name="Courtney Robertson" --first_name="Courtney" \
-    --last_name="Robertson" --user_email="courtney@ridgelinecabins.test" >/dev/null
+# Fictional persona on purpose — published screenshots shouldn't carry your real
+# name or address. Change it if you want the shots attributed to you.
+w user update 1 --display_name="Rowan Ellis" --first_name="Rowan" \
+    --last_name="Ellis" --user_email="rowan@ridgelinecabins.test" >/dev/null
 echo "   blogname   : $(w option get blogname | tail -1)"
 echo "   admin name : $(w user get 1 --field=display_name | tail -1)"
 

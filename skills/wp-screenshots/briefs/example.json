@@ -1,0 +1,38 @@
+{
+  "topic": "example-shots",
+  "site": "https://example.com",
+  "auth": {
+    "user": "admin",
+    "passEnv": "WP_SITE_PASS"
+  },
+  "description": "Tiny example brief — three shots covering an admin page, the Customizer, and a logged-out front-end view. Copy to <topic>.json and edit.",
+  "dpr": 2,
+  "shots": [
+    {
+      "slug": "01-plugins-admin",
+      "label": "Plugins admin page",
+      "url": "/wp-admin/plugins.php",
+      "viewport": [1600, 1000],
+      "delay": 1500,
+      "hideNotices": true,
+      "section": "admin"
+    },
+    {
+      "slug": "02-customizer-colors",
+      "label": "Customizer · Colors",
+      "url": "/?customize_changeset_uuid=&autofocus[section]=colors",
+      "viewport": [1600, 1000],
+      "delay": 4000,
+      "section": "customizer"
+    },
+    {
+      "slug": "03-front-page-logged-out",
+      "label": "Homepage (logged out)",
+      "url": "/",
+      "viewport": [1440, 900],
+      "loggedOut": true,
+      "delay": 1500,
+      "section": "front-end"
+    }
+  ]
+}

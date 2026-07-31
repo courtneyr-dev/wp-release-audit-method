@@ -1,0 +1,15 @@
+{
+  "name": "wp-screenshots-skill",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Capture clean WordPress screenshots from a JSON brief.",
+  "scripts": {
+    "capture": "node scripts/capture.mjs",
+    "verify":  "node scripts/verify-site.mjs",
+    "gallery": "node scripts/make-gallery.mjs"
+  },
+  "dependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}

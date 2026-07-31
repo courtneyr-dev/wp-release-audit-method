@@ -1,0 +1,5 @@
+node_modules/
+screenshots/
+briefs/*.json
+!briefs/example.json
+.DS_Store
