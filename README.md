@@ -13,15 +13,20 @@ failure is actionable.
 
 ```mermaid
 flowchart LR
-    A["📦 Beta drops"] --> B["Act I<br/><b>Before the party</b><br/><i>build the instruments</i>"]
-    B --> C["Act II<br/><b>The party</b><br/><i>breadth, fast</i>"]
-    C --> D["Act III<br/><b>After the party</b><br/><i>depth, honest</i>"]
-    D --> E["🐛 Filed tickets<br/>+ better instruments"]
-    E -.->|"next release"| B
+    A["<b>Act I</b><br/>Before the drop<br/><i>build environments on the<br/>current release, ready to upgrade</i>"]
+    B(["📦 <b>Beta / RC drops</b>"])
+    C["<b>Act II</b><br/>The party<br/><i>breadth, fast</i>"]
+    D["<b>Act III</b><br/>After the party<br/><i>depth, honest</i>"]
+    E["🐛 Filed tickets<br/>+ better instruments"]
 
-    style B fill:#e8f4f8,stroke:#21759B,stroke-width:2px,color:#000
+    A --> B --> C --> D --> E
+    E -.->|"next cycle"| A
+
+    style A fill:#e8f4f8,stroke:#21759B,stroke-width:2px,color:#000
+    style B fill:#fffbe6,stroke:#b8860b,stroke-width:2px,color:#000
     style C fill:#fff4e6,stroke:#D54E21,stroke-width:2px,color:#000
     style D fill:#f0e8f8,stroke:#826EB4,stroke-width:2px,color:#000
+    style E fill:#eafaea,stroke:#28a745,stroke-width:2px,color:#000
 ```
 
 ## Who this is for
@@ -343,20 +348,22 @@ three acts.
 
 ```mermaid
 flowchart LR
-    subgraph ACT1["<b>Act I · Before</b>"]
+    subgraph ACT1["<b>Act I · Before the drop</b>"]
         direction TB
-        A1["Build-identity gate<br/><i>does it exist yet?</i>"] --> A2["Build fixtures"]
+        A1["Watch for the build<br/><i>is it out yet?</i>"] --> A2["Build fixtures on the<br/><b>current</b> release"]
         A2 --> A3["Seed content"]
         A3 --> A4["Assert state"]
         A4 --> A5["Calibrate controls"]
     end
 
+    DROP(["📦 <b>Beta / RC drops</b>"])
+
     subgraph ACT2["<b>Act II · The party</b>"]
         direction TB
-        B1["Re-run the gate"] --> B2["T1 sweep<br/><i>~61 cells</i>"]
-        B2 --> B3["Upgrade ladder<br/><i>9 cells</i>"]
-        B3 --> B4["Post the checklist"]
-        B4 --> B5["Thread the detail"]
+        B1["Build-identity gate"] --> B2["<b>Fresh install</b><br/><i>does it install clean?</i>"]
+        B2 --> B3["<b>Upgrade ladder</b><br/><i>9 cells, PHP 7.4</i>"]
+        B3 --> B4["<b>T1 sweep</b><br/><i>~61 cells</i>"]
+        B4 --> B5["Post the checklist"]
     end
 
     subgraph ACT3["<b>Act III · After</b>"]
@@ -367,10 +374,11 @@ flowchart LR
         C4 --> C5["Feed the loop"]
     end
 
-    A5 --> B1
+    A5 --> DROP --> B1
     B5 --> C1
 
     style ACT1 fill:#e8f4f8,stroke:#21759B,stroke-width:2px,color:#000
+    style DROP fill:#fffbe6,stroke:#b8860b,stroke-width:2px,color:#000
     style ACT2 fill:#fff4e6,stroke:#D54E21,stroke-width:2px,color:#000
     style ACT3 fill:#f0e8f8,stroke:#826EB4,stroke-width:2px,color:#000
 ```
@@ -380,20 +388,34 @@ playbook if you'd rather drive.
 
 ---
 
-### Act I — Before the party
+### Act I — Before the drop
 
 > **The goal:** show up on release day with instruments that already work.
 > **The skill:** [`wp-release-prep`](skills/wp-release-prep/)
+> **When:** *before the beta or RC exists.* This is the part people get wrong.
 
-Nothing is more demoralizing than spending the release party fighting Docker while everyone
-else finds bugs. Act I is provisioning, done the day before, so party day is spent testing.
+Act I happens **ahead of the build you're going to test.** That ordering isn't a
+scheduling preference — it's structural.
 
-**1. The build-identity gate — always first.**
+To test an upgrade, you need a site running the **current** release, with content on it,
+that you then upgrade. You cannot build that after the beta drops and still be testing the
+same thing: a site you install today, on today's stable, with content added and settings
+changed, is a fundamentally different animal from one you spin up in five minutes during the
+party. The realistic upgrade sources are the ones that have been sitting there.
 
-Before anything else, confirm the build you want *actually exists*. If RC1 hasn't shipped
-yet, you cannot test RC1. This sounds too obvious to need a rule, which is exactly why it
-needs a rule: the failure mode is testing beta4, labeling it RC1, and reporting results
-about a build nobody can reproduce.
+So Act I is: build environments on the current release, put real content in them, write down
+exactly what you built — all *before* there's a beta to point them at.
+
+> [!TIP]
+> Watch the [Make/Core release schedule](https://make.wordpress.org/core/) and start Act I a
+> few days out. The betas land on a published cadence; you almost always have warning.
+
+**1. Know what you're waiting for.**
+
+Confirm the build you intend to test *actually exists* before you claim to have tested it.
+If RC1 hasn't shipped, you cannot test RC1. This sounds too obvious to need a rule, which is
+exactly why it needs one: the failure mode is testing beta4, labeling it RC1, and reporting
+results about a build nobody can reproduce.
 
 > [!WARNING]
 > Never substitute a beta, trunk, nightly, or prior RC for a build that doesn't exist yet.
@@ -476,12 +498,83 @@ calibrated, and the build manifest is pinned — or honestly marked `WAITING`.
 
 Breadth, fast. Depth is Act III's job — resist the urge to chase the interesting thing now.
 
-**Re-run the build-identity gate.** Yes, even though Act I passed it. Packages get
+**Re-run the build-identity gate.** Yes, even though Act I checked it. Packages get
 republished and labels move.
 
+#### The three lanes, and why you need all three
+
+| Lane | Question it answers | Who it represents |
+|---|---|---|
+| **Fresh install** | Does this build install cleanly from nothing? | Every new site created during this release's lifetime |
+| **Upgrade** | Does an existing site survive moving to it? | Everyone who already runs WordPress — the overwhelming majority |
+| **Everyday use** | Do ordinary tasks still work once you're on it? | Everyone, every day, afterwards |
+
+Each catches things the others structurally cannot. A fresh install can't reveal an upgrade
+bug ([lie #2](#five-ways-your-test-can-lie-to-you)). An upgrade can't reveal a broken
+first-run experience — a bad install screen, a failed `wp-config.php` write, a setup step that
+500s. And neither tells you whether publishing a post still works afterwards.
+
+**Fresh install** is the one people skip, because it feels like the boring one. It's also
+where you find missing-file and permissions problems fastest, and it gives you the **clean
+baseline tree** that every upgrade comparison is measured against. Cover at minimum: install
+from the setup screen in a browser, install via WP-CLI, install with `wp-config.php` already
+present, and install with it absent so WordPress has to write it.
+
+`scripts/users-pages-install.sh` runs the fresh-install and manual-install lanes for you.
+
+**Run the upgrade ladder** — 9 cells covering 4.9, 5.0, 6.2, 6.3, 6.6, 6.9, and 7.0.2 on
+single site, plus 4.9 and 7.0.2 on multisite.
+
 **Run the T1 sweep** — around 61 cells across single site, multisite subsite, and multisite
-network. Command line first (scriptable, parallelizable), browser second (slow, and only for
-the parts of the UI this release actually changed).
+network.
+
+#### Cover as many surfaces as you can
+
+The same action can succeed on one surface and fail on another, and that mismatch **is** a
+bug — the kind that never surfaces if you only ever test one way. WordPress 7.1 had exactly
+this: a plugin's runtime dependency check said "satisfied" while the button in the admin said
+"inactive," because the two read different options. Command line alone would have missed it.
+Browser alone would have missed it.
+
+| Surface | What only it can tell you |
+|---|---|
+| **WP-CLI** | Scriptable, parallel, exact. Catches what the UI hides and gives you a rerun recipe someone else can paste |
+| **Browser** | What a human actually experiences — the admin notice, the disabled button, the JS console error, the thing that looks fine to the API and broken to a person |
+| **Docker / wp-env** | A clean, resettable, *shareable* environment. `wp db reset` between runs means run 2 isn't contaminated by run 1, and someone else can reproduce your exact setup |
+| **REST API** | The surface headless sites and the block editor use. Check it agrees with both of the above |
+
+```mermaid
+flowchart LR
+    subgraph LANES["<b>Lanes</b>"]
+        direction TB
+        L1["Fresh install"]
+        L2["Upgrade"]
+        L3["Everyday use"]
+    end
+
+    subgraph SURF["<b>Surfaces — run each lane on as many as you can</b>"]
+        direction TB
+        S1["WP-CLI<br/><i>scriptable, exact</i>"]
+        S2["Browser<br/><i>what humans hit</i>"]
+        S3["Docker / wp-env<br/><i>clean, resettable</i>"]
+        S4["REST API<br/><i>headless + editor</i>"]
+    end
+
+    LANES --> SURF --> R["Disagreement between<br/>surfaces <b>is</b> a finding"]
+
+    style LANES fill:#e8f4f8,stroke:#21759B,stroke-width:2px,color:#000
+    style SURF fill:#fff4e6,stroke:#D54E21,stroke-width:2px,color:#000
+    style R fill:#eafaea,stroke:#28a745,stroke-width:2px,color:#000
+```
+
+Order of operations: **command line first** (fast, scriptable, parallel across fixtures),
+**browser second** (slow — reserve it for the parts of the UI this release actually changed).
+Don't browser-test all 61 cells; you'll run out of party.
+
+> [!TIP]
+> When CLI and browser disagree, **don't pick a winner.** Record both, and report the
+> disagreement as the finding. You've just found a place where two parts of WordPress hold
+> different beliefs about the same state, which is more interesting than either result alone.
 
 Each cell gets a verdict:
 
@@ -510,13 +603,10 @@ flowchart LR
 > say you excluded it. A harness fault reported as a product bug wastes a contributor's
 > afternoon and costs you their attention next time.
 
-**Run the upgrade ladder** — 9 cells covering 4.9, 5.0, 6.2, 6.3, 6.6, 6.9, and 7.0.2 on
-single site, plus 4.9 and 7.0.2 on multisite.
-
-Every ladder fixture pins **PHP 7.4**, because that's the only band where both the oldest
-source and the current target run. That means the ladder proves *the upgrade*, not the
-modern runtime — and your report should say so, or someone will reasonably assume you tested
-something you didn't.
+**About that PHP 7.4 pin on the ladder.** Every ladder fixture runs PHP 7.4, because that's
+the only band where both the oldest source and the current target run at all. That means the
+ladder proves *the upgrade*, not the modern runtime — and your report should say so, or
+someone will reasonably assume you tested something you didn't.
 
 **Post the report.** [`playbooks/slack-test-report-template.md`](playbooks/slack-test-report-template.md)
 renders a checklist for `#core-test`. Before you hit send:
