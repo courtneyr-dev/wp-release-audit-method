@@ -114,21 +114,66 @@ bash scripts/fast-triage.sh ~/Downloads/wordpress-7.2-RC1.zip ~/Downloads/wordpr
 
 ```mermaid
 flowchart TD
-    Q{"What are you testing?"}
-    Q -->|"Just clicking around<br/>the editor"| P["<b>Playground</b><br/>browser-only, zero install"]
-    Q -->|"Upgrading from<br/>an older version"| L["<b>Local / Studio / MAMP</b><br/>real install, few clicks"]
-    Q -->|"Running the scripts<br/>in this repo"| W["<b>wp-env</b><br/>Docker, scriptable"]
+    Q{"Where will you test?"}
 
-    P --> PN["❌ can't test upgrades<br/>❌ not your real server"]
-    L --> LN["✅ realistic<br/>❌ manual"]
-    W --> WN["✅ resettable<br/>❌ needs Docker"]
+    Q -->|"Nowhere yet —<br/>I just want to look"| P["<b>Playground</b><br/>browser only, zero install"]
+    Q -->|"A site I already have<br/><i>staging · shared host · local</i>"| BT["<b>Beta Tester plugin</b><br/>flip a channel, click update"]
+    Q -->|"A fresh throwaway<br/>on my machine"| L["<b>Local / Studio / MAMP</b><br/>real install, few clicks"]
+    Q -->|"I want to run<br/>the scripts in this repo"| W["<b>wp-env</b><br/>Docker, scriptable"]
+
+    P --> PN["✅ nothing to install<br/>❌ can't test upgrades<br/>❌ not your real server"]
+    BT --> BTN["✅ your real host and PHP<br/>✅ no Docker, no terminal<br/>⚠️ back it up first"]
+    L --> LN["✅ realistic, upgradeable<br/>❌ manual"]
+    W --> WN["✅ resettable, scriptable<br/>❌ needs Docker"]
 
     style P fill:#e8f4f8,stroke:#21759B,color:#000
+    style BT fill:#d4edda,stroke:#28a745,stroke-width:3px,color:#000
     style L fill:#fff4e6,stroke:#D54E21,color:#000
     style W fill:#f0e8f8,stroke:#826EB4,color:#000
 ```
 
-### Option A — WordPress Playground
+### Option A — the Beta Tester plugin *(how most people do it)*
+
+The [**WordPress Beta Tester**](https://wordpress.org/plugins/wordpress-beta-tester/) plugin
+puts the beta on a site you already have. Staging site at your host, a subdomain on shared
+hosting, a local install — anywhere you can install a plugin. No Docker, no terminal, no
+Node.
+
+It's maintained by Andy Fragen, Colin Stewart, Paul Biron, Mel Choyce-Dwan, and Peter
+Westwood ([GitHub](https://github.com/afragen/wordpress-beta-tester)), and it's the path the
+Test team assumes in most [calls for testing](https://make.wordpress.org/test/).
+
+**Setup:**
+
+1. Install and activate **WordPress Beta Tester**
+2. Go to **Tools → Beta Testing** (**Settings → Beta Testing** on multisite)
+3. Pick your **channel**:
+   - **Point release** *(default)* — the next minor, e.g. 7.1.1. Lower risk.
+   - **Bleeding edge** — trunk, where the next major is being built.
+4. Pick your **stream**:
+   - **Beta/RC only** — betas and release candidates. **Start here.**
+   - **Nightlies** — rebuilt daily from trunk. Genuinely unstable; expect breakage.
+5. Go to **Dashboard → Updates** and update.
+
+> [!CAUTION]
+> **Back up first, and don't do this on a site that matters.** The plugin's own advice is
+> "don't forget to backup before you start" — take it literally. There's no supported
+> downgrade path from a beta; going back means restoring your backup.
+>
+> A staging copy of a real site is ideal, because your plugins, theme, and content are the
+> thing most likely to expose a regression that a clean install never will.
+
+**Two extra settings** worth knowing: *Skip successful autoupdate emails* (stops the inbox
+flood on nightlies) and *Skip bundled plugins and themes* (keeps core updates from
+reinstalling Twenty-Whatever every time).
+
+> [!TIP]
+> Beta Tester uses **WordPress's own updater** — which is the lane most of your users are
+> on, and the one that left [243 files behind](#five-ways-your-test-can-lie-to-you) in 7.1.
+> That makes it a genuinely valuable lane to test, not a lesser one. Just name it in your
+> report so nobody assumes you used WP-CLI.
+
+### Option B — WordPress Playground
 
 [WordPress Playground](https://wordpress.org/playground/) runs WordPress in your browser.
 Nothing to install; throw it away by closing the tab.
@@ -140,13 +185,16 @@ Nothing to install; throw it away by closing the tab.
 **Can't do:** upgrades from older versions, or anything about your real server's PHP and
 image libraries.
 
-### Option B — a local app
+### Option C — a local app
 
 [Local](https://localwp.com/), [Studio](https://developer.wordpress.com/studio/), or
-[MAMP](https://www.mamp.info/). A real install in a few clicks. Best for upgrade testing —
-install the *previous* version, add content, then upgrade to the beta.
+[MAMP](https://www.mamp.info/). A real install in a few clicks. Best for upgrade testing when
+you want a *clean* starting point — install the previous version, add content, then upgrade.
 
-### Option C — wp-env
+Pairs well with Option A: install the previous release here, then use Beta Tester to make the
+jump, and you've tested the exact path your users will take.
+
+### Option D — wp-env
 
 [`@wordpress/env`](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/)
 is WordPress's own Docker environment, and what the scripts here drive — it can reset a
@@ -581,6 +629,15 @@ Four things turn "it broke for me" into something someone can act on:
 
 New to Trac? Read [Reporting Bugs](https://make.wordpress.org/core/handbook/testing/reporting-bugs/) first.
 
+> [!TIP]
+> The [**Test Reports**](https://wordpress.org/plugins/test-reports/) plugin (also by Andy
+> Fragen) generates a formatted report with your environment details already filled in —
+> WordPress version, PHP, server, active theme and plugins, browser. It's the successor to
+> Beta Tester's old "Report a Bug" button.
+>
+> It gets item 3 of the list above right automatically, which is the item people most often
+> skip.
+
 ---
 
 ## Where official information lives
@@ -759,11 +816,14 @@ lands.
 
 ### The official tools underneath
 
-[WP-CLI](https://wp-cli.org/) ([handbook](https://make.wordpress.org/cli/)) ·
-[wp-env](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/) ·
-[Playground](https://wordpress.org/playground/) ·
-[Beta Tester plugin](https://wordpress.org/plugins/wordpress-beta-tester/) ·
-[Make/Test handbook](https://make.wordpress.org/test/handbook/)
+| Tool | What it's for |
+|---|---|
+| [WordPress Beta Tester](https://wordpress.org/plugins/wordpress-beta-tester/) | Put a beta on any site you already have — staging, shared hosting, local |
+| [Test Reports](https://wordpress.org/plugins/test-reports/) | Generate a report with your environment already filled in |
+| [WP-CLI](https://wp-cli.org/) | Command-line WordPress ([handbook](https://make.wordpress.org/cli/)) |
+| [wp-env](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/) | Docker environment the scripts here drive |
+| [Playground](https://wordpress.org/playground/) | WordPress in a browser tab |
+| [Make/Test handbook](https://make.wordpress.org/test/handbook/) | How the Test team works |
 
 ---
 
