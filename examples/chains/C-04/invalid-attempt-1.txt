@@ -1,0 +1,6 @@
+tested_build=WordPress 7.1-beta4
+attempt_verdict=INVALID
+reason=WP-CLI did not initialize the admin dependency registry before the probe.
+symptom=Inactive dependency returned dependency_unmet_for_runtime=false.
+cleanup_verified=yes
+result_excluded=yes

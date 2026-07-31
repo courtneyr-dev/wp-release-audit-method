@@ -1,0 +1,51 @@
+tested_builds=WordPress 7.0.2;WordPress 7.1-beta4
+target_build=WordPress 7.1 RC1
+rc1_gate=WAITING-FOR-RC1
+fixture_state_hash=f79dd2af55f04934c364ba9a862c9a16bcd7aa104d0b178bdc67bccfe17361a5
+
+DIRECT_PARSER_LEGACY_CORPUS
+7.0.2 legacy-url=unchanged
+7.1-beta4 legacy-url=unchanged
+7.0.2 legacy-shorthand=unchanged
+7.1-beta4 legacy-shorthand=unchanged
+7.0.2 gradient-only=unchanged
+7.1-beta4 gradient-only=unchanged
+7.0.2 background-repeat=unchanged
+7.1-beta4 background-repeat=unchanged
+7.0.2 background-position=unchanged
+7.1-beta4 background-position=unchanged
+7.0.2 ordinary-color=unchanged
+7.1-beta4 ordinary-color=unchanged
+
+DIRECT_PARSER_NEW_ALLOWANCE
+7.0.2 gradient-plus-url=rejected
+7.0.2 gradient-url-tight=rejected
+7.1-beta4 gradient-plus-url=unchanged
+7.1-beta4 gradient-url-tight=unchanged
+
+DIRECT_PARSER_NEGATIVE_CONTROL
+7.0.2 unsafe-js-url=rejected
+7.0.2 unsafe-js-shorthand=rejected
+7.1-beta4 unsafe-js-url=rejected
+7.1-beta4 unsafe-js-shorthand=rejected
+
+LOWER_PRIVILEGE_FULL_CONTENT_RESAVE
+7.0.2 legacy-url=unchanged
+7.0.2 legacy-shorthand=unchanged
+7.0.2 gradient-only=unchanged
+7.0.2 gradient-plus-url=removed
+7.0.2 unsafe-js-url=removed
+7.1-beta4 legacy-url=unchanged
+7.1-beta4 legacy-shorthand=unchanged
+7.1-beta4 gradient-only=unchanged
+7.1-beta4 gradient-plus-url=unchanged
+7.1-beta4 unsafe-js-url=removed
+
+cleanup_7.0.2_post_exists=false
+cleanup_7.0.2_user_exists=false
+cleanup_7.1-beta4_post_exists=false
+cleanup_7.1-beta4_user_exists=false
+cleanup_verified=yes
+
+VERDICT=REFUTED
+reason=No pinned legacy safe background declaration changed in the direct parser or lower-privilege full-content save paths. The new form and unsafe controls behaved as expected.

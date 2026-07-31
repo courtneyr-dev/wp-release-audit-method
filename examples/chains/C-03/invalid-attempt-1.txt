@@ -1,0 +1,6 @@
+tested_build=WordPress 7.1-beta4
+attempt_verdict=INVALID
+reason=The installed WP-CLI site command has no update or get subcommand.
+mutation_performed=no
+post_attempt_flag_check=blog_id 3 remained archived=1
+result_excluded=yes

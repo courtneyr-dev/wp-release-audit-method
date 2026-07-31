@@ -1,0 +1,31 @@
+tested_build=WordPress 7.1-beta4
+target_build=WordPress 7.1 RC1
+rc1_gate=WAITING-FOR-RC1
+
+== C-02 preflight ==
+7.1-beta4
+== detector positive control: 7.0.2 -> beta4 ==
+old_tree_files=3945 new_tree_files=3786
+removed_paths=243 declared_in_old_files=791
+UNDECLARED_REMOVALS=243
+   243  wp-includes/images/icon-library
+detector_exit=1 expected=1
+== detector negative control: beta4 -> beta4 ==
+old_tree_files=3786 new_tree_files=3786
+removed_paths=0 declared_in_old_files=791
+UNDECLARED_REMOVALS=0
+detector_exit=0 expected=0
+CELL=prior-stable-core
+candidate_version=7.1-beta4 clean_version=7.1-beta4
+extra_core_files=243 missing_core_files=0
+VERDICT=CONFIRMED file-set-divergence
+CELL=prior-stable-wp-cli
+candidate_version=7.1-beta4 clean_version=7.1-beta4
+extra_core_files=0 missing_core_files=0
+VERDICT=REFUTED no-file-set-divergence
+CELL=prior-beta-core
+candidate_version=7.0.2 clean_version=7.1-beta4
+VERDICT=BLOCKED reason=build-identity-mismatch
+CELL=prior-beta-wp-cli
+VERDICT=BLOCKED reason=no-verified-prior-beta-wp-cli-fixture
+cleanup_verified=yes read-only-batch

@@ -1,0 +1,21 @@
+tested_build=WordPress 7.1-beta4
+target_build=WordPress 7.1 RC1
+rc1_gate=WAITING-FOR-RC1
+
+== denominator control ==
+total_sites=5
+eligible=2
+held_back=3
+blog_1_db_version=61833 flags=0/0/0
+blog_2_db_version=61833 flags=0/0/0
+blog_3_db_version=61832 flags=1/0/0
+blog_4_db_version=61832 flags=0/1/0
+blog_5_db_version=61832 flags=0/0/1
+
+CELL=archived-first-load
+before_db_version=61832
+http_status=200
+after_db_version=61832
+cleanup_archived_flag=1
+VERDICT=INCONCLUSIVE reason=no-schema-dependent-feature-named
+cleanup_verified=yes

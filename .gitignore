@@ -1,0 +1,11 @@
+# Evidence and run state live in the run root, never in this repo.
+private/
+evidence/
+runs/
+*.local.*
+
+# Fixture and harness noise
+.DS_Store
+__pycache__/
+*.pyc
+node_modules/

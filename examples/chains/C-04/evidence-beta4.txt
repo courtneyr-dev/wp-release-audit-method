@@ -1,0 +1,53 @@
+tested_build=WordPress 7.1-beta4
+target_build=WordPress 7.1 RC1
+rc1_gate=WAITING-FOR-RC1
+fixture=FX-02
+fixture_state_hash=f8e3d6ac60813926de09e5a506fd7767be6739095fc7a440ca92fed609df9143
+
+== preflight ==
+wp_version=7.1-beta4
+site_mode=multisite
+viewer_1=admin super_admin=true
+viewer_2=codex-subadmin site_role=administrator super_admin=false
+
+CELL=dependency-network/scope-network/viewer-1
+{"dependency_active_effective":true,"dependency_active_site":false,"dependency_active_network":true,"dependency_unmet_for_runtime":false,"action_button_disabled":true,"action_button_activate_link":false,"action_button_text":"Network Activate","rest_status":200,"rest_plugin_status":"inactive"}
+VERDICT=CONFIRMED
+CELL=dependency-network/scope-network/viewer-2
+{"can_activate_plugins":false,"can_manage_network_plugins":false,"action_button_text":"","rest_status":403,"rest_error_code":"rest_cannot_view_plugin"}
+VERDICT=REFUTED
+CELL=dependency-network/scope-site/viewer-1
+{"dependency_active_effective":true,"dependency_active_site":false,"dependency_active_network":true,"dependency_unmet_for_runtime":false,"action_button_disabled":true,"action_button_activate_link":false,"action_button_text":"Activate","rest_status":200,"rest_plugin_status":"inactive"}
+VERDICT=CONFIRMED
+CELL=dependency-network/scope-site/viewer-2
+{"can_activate_plugins":false,"can_manage_network_plugins":false,"action_button_text":"","rest_status":403,"rest_error_code":"rest_cannot_view_plugin"}
+VERDICT=REFUTED
+
+CELL=dependency-site/scope-network/viewer-1
+{"dependency_active_effective":true,"dependency_active_site":true,"dependency_active_network":false,"dependency_unmet_for_runtime":false,"action_button_disabled":false,"action_button_activate_link":true,"action_button_text":"Network Activate","rest_status":200,"rest_plugin_status":"inactive"}
+VERDICT=INCONCLUSIVE reason=network-wide-dependent-activation-not-executed
+CELL=dependency-site/scope-network/viewer-2
+{"can_activate_plugins":false,"can_manage_network_plugins":false,"action_button_text":"","rest_status":403,"rest_error_code":"rest_cannot_view_plugin"}
+VERDICT=REFUTED
+CELL=dependency-site/scope-site/viewer-1
+{"dependency_active_effective":true,"dependency_active_site":true,"dependency_active_network":false,"dependency_unmet_for_runtime":false,"action_button_disabled":false,"action_button_activate_link":true,"action_button_text":"Activate","rest_status":200,"rest_plugin_status":"inactive"}
+VERDICT=REFUTED
+CELL=dependency-site/scope-site/viewer-2
+{"can_activate_plugins":false,"can_manage_network_plugins":false,"action_button_text":"","rest_status":403,"rest_error_code":"rest_cannot_view_plugin"}
+VERDICT=REFUTED
+
+CELL=dependency-inactive/scope-network/viewer-1
+{"dependency_active_effective":false,"dependency_active_site":false,"dependency_active_network":false,"dependency_unmet_for_runtime":true,"action_button_disabled":true,"action_button_activate_link":false,"action_button_text":"Network Activate","rest_status":200,"rest_plugin_status":"inactive"}
+VERDICT=REFUTED
+CELL=dependency-inactive/scope-network/viewer-2
+{"can_activate_plugins":false,"can_manage_network_plugins":false,"action_button_text":"","rest_status":403,"rest_error_code":"rest_cannot_view_plugin"}
+VERDICT=REFUTED
+CELL=dependency-inactive/scope-site/viewer-1
+{"dependency_active_effective":false,"dependency_active_site":false,"dependency_active_network":false,"dependency_unmet_for_runtime":true,"action_button_disabled":true,"action_button_activate_link":false,"action_button_text":"Activate","rest_status":200,"rest_plugin_status":"inactive"}
+VERDICT=REFUTED
+CELL=dependency-inactive/scope-site/viewer-2
+{"can_activate_plugins":false,"can_manage_network_plugins":false,"action_button_text":"","rest_status":403,"rest_error_code":"rest_cannot_view_plugin"}
+VERDICT=REFUTED
+
+cleanup_state=dependency_network_active;dependency_site_inactive;dependent_network_inactive;dependent_site_inactive
+cleanup_verified=yes
