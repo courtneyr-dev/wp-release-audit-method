@@ -39,7 +39,7 @@ You are **not** expected to read WordPress core code, write PHP, or know what a 
 
 | | |
 |---|---|
-| **Get going** | [Before you start](#before-you-start) · [Check the build](#step-1-check-the-build-60-seconds) · [Get a test site](#step-2-get-a-test-site) · [Run the suites](#step-3-run-the-test-suites) · [Preflight](#step-4-check-what-your-setup-can-detect) |
+| **Get going** | [Before you start](#before-you-start) · [Check the build](#step-1-check-the-build-60-seconds) · [Get a test site](#step-2-get-a-test-site) · [The debugging toolkit](#the-debugging-toolkit-works-with-any-option) · [Run the suites](#step-3-run-the-test-suites) · [Preflight](#step-4-check-what-your-setup-can-detect) |
 | **The main event** | [A release party in three acts](#a-release-party-in-three-acts) |
 | **Get it right** | [Five ways your test can lie to you](#five-ways-your-test-can-lie-to-you) · [How to report](#how-to-report-what-you-find) · [Official sources](#where-official-information-lives) |
 | **Tooling** | [AI assistants](#using-ai-assistants) · [Tools and integrations](#tools-and-integrations) |
@@ -173,17 +173,39 @@ reinstalling Twenty-Whatever every time).
 > That makes it a genuinely valuable lane to test, not a lesser one. Just name it in your
 > report so nobody assumes you used WP-CLI.
 
-### Option B — WordPress Playground
+### Option B — WordPress Playground *(fastest possible start)*
 
 [WordPress Playground](https://wordpress.org/playground/) runs WordPress in your browser.
 Nothing to install; throw it away by closing the tab.
 
-[Docs](https://developer.wordpress.org/playground/) ·
-[Make/Playground](https://make.wordpress.org/playground/) ·
-[a worked beta blueprint](https://github.com/courtneyr-dev/WP7-testing)
+**There's an official blueprint built for exactly this job:**
 
-**Can't do:** upgrades from older versions, or anything about your real server's PHP and
-image libraries.
+### ▶ [Launch a loaded beta test site](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/WordPress/blueprints/trunk/blueprints/beta-rc/blueprint.json)
+
+One click gets you a running beta with everything already set up. The
+[**beta-rc blueprint**](https://github.com/WordPress/blueprints/tree/trunk/blueprints/beta-rc)
+lives in the official [WordPress blueprints collection](https://github.com/WordPress/blueprints)
+and is maintained by this repo's author.
+
+What you get, without configuring anything:
+
+| | |
+|---|---|
+| **PHP 8.3**, WordPress **beta** channel | Falls back to stable outside a beta period |
+| Logged in as admin | No setup screen |
+| [theme-test-data](https://github.com/WordPress/theme-test-data) | The canonical content corpus — markup edge cases, nested menus, embeds, unicode, sticky and password-protected posts |
+| [a11y-theme-unit-test](https://github.com/wpaccessibility/a11y-theme-unit-test) | Accessibility-focused test content |
+| Six debugging plugins | [The toolkit below](#the-debugging-toolkit-works-with-any-option), preinstalled |
+
+> [!NOTE]
+> **Playground can't test upgrades**, and it tells you nothing about your real server's PHP
+> or image libraries. It's excellent for "does this feature work and look right," useless for
+> "will this break my site when I update." Use Option A for that.
+
+More: [Playground docs](https://developer.wordpress.org/playground/) ·
+[Make/Playground](https://make.wordpress.org/playground/) ·
+[blueprint gallery](https://wordpress.github.io/blueprints/) ·
+[another worked example](https://github.com/courtneyr-dev/WP7-testing)
 
 ### Option C — a local app
 
@@ -212,6 +234,44 @@ wp-env start
 
 It prints your URL (usually `http://localhost:8888`). Pass that directory and URL to the
 scripts below.
+
+---
+
+## The debugging toolkit (works with any option)
+
+Whichever environment you picked, these six plugins do most of the work of turning
+*"something's wrong"* into *"here's what's wrong."* The
+[beta-rc blueprint](#option-b--wordpress-playground-fastest-possible-start) installs all of
+them; on a Beta Tester or local site, install them yourself.
+
+| Plugin | What it gives you | Why it matters when testing a release |
+|---|---|---|
+| [**Query Monitor**](https://wordpress.org/plugins/query-monitor/) | Slow queries, PHP errors and notices, hooks fired, REST requests, capability checks, template used | **The one to install first.** Most "the page looks broken" reports are a PHP notice or a failed REST call that Query Monitor shows you in one glance. Turns a vague symptom into a specific line |
+| [**Health Check & Troubleshooting**](https://wordpress.org/plugins/health-check/) | Server and config report, plus a troubleshooting mode that disables plugins and switches themes **for your session only** | Answers "is this WordPress, or is this my setup?" without taking the site down for anyone else. This is how you isolate a conflict on a staging site people are still looking at |
+| [**Debug Bar**](https://wordpress.org/plugins/debug-bar/) | Core's own debug output in the toolbar — queries, cache, `WP_DEBUG` notices | Surfaces deprecation notices, which is exactly what a major release generates. Pairs with `WP_DEBUG` and `SCRIPT_DEBUG` in `wp-config.php` |
+| [**User Switching**](https://wordpress.org/plugins/user-switching/) | Switch to any user in one click, and switch back | **Underrated for release testing.** A whole class of bug works fine for admins and breaks for Authors, Editors, or Contributors. Without this you're logging in and out all afternoon and will simply skip the check |
+| [**Test Reports**](https://wordpress.org/plugins/test-reports/) | A formatted report with WordPress version, PHP, server, theme, plugins, and browser filled in | Gets the environment section of your bug report right automatically — the part people most often omit, and the first thing anyone triaging will ask for |
+| [**Create Block Theme**](https://wordpress.org/plugins/create-block-theme/) | Build, modify, and export block themes | For testing theme-side and Site Editor changes, or producing a minimal theme that reproduces a problem |
+
+> [!TIP]
+> **Turn on debugging too.** In `wp-config.php` on a test site:
+>
+> ```php
+> define( 'WP_DEBUG', true );
+> define( 'WP_DEBUG_LOG', true );   // writes to wp-content/debug.log
+> define( 'WP_DEBUG_DISPLAY', false ); // keep errors out of the page
+> define( 'SCRIPT_DEBUG', true );   // unminified core JS and CSS
+> ```
+>
+> `SCRIPT_DEBUG` matters more than people expect during a beta — a minified bundle can hide
+> which script actually threw.
+
+> [!WARNING]
+> **Deactivate Query Monitor before judging performance**, and be careful reading the admin
+> with several debug plugins active. They add their own queries and markup. A page that
+> "feels slow" with the whole toolkit running is not evidence of a regression — that's your
+> [environment failing to be sensitive](#step-4-check-what-your-setup-can-detect) in the
+> other direction.
 
 ---
 
@@ -819,10 +879,12 @@ lands.
 | Tool | What it's for |
 |---|---|
 | [WordPress Beta Tester](https://wordpress.org/plugins/wordpress-beta-tester/) | Put a beta on any site you already have — staging, shared hosting, local |
-| [Test Reports](https://wordpress.org/plugins/test-reports/) | Generate a report with your environment already filled in |
+| [beta-rc blueprint](https://playground.wordpress.net/?blueprint-url=https://raw.githubusercontent.com/WordPress/blueprints/trunk/blueprints/beta-rc/blueprint.json) | One-click loaded beta site in Playground ([source](https://github.com/WordPress/blueprints/tree/trunk/blueprints/beta-rc)) |
+| [The debugging toolkit](#the-debugging-toolkit-works-with-any-option) | Query Monitor, Health Check, Debug Bar, User Switching, Test Reports, Create Block Theme |
 | [WP-CLI](https://wp-cli.org/) | Command-line WordPress ([handbook](https://make.wordpress.org/cli/)) |
 | [wp-env](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-env/) | Docker environment the scripts here drive |
 | [Playground](https://wordpress.org/playground/) | WordPress in a browser tab |
+| [WordPress blueprints](https://github.com/WordPress/blueprints) | The official blueprint collection ([gallery](https://wordpress.github.io/blueprints/)) |
 | [Make/Test handbook](https://make.wordpress.org/test/handbook/) | How the Test team works |
 
 ---
