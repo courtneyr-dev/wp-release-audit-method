@@ -144,7 +144,7 @@ puts a Beta or RC on a site you already have. Staging site at your host, a subdo
 shared hosting, a local install — anywhere you can install a plugin. No Docker, no terminal,
 no Node.
 
-It's maintained by Andy Fragen, Colin Stewart, Paul Biron, Mel Choyce-Dwan, and Peter
+It's maintained by Andy Fragen, Colin Stewart, Paul Biron, Maura Teal, and Peter
 Westwood ([GitHub](https://github.com/afragen/wordpress-beta-tester)), and it's the path the
 Test team assumes in most [calls for testing](https://make.wordpress.org/test/).
 
