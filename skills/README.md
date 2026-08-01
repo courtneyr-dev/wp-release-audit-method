@@ -63,14 +63,24 @@ last release"*.
 
 ### [`wordpress-audit-handoff`](wordpress-audit-handoff/)
 
-Turns testing work into one self-contained markdown file a colleague can actually read —
-findings as mechanism → evidence → fix, each linked to an authoritative WordPress source,
-with the methods and prompts used.
+Turns testing work into one self-contained markdown file the recipient can act on. Two modes:
 
-Worth reading even if you never run it, for two rules it enforces: **verify every GitHub
-link is public before including it** (a private repo link gives your colleague a 404), and
-**any privately-disclosed finding reduces to a bare acknowledgment** — mechanism, endpoint,
-CVSS, and reproduction all scrubbed, then grep the file to prove nothing remains.
+- **Coworker handoff** — findings as mechanism → evidence → fix, each linked to an
+  authoritative WordPress source, with the methods and prompts used.
+- **[SRE fleet brief](wordpress-audit-handoff/SKILL.md#mode-b--sre-fleet-brief)** — for people
+  who run hosting for many sites. Rollout posture with movement conditions, a
+  [fleet-variance matrix](wordpress-audit-handoff/SKILL.md#3-fleet-variance-matrix) (PHP
+  versions, image delegates, object cache, edge header handling, pre-installed plugins),
+  blast radius per finding, numbered pre-GA gates, monitoring re-baselining, and where
+  performance and security testing continues per tier.
+
+Worth reading even if you never run it, for three things it enforces: **verify every GitHub
+link is public before including it** (a private repo link gives your colleague a 404); **any
+privately-disclosed finding reduces to a bare acknowledgment** — mechanism, endpoint, CVSS,
+and reproduction all scrubbed, then grep the file to prove nothing remains; and the
+**[silent-fallback class](wordpress-audit-handoff/SKILL.md#the-silent-fallback-class--worth-its-own-habit)**,
+which is the habit of asking what happens when a header-gated or capability-gated feature
+quietly doesn't engage and nothing logs it.
 
 ### [`wp-screenshots`](wp-screenshots/)
 

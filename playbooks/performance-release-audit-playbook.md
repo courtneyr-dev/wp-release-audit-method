@@ -19,6 +19,9 @@ related:
 
 > **Where this fits:** the performance axis of [`wp-release-followup`](../skills/wp-release-followup/SKILL.md) §3.
 > **This playbook is unexercised** — it states acceptance criteria; no benchmark has been run against it.
+> Hand it to an SRE as a design to execute, never as a result — see
+> [handing off performance work](../skills/wordpress-audit-handoff/SKILL.md#performance).
+> Until baselines exist the correct posture word is **unverified**, not *good*.
 
 ## Status: design only — UNEXERCISED
 
