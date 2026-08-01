@@ -29,6 +29,41 @@ flowchart LR
     style E fill:#eafaea,stroke:#28a745,stroke-width:2px,color:#000
 ```
 
+## The 30-second start
+
+**Don't want to read any of this?** Copy the block below into ChatGPT, Claude, Gemini, Copilot —
+anything that can fetch a URL. It sets up the whole project and walks you through it.
+
+```
+Set me up to test WordPress releases using this project:
+https://github.com/courtneyr-dev/wp-release-audit-method
+
+Read these four files first:
+- https://raw.githubusercontent.com/courtneyr-dev/wp-release-audit-method/main/README.md
+- https://raw.githubusercontent.com/courtneyr-dev/wp-release-audit-method/main/sources/official-sources.md
+- https://raw.githubusercontent.com/courtneyr-dev/wp-release-audit-method/main/playbooks/release-day-sweep-playbook.md
+- https://raw.githubusercontent.com/courtneyr-dev/wp-release-audit-method/main/playbooks/slack-test-report-template.md
+
+Then:
+1. Ask me what I've got — my OS, whether I have Docker, and whether I have a site
+   I can safely break. Recommend ONE setup path; don't list all four.
+2. Walk me through that path one step at a time. Wait for me after each step.
+3. Use ONLY the official sources register above for any factual claim about
+   WordPress. If you can't source a claim there, say so instead of guessing.
+4. When I have results, help me write them up — and tell me plainly which of my
+   claims my evidence doesn't actually support.
+
+I'm comfortable in a terminal but I'm not a WordPress developer.
+```
+
+Adjust that last line to describe yourself and the assistant will pitch it right. If you have shell
+access (Claude Code, Cursor, Copilot CLI), add: *"clone the repo and run the scripts for me."*
+
+> [!TIP]
+> Point 4 is the one that matters. Assistants agree with you by default and will happily promote
+> "seemed broken" into "confirmed bug." Asking to be contradicted is most of what this project is
+> about.
+
 ## Who this is for
 
 You run WordPress sites. You can follow instructions in a terminal. You've offered to help
@@ -40,10 +75,16 @@ You are **not** expected to read WordPress core code, write PHP, or know what a 
 > If you've ever thought *"I tested the Beta or RC and it seemed fine, but I don't think that
 > helped anyone"* — you were probably right, and this is the fix.
 
+> [!TIP]
+> **Ship a plugin or theme?** Go to [`plugin-authors/`](plugin-authors/) instead — the same method
+> narrowed to your own code, plus what to verify before you bump **"Tested up to"** and what the
+> plugin directory expects.
+
 ## Contents
 
 | | |
 |---|---|
+| **Plugin/theme authors** | [Testing your own plugin or theme](plugin-authors/) — including the ["Tested up to" bump](plugin-authors/#the-tested-up-to-bump) |
 | **Get going** | [Before you start](#before-you-start) · [Check the build](#step-1-check-the-build-60-seconds) · [Get a test site](#step-2-get-a-test-site) · [The debugging toolkit](#the-debugging-toolkit-works-with-any-option) · [Run the suites](#step-3-run-the-test-suites) · [Preflight](#step-4-check-what-your-setup-can-detect) |
 | **The main event** | [A release party in three acts](#a-release-party-in-three-acts) |
 | **Get it right** | [Five ways your test can lie to you](#five-ways-your-test-can-lie-to-you) · [How to report](#how-to-report-what-you-find) · [Official sources](#where-official-information-lives) |
@@ -71,6 +112,20 @@ You are **not** expected to read WordPress core code, write PHP, or know what a 
 git clone https://github.com/courtneyr-dev/wp-release-audit-method.git
 cd wp-release-audit-method
 ```
+
+> [!IMPORTANT]
+> **Read [`sources/official-sources.md`](sources/official-sources.md) before you start** — or
+> point your AI assistant at it.
+>
+> It's the register of what's authoritative for each kind of WordPress question, and loading it
+> **constrains the whole project to official sources only.** WordPress.org, Make blogs, Trac,
+> Developer Resources, and the running build itself. Two supplementary publications are
+> allowlisted for discovery, and everything else — random blogs, Stack Overflow, search
+> snippets, and an AI's own memory — is out of scope for factual claims.
+>
+> That constraint is what makes a report trustworthy. Most weak bug reports aren't wrong about
+> the symptom; they're wrong about what was *supposed* to happen, because somebody read a
+> four-month-old planning post and assumed it shipped.
 
 ---
 
@@ -982,13 +1037,14 @@ lands.
 ## What's in this repository
 
 ```
-├── scripts/      the test scripts from Step 3
-├── sources/      where official WordPress information lives
-├── skills/       the three acts, as AI assistant skills (optional)
-├── playbooks/    longer runbooks: security, performance, content, release day
-├── examples/     four worked investigations, with evidence and cleanup
-├── prompts/      prompts for AI-assisted testing
-└── method/       the reasoning behind all of it
+├── scripts/          the test scripts from Step 3
+├── sources/          where official WordPress information lives
+├── plugin-authors/   testing your OWN plugin or theme + "Tested up to"
+├── skills/           the three acts, as AI assistant skills (optional)
+├── playbooks/        longer runbooks: security, performance, content, release day
+├── examples/         four worked investigations, with evidence and cleanup
+├── prompts/          prompts for AI-assisted testing
+└── method/           the reasoning behind all of it
 ```
 
 ### If you want to go further
