@@ -249,6 +249,6 @@ WHAT TO DO WITH THIS
 5. Cross-reference your own changelog: code YOU changed recently, on a surface
    CORE changed this cycle, is your highest-risk cell. Test that first.
 
-Full method: https://github.com/courtneyr-dev/wp-release-audit-method/tree/main/plugin-authors
+Full method: https://github.com/courtneyr-dev/wp-release-audit-method/tree/main/plugin-theme-authors
 EOF
 exit 0

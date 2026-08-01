@@ -76,7 +76,7 @@ You are **not** expected to read WordPress core code, write PHP, or know what a 
 > helped anyone"* — you were probably right, and this is the fix.
 
 > [!TIP]
-> **Ship a plugin or theme?** Go to [`plugin-authors/`](plugin-authors/) instead — the same method
+> **Ship a plugin or theme?** Go to [`plugin-theme-authors/`](plugin-theme-authors/) instead — the same method
 > narrowed to your own code, plus what to verify before you bump **"Tested up to"** and what the
 > plugin directory expects.
 
@@ -84,7 +84,7 @@ You are **not** expected to read WordPress core code, write PHP, or know what a 
 
 | | |
 |---|---|
-| **Plugin/theme authors** | [Testing your own plugin or theme](plugin-authors/) — including the ["Tested up to" bump](plugin-authors/#the-tested-up-to-bump) |
+| **Plugin/theme authors** | [Testing your own plugin or theme](plugin-theme-authors/) — including the ["Tested up to" bump](plugin-theme-authors/#the-tested-up-to-bump) |
 | **Get going** | [Before you start](#before-you-start) · [Check the build](#step-1-check-the-build-60-seconds) · [Get a test site](#step-2-get-a-test-site) · [The debugging toolkit](#the-debugging-toolkit-works-with-any-option) · [Run the suites](#step-3-run-the-test-suites) · [Preflight](#step-4-check-what-your-setup-can-detect) |
 | **The main event** | [A release party in three acts](#a-release-party-in-three-acts) |
 | **Get it right** | [Five ways your test can lie to you](#five-ways-your-test-can-lie-to-you) · [How to report](#how-to-report-what-you-find) · [Official sources](#where-official-information-lives) |
@@ -1040,7 +1040,7 @@ lands.
 ```
 ├── scripts/          the test scripts from Step 3
 ├── sources/          where official WordPress information lives
-├── plugin-authors/   testing your OWN plugin or theme + "Tested up to"
+├── plugin-theme-authors/   testing your OWN plugin or theme + "Tested up to"
 ├── skills/           the three acts, as AI assistant skills (optional)
 ├── playbooks/        longer runbooks: security, performance, content, release day
 ├── examples/         four worked investigations, with evidence and cleanup
