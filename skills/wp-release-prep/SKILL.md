@@ -37,15 +37,21 @@ Add from `methods/test-and-fixture-registry.csv` when the release calls for it: 
 
 **Keep Core-updater and WP-CLI-updater lanes separate.** They produce different file trees — that's how the 243-stale-file finding surfaced.
 
-## 3. Seed content — theme-test-data
+## 3. Seed content — the canonical corpora
 
-Import the canonical corpus into every content fixture:
+Import both into every content fixture. The second is derived from the first, so the overlap
+deduplicates on import; the items that don't are the point.
 
 ```bash
-curl -sL -o /tmp/theme-unit-test-data.xml \
-  https://raw.githubusercontent.com/WordPress/theme-test-data/master/themeunittestdata.wordpress.xml
 studio-cli.sh wp plugin install wordpress-importer --activate
-studio-cli.sh wp import /tmp/theme-unit-test-data.xml --authors=create
+
+curl -sL -o /tmp/theme-test-data.xml \
+  https://raw.githubusercontent.com/WordPress/theme-test-data/master/themeunittestdata.wordpress.xml
+studio-cli.sh wp import /tmp/theme-test-data.xml --authors=create
+
+curl -sL -o /tmp/a11y-test-data.xml \
+  https://raw.githubusercontent.com/wpaccessibility/a11y-theme-unit-test/master/a11y-theme-unit-test-data.xml
+studio-cli.sh wp import /tmp/a11y-test-data.xml --authors=create
 ```
 
 It covers markup edge cases, nested/long menus, embeds, image alignments, unicode and RTL strings, sticky/password/scheduled posts, and deep page hierarchies — the shapes hand-made content never has.

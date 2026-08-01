@@ -84,7 +84,7 @@ worse than none. If your bug is in that category, say so and provide steps inste
 |---|---|
 | `login` | Skip the login screen |
 | `installPlugin` / `installTheme` | From the directory by slug, or a zip URL |
-| `importWxr` | Load content — including [theme-test-data](https://github.com/WordPress/theme-test-data) |
+| `importWxr` | Load content — [theme-test-data](https://github.com/WordPress/theme-test-data) and [a11y-theme-unit-test](https://github.com/wpaccessibility/a11y-theme-unit-test) |
 | `runPHP` | Set options, create posts, register test fixtures |
 | `setSiteOptions` | Change settings without PHP |
 | `defineWpConfigConsts` | `WP_DEBUG`, `SCRIPT_DEBUG`, multisite constants |

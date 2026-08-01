@@ -255,6 +255,7 @@ What you get, without configuring anything:
 |---|---|
 | **PHP 8.3**, WordPress **beta** channel | Falls back to stable outside a Beta/RC period |
 | Logged in as admin | No setup screen |
+| [a11y-theme-unit-test](https://github.com/wpaccessibility/a11y-theme-unit-test) | Accessibility test content |
 | [theme-test-data](https://github.com/WordPress/theme-test-data) | The canonical content corpus — markup edge cases, nested menus, embeds, unicode, sticky and password-protected posts |
 | [a11y-theme-unit-test](https://github.com/wpaccessibility/a11y-theme-unit-test) | Accessibility-focused test content |
 | Six debugging plugins | [The toolkit below](#the-debugging-toolkit-works-with-any-option), preinstalled |
@@ -507,14 +508,30 @@ on the old database version, quietly broken. You cannot catch that without a fix
 
 **3. Seed real content.**
 
-Import [theme-test-data](https://github.com/WordPress/theme-test-data) into every fixture:
+Import all three canonical corpora into every fixture. They complement rather than duplicate each
+other, and the importer deduplicates the overlap:
 
 ```bash
-curl -sL -o /tmp/theme-unit-test-data.xml \
-  https://raw.githubusercontent.com/WordPress/theme-test-data/master/themeunittestdata.wordpress.xml
 wp plugin install wordpress-importer --activate
-wp import /tmp/theme-unit-test-data.xml --authors=create
+
+# Core markup edge cases
+curl -sL -o /tmp/theme-test-data.xml \
+  https://raw.githubusercontent.com/WordPress/theme-test-data/master/themeunittestdata.wordpress.xml
+wp import /tmp/theme-test-data.xml --authors=create
+
+# Accessibility-focused content
+curl -sL -o /tmp/a11y-test-data.xml \
+  https://raw.githubusercontent.com/wpaccessibility/a11y-theme-unit-test/master/a11y-theme-unit-test-data.xml
+wp import /tmp/a11y-test-data.xml --authors=create
 ```
+
+| Corpus | Covers |
+|---|---|
+| [theme-test-data](https://github.com/WordPress/theme-test-data) | Markup edge cases, nested and long menus, embeds, image alignments, unicode and RTL strings, sticky/password/scheduled posts, deep page hierarchies |
+| [a11y-theme-unit-test](https://github.com/wpaccessibility/a11y-theme-unit-test) | Accessibility-focused content — the corpus the [accessibility-ready](https://wpaccessibility.org/docs/accessibility-ready/) review uses |
+
+The second is derived from the first, so most of it deduplicates on import. The handful of items
+that don't are the ones that matter — import both and let the importer sort it out.
 
 It covers markup edge cases, deeply nested menus, embeds, image alignments, unicode and RTL
 strings, sticky and password-protected and scheduled posts, and page hierarchies five levels
@@ -1026,6 +1043,9 @@ lands.
   Playwright runner, 123 steps across 14 areas
 - [`courtneyr-dev/WP7-testing`](https://github.com/courtneyr-dev/WP7-testing) — Beta/RC launcher
   and Playground blueprint
+- [`courtneyr-dev/indieweb-test-data`](https://github.com/courtneyr-dev/indieweb-test-data) — WXR
+  test content for post formats, the `kind` taxonomy, and XFN, with their edge cases. Complements
+  theme-test-data and a11y-theme-unit-test rather than replacing them
 
 ### The official tools underneath
 
