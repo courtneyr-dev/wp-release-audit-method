@@ -17,8 +17,18 @@ Works for any codebase; nothing here assumes a particular framework or build set
 | [Shipping to the directory](#shipping-to-the-directory) | Guidelines, Plugin Check, and the common rejections |
 | [Themes specifically](#themes-specifically) | The surfaces only themes have |
 | [The release checklist](#the-release-checklist) | Copy-paste, per release |
-| **[The release-diff method](release-diff-method.md)** | **The deep version** — derive what your code touches, intersect it with what the release changed, and prioritize by your own changelog |
-| **[Adopting what the release adds](adopting-new-apis.md)** | The opposite question — what core now does for free that you're still hand-rolling |
+
+**Go deeper:**
+
+| | |
+|---|---|
+| **[Drop-in CI](ci/)** | **Start here if you do nothing else.** A supported test matrix plus a nightly canary that opens an issue when WordPress trunk breaks you |
+| [Starter tests](starter-tests/) | The five PHPUnit tests and two Playwright specs that cover what a *release* breaks |
+| [The release-diff method](release-diff-method.md) | Derive what your code touches, intersect it with what the release changed, prioritize by your own changelog |
+| [Adopting what the release adds](adopting-new-apis.md) | The opposite question — what core now does for free that you're still hand-rolling |
+| [Testing blocks](testing-blocks.md) | The highest-churn surface, where failures are invisible server-side |
+| [Co-installed plugins](co-installed-plugins.md) | The seam bugs no static method can find |
+| [The extender digest](extender-digest.md) | Turn a release's dev notes into a greppable list of names |
 
 ---
 

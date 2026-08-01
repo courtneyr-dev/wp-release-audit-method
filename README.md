@@ -1040,7 +1040,8 @@ lands.
 ```
 ├── scripts/          the test scripts from Step 3
 ├── sources/          where official WordPress information lives
-├── plugin-theme-authors/   testing your OWN plugin or theme + "Tested up to"
+├── plugin-theme-authors/   testing your OWN plugin or theme (CI, tests, blocks)
+├── data/             deprecations.csv — community-maintained, PRs welcome
 ├── skills/           the three acts, as AI assistant skills (optional)
 ├── playbooks/        longer runbooks: security, performance, content, release day
 ├── examples/         four worked investigations, with evidence and cleanup
