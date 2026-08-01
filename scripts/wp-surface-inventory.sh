@@ -279,6 +279,61 @@ fi
 # ADOPTION CANDIDATES — the opposite of risk. What core now does for you that
 # you may still be hand-rolling. Heuristics: each is a prompt to look, not a verdict.
 # ─────────────────────────────────────────────────────────────────────────────
+# ─────────────────────────────────────────────────────────────────────────────
+# EDITOR AND THEME PARADIGM — which of the four deployments you actually serve.
+# Classic Editor has ~9 million active installs; assuming block-only is a bet
+# against a large share of real sites.
+# ─────────────────────────────────────────────────────────────────────────────
+hdr "CLASSIC EDITOR SURFACES — only run when the block editor is OFF"
+scan "classic:metabox"  "add_meta_box\(\s*['\"][^'\"]+"                    "['\"][^'\"]+$"
+scan "classic:tinymce"  "(mce_buttons[_0-9]*|mce_external_plugins|tiny_mce_before_init|teeny_mce_buttons|mce_css)" \
+                        "(mce_buttons[_0-9]*|mce_external_plugins|tiny_mce_before_init|teeny_mce_buttons|mce_css)"
+scan "classic:editor"   "(wp_editor\(|the_editor|wp_default_editor|media_buttons|quicktags|wp_tiny_mce)" \
+                        "(wp_editor|the_editor|wp_default_editor|media_buttons|quicktags|wp_tiny_mce)"
+scan "classic:form"     "(edit_form_after_title|edit_form_after_editor|edit_form_top|edit_form_advanced|post_submitbox_misc_actions|dbx_post_sidebar)" \
+                        "(edit_form_[a-z_]+|post_submitbox_misc_actions|dbx_post_sidebar)"
+scan "classic:gate"     "(use_block_editor_for_post_type|use_block_editor_for_post|gutenberg_can_edit_post)" \
+                        "(use_block_editor_for_post[a-z_]*|gutenberg_can_edit_post)"
+scan "classic:editorstyle" "add_editor_style\(" "add_editor_style"
+
+hdr "BLOCK EDITOR SURFACES — only run when the block editor is ON"
+scan "block:assets"  "(enqueue_block_editor_assets|enqueue_block_assets|block_editor_settings_all|allowed_block_types_all)" \
+                     "(enqueue_block_[a-z_]+|block_editor_settings_all|allowed_block_types_all)"
+scan "block:js"      "wp\.(blocks|data|blockEditor|editor|element|components|plugins|richText)" \
+                     "wp\.[a-zA-Z]+" "$JS"
+scan "block:filter"  "addFilter\(\s*['\"][^'\"]+" "['\"][^'\"]+$" "$JS"
+scan "block:rest-meta" "show_in_rest" "show_in_rest"
+
+hdr "CLASSIC THEME SURFACES"
+scan "classic-theme:sidebar" "(register_sidebar|dynamic_sidebar|register_widget|WP_Widget)" \
+                             "(register_sidebar|dynamic_sidebar|register_widget|WP_Widget)"
+scan "classic-theme:menu"    "(register_nav_menus?|wp_nav_menu)" "(register_nav_menus?|wp_nav_menu)"
+scan "classic-theme:customizer" "(customize_register|WP_Customize_|customize_preview_init)" \
+                                "(customize_register|WP_Customize_[A-Za-z]*|customize_preview_init)"
+scan "classic-theme:template" "(get_header|get_footer|get_sidebar|get_template_part|comments_template)\(" \
+                              "(get_header|get_footer|get_sidebar|get_template_part|comments_template)"
+
+hdr "BLOCK THEME SURFACES"
+scan "block-theme:template" "(block_template_hierarchy|get_block_template|wp_template|wp_template_part|render_block_template)" \
+                            "(block_template[a-z_]*|get_block_template|wp_template[a-z_]*|render_block_template)"
+scan "block-theme:styles"   "(wp_get_global_settings|wp_get_global_styles|wp_theme_json|theme_json_[a-z_]+)" \
+                            "(wp_get_global_[a-z]+|wp_theme_json[a-zA-Z_]*|theme_json_[a-z_]+)"
+
+if [ -z "$CSV" ]; then
+  CE=$(echo "$PHP" | tr '\n' '\0' | xargs -0 grep -lE "add_meta_box|mce_buttons|wp_editor\(|edit_form_after" 2>/dev/null | wc -l | tr -d ' ')
+  BE=$(echo "$PHP$JS" | tr '\n' '\0' | xargs -0 grep -lE "enqueue_block_editor_assets|register_block_type|wp\.blocks" 2>/dev/null | wc -l | tr -d ' ')
+  echo
+  printf '  \033[1mParadigm exposure:\033[0m classic-editor files: %s · block-editor files: %s\n' "$CE" "$BE"
+  if [ "$CE" -gt 0 ] && [ "$BE" -gt 0 ]; then
+    echo "     → You serve BOTH. Test all four cells: {classic, block} editor × {classic, block} theme."
+  elif [ "$CE" -gt 0 ]; then
+    echo "     → Classic-editor features only. Confirm they degrade sanely when the block editor is on."
+  elif [ "$BE" -gt 0 ]; then
+    echo "     → Block-editor features only. ~9M sites run Classic Editor — confirm you fail gracefully there,"
+    echo "       or say so in your readme. Silence reads as 'supported'."
+  fi
+fi
+
 hdr "ADOPTION CANDIDATES — core may already do this for you"
 
 flag() { # <condition-count> <label> <recommendation>

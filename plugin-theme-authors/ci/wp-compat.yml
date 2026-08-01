@@ -195,6 +195,62 @@ jobs:
             }
 
   # ───────────────────────────────────────────────────────────────────────────
+  # Editor paradigm: block editor vs Classic Editor.
+  # Classic Editor has ~9 million active installs. If your plugin has features
+  # that only exist in one editor, a pass in the other proves nothing.
+  # Delete this job only if the surface inventory says you touch neither.
+  # ───────────────────────────────────────────────────────────────────────────
+  editors:
+    name: ${{ matrix.editor }} editor / ${{ matrix.theme }} theme
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        editor: [ block, classic ]
+        theme:  [ block, classic ]
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports: [ '3306:3306' ]
+        options: >-
+          --health-cmd="mysqladmin ping" --health-interval=10s
+          --health-timeout=5s --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, gd, zip
+          tools: composer, wp-cli
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: |
+          [ -f composer.json ] && composer install --prefer-dist --no-progress --no-interaction || true
+
+      - name: Install the WordPress test suite
+        env:
+          # EDIT: 'classic' installs the Classic Editor plugin in the test env.
+          WP_EDITOR: ${{ matrix.editor }}
+          # EDIT: swap for your own theme slugs if you're testing a theme.
+          WP_THEME: ${{ matrix.theme == 'block' && 'twentytwentyfive' || 'twentytwentyone' }}
+        run: bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:3306 latest
+
+      - name: Run tests in this paradigm
+        env:
+          WP_EDITOR: ${{ matrix.editor }}
+          WP_THEME: ${{ matrix.theme == 'block' && 'twentytwentyfive' || 'twentytwentyone' }}
+        # Your tests can branch on WP_EDITOR / WP_THEME, or skip groups that
+        # don't apply. See starter-tests/phpunit/test-editor-paradigm.php.
+        run: composer run test || vendor/bin/phpunit
+
+  # ───────────────────────────────────────────────────────────────────────────
   # Surface inventory: what your code touches, and what changed since last time.
   # ───────────────────────────────────────────────────────────────────────────
   surfaces:

@@ -139,11 +139,12 @@ You don't need every combination — you need the ones your users actually run:
 
 | Axis | Test at minimum |
 |---|---|
-| **WordPress** | Your `Requires at least`, current stable, and the beta or RC |
+| **WordPress** | Your `Requires at least`, current stable, and the Beta or RC |
 | **PHP** | Your `Requires PHP` floor and the newest version WordPress supports |
 | **Site mode** | Single site; plus multisite if you claim support |
-| **Theme** | A block theme and a classic theme, if you touch the front end |
-| **Other plugins** | The two or three most commonly installed alongside yours |
+| **Editor** | Block editor **and** classic (Classic Editor plugin active) — [see the four cells](#classic-and-block-four-deployments-not-one) |
+| **Theme** | A block theme **and** a classic theme |
+| **Other plugins** | [Your top three co-installed](co-installed-plugins.md) |
 
 > [!IMPORTANT]
 > **Your PHP floor is a real claim too.** If your readme says `Requires PHP: 7.4` and you only ever
@@ -178,6 +179,110 @@ The changes that most often affect plugin and theme authors:
 - **Bundled library updates** — jQuery, and other libraries core ships
 
 ---
+
+## Classic and block: four deployments, not one
+
+WordPress is not one product. Two independent choices — **which editor** and **which theme type** —
+give four combinations, and all four are real sites in large numbers.
+
+```mermaid
+flowchart TD
+    subgraph M[" "]
+      direction TB
+      A["<b>Block editor<br/>+ block theme</b><br/><i>the modern default</i>"]
+      B["<b>Block editor<br/>+ classic theme</b><br/><i>very common — theme updated slower</i>"]
+      C["<b>Classic editor<br/>+ classic theme</b><br/><i>~9M sites run Classic Editor</i>"]
+      D["<b>Classic editor<br/>+ block theme</b><br/><i>rare but real</i>"]
+    end
+    style A fill:#e8f4f8,stroke:#21759B,stroke-width:2px,color:#000
+    style B fill:#fff4e6,stroke:#D54E21,stroke-width:2px,color:#000
+    style C fill:#eafaea,stroke:#28a745,stroke-width:2px,color:#000
+    style D fill:#f0e8f8,stroke:#826EB4,stroke-width:2px,color:#000
+```
+
+> [!IMPORTANT]
+> [**Classic Editor**](https://wordpress.org/plugins/classic-editor/) has roughly **9 million active
+> installs** and is maintained by WordPress.org. That's more than almost any plugin in the directory.
+> Shipping block-editor-only features without saying so leaves a large share of sites with a feature
+> that silently isn't there.
+>
+> [Classic Widgets](https://wordpress.org/plugins/classic-widgets/) adds another ~2 million.
+
+### Which cells you have to test
+
+Run the inventory tool — it tells you which paradigms your code actually touches:
+
+```bash
+bash ../scripts/wp-surface-inventory.sh /path/to/your-plugin
+```
+
+```
+Paradigm exposure: classic-editor files: 1 · block-editor files: 11
+   → You serve BOTH. Test all four cells: {classic, block} editor × {classic, block} theme.
+```
+
+| Its verdict | What to test |
+|---|---|
+| **Classic surfaces only** | Both editors — confirm your features **degrade sanely** when the block editor is on, rather than vanishing without explanation |
+| **Block surfaces only** | Both editors — confirm you fail *gracefully* under Classic Editor, and say so in your readme. Silence reads as "supported" |
+| **Both** | All four cells. Your features differ by paradigm, so a pass in one proves nothing about the other |
+
+### Setting up the classic lane
+
+```bash
+wp plugin install classic-editor --activate
+wp option update classic-editor-replace classic     # force classic everywhere
+# 'allow' lets users choose per post — test that too if you support it
+```
+
+Classic Editor has three modes, and they're different code paths: **replace** (classic only),
+**allow** (user chooses, with a per-post setting), and per-user preference. If your plugin behaves
+differently by editor, the *allow* mode is where you find out whether it copes with both existing
+on the same site.
+
+You can also gate in code, which many plugins do:
+
+```php
+add_filter( 'use_block_editor_for_post_type', function ( $use, $post_type ) {
+    return 'my_cpt' === $post_type ? false : $use;
+}, 10, 2 );
+```
+
+If you register a post type that forces one editor, **that's a feature unique to a paradigm** and
+needs its own test row.
+
+### What only exists in each
+
+| Classic editor only | Block editor only |
+|---|---|
+| Meta boxes (`add_meta_box`) — the big one | Blocks and block registration |
+| TinyMCE buttons and plugins (`mce_buttons`, `mce_external_plugins`) | `enqueue_block_editor_assets` |
+| Quicktags / the Text tab | SlotFills, `addFilter` on editor stores |
+| `wp_editor()` instances | Editor sidebar plugins |
+| `media_buttons` | Block patterns and templates |
+| `edit_form_after_title` and friends | Post meta via REST (needs `show_in_rest`) |
+| `add_editor_style()` for the editor iframe | `theme.json` styles applied in the canvas |
+
+> [!WARNING]
+> **Meta boxes are the classic feature most often assumed to "just work."** They do render in the
+> block editor — in a compatibility panel at the bottom — but they behave differently: no live
+> preview, different save timing, and JavaScript written against the classic DOM will not find its
+> elements. If you ship meta boxes, test them in **both** editors, and check the browser console in
+> the block editor specifically.
+
+### Classic theme vs block theme
+
+| Classic theme only | Block theme only |
+|---|---|
+| `register_sidebar()` and widgets | `templates/*.html`, `parts/*.html` |
+| `wp_nav_menu()` and menu locations | Navigation block |
+| The Customizer | The Site Editor |
+| `get_header()` / `get_footer()` / template hierarchy PHP | Block template hierarchy |
+| `comments_template()` | Comment blocks |
+
+If your plugin registers a widget, a menu location, or a Customizer section, **those surfaces do not
+exist in a block theme** — the user simply won't find your feature. That's not a bug, but it is
+something your readme should say, and something to test rather than assume.
 
 ## Themes specifically
 
