@@ -34,7 +34,7 @@ if ($imagick) {
 }
 $out[] = array("imagick", $imagick ? "loaded ($delegates)" : "absent",
     $imagick ? "CAN test Imagick paths — CHECK DELEGATES, not the extension"
-             : "GD-only: CAN detect GD fallback bugs; CANNOT test Imagick delegates");
+             : "GD (php-gd) only: CAN detect GD fallback bugs; CANNOT test Imagick delegates");
 
 $gd = extension_loaded("gd");
 if ($gd) {

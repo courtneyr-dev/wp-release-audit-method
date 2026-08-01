@@ -95,7 +95,7 @@ behaves differently across tiers. Enumerate where yours differ:
 | Axis | Why it changes the answer | Check with |
 |---|---|---|
 | **PHP versions offered and defaulted** | Feature floors, deprecations, and which of your tiers can even run the target | `wp cli info`, tier provisioning defaults |
-| **Image stack** — GD vs Imagick, and **which delegates** | Format support is a *delegate* question, not an extension question. A tier with Imagick but no HEIC delegate behaves like GD for HEIC | `wp eval` on `Imagick::queryFormats()` |
+| **Image stack** — GD (`php-gd`) vs Imagick (`php-imagick`), and **which delegates** | Format support is a *delegate* question, not an extension question. A tier with Imagick but no HEIC delegate behaves like GD for HEIC | `wp eval` on `Imagick::queryFormats()` |
 | **Object cache** — none / Redis / Memcached | Cache-vs-DB reconciliation bugs only appear where a persistent cache exists | `wp cache type` |
 | **Page cache and edge** — none / server / CDN | Determines whether front-end changes are even visible to a visitor | Response headers |
 | **Edge and proxy header handling** | Whether security and isolation headers survive to the browser (see the silent-fallback class below) | `curl -I` from outside the edge |

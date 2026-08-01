@@ -59,7 +59,7 @@ seed_user devin  devin@ridgelinecabins.test  author "Devin Alvarez" Devin Alvare
 seed_user harper harper@ridgelinecabins.test editor "Harper Singh"  Harper Singh
 
 # ---------------------------------------------------------------- media
-# Generated in-site with GD (this cell is deliberately GD-only, no Imagick), so the
+# Generated in-site with GD (php-gd; this cell is deliberately GD-only, no Imagick), so the
 # rig needs no network and no binary assets checked into the vault.
 say "3. Media library"
 # NOTE: `wp eval` takes NO positional arguments — it errors with "Too many positional

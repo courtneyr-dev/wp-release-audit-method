@@ -59,7 +59,7 @@ Seed **beyond** it for this method:
 
 ## 4. Assert state before declaring ready
 
-Per fixture, record and keep: WordPress version, `db_version`, PHP version, image stack (GD/Imagick, HEIC/AVIF support), site mode, full site inventory with status flags, active plugins, active theme, user count, content counts, fixture hash.
+Per fixture, record and keep: WordPress version, `db_version`, PHP version, image stack (GD (`php-gd`) / Imagick, HEIC/AVIF support), site mode, full site inventory with status flags, active plugins, active theme, user count, content counts, fixture hash.
 
 ```bash
 $WP_AUDIT_ROOT/scripts/assert_multisite_denominator.sh   # every multisite fixture

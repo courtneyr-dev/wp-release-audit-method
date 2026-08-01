@@ -109,7 +109,7 @@ T2/T3 cells run asynchronously after the release-day window; they are not gates 
 
 | Chain | Why PHP is load-bearing | Versions |
 |---|---|---|
-| `X-ERR-01` ERRORPATH | The server fallback **is** the PHP image stack. MF-1 was exactly this: PHP 8.4 without Imagick → GD → no HEIC | 7.4, 8.1, 8.4 |
+| `X-ERR-01` ERRORPATH | The server fallback **is** the PHP image stack. MF-1 was exactly this: PHP 8.4 without Imagick → GD (`php-gd`) → no HEIC | 7.4, 8.1, 8.4 |
 | `X-QUAL-01` QUALITY | Encoded subsize quality depends on the GD/Imagick build compiled against that PHP | 7.4, 8.1, 8.4 |
 | `X-SERIAL-01` SERIAL | serialize/unserialize edge cases plus `wp69-utf8`'s PHP fallback pipeline; byte-identity is the assertion | 7.4, 8.1, 8.2, 8.4 |
 | `X-HASH-01` HASH | `password_hash()` algorithm availability and cost defaults differ; a hash written under one runtime must verify under another | 7.4, 8.1, 8.4 |

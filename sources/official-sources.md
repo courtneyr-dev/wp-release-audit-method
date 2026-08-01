@@ -144,42 +144,52 @@ Use the Codex for historical discovery only. Flag Codex-only claims as legacy an
 
 Use the WP-CLI landing page as official project-overview and discovery evidence. Follow it to the Make/CLI handbook, Developer Resources command reference, and current release notes as the claim requires. Do not use the landing page alone to prove version-specific command behavior; verify that against the relevant WP-CLI version and executed output. Keep Core updater and WP-CLI updater evidence in separate lanes.
 
-### Developer Resources coverage
+### Developer Resources — the handbooks
 
-Count the user-supplied combined feed as official discovery material. It covers:
+Twelve public handbooks plus the generated API reference. Go to the one that owns your question:
 
-- `wporg_explanations`
-- `apis-handbook`
-- `plugin-handbook`
-- `theme-handbook`
-- `blocks-handbook`
-- `wpcs-handbook`
-- `rest-api-handbook`
-- `wp-parser-function`
-- `wp-parser-class`
-- `wp-parser-hook`
-- `wp-parser-method`
-- `command`
+| Handbook | Covers |
+|---|---|
+| [Code Reference](https://developer.wordpress.org/reference/) | Every function, class, hook, and method, generated from source |
+| [APIs](https://developer.wordpress.org/apis/) | Core APIs — options, transients, settings, HTTP, filesystem |
+| [Plugin](https://developer.wordpress.org/plugins/) | Plugin architecture, hooks, security, internationalization |
+| [Theme](https://developer.wordpress.org/themes/) | Classic and block themes, template hierarchy, theme.json |
+| [Block Editor](https://developer.wordpress.org/block-editor/) | Blocks, the editor, `@wordpress/*` packages, `wp-env` |
+| [REST API](https://developer.wordpress.org/rest-api/) | Routes, schemas, authentication, extending |
+| [Coding Standards](https://developer.wordpress.org/coding-standards/) | PHP, JS, CSS, HTML, accessibility, inline docs |
+| [Advanced Administration](https://developer.wordpress.org/advanced-administration/) | Server config, security, performance, upgrading, multisite |
+| [WP-CLI Commands](https://developer.wordpress.org/cli/commands/) | Every command and subcommand |
+| [Playground](https://developer.wordpress.org/playground/) | Blueprints, the JS API, embedding |
+| [Secure Custom Fields](https://developer.wordpress.org/secure-custom-fields/) | SCF fields and functions |
+| [Developer Blog](https://developer.wordpress.org/news/) | Practical articles, often the clearest explanation of a new feature |
 
-Add these registered public handbook types omitted by that feed:
+Two rules for using them:
 
-- `scf-handbook` — Secure Custom Fields Handbook
-- `adv-admin-handbook` — Advanced Administration Handbook
-- `playground-handbook` — WordPress Playground documentation
+- **Code Reference is source-derived** — treat it as API evidence, but verify release-specific
+  behavior against the target build and a runtime test. A parser page describes trunk, not
+  necessarily the version you're testing.
+- **Handbooks are guidance, not proof.** They describe intent. When a handbook and the running
+  build disagree, the build wins — and that disagreement is worth reporting, to the docs team if
+  the build is right and to Trac if the handbook is.
 
-Use this expanded discovery feed:
+<details>
+<summary>Bulk discovery via RSS (only when you need completeness)</summary>
 
-`https://developer.wordpress.org/feed/?post_type%5B0%5D=wporg_explanations&post_type%5B1%5D=apis-handbook&post_type%5B2%5D=plugin-handbook&post_type%5B3%5D=theme-handbook&post_type%5B4%5D=blocks-handbook&post_type%5B5%5D=wpcs-handbook&post_type%5B6%5D=rest-api-handbook&post_type%5B7%5D=wp-parser-function&post_type%5B8%5D=wp-parser-class&post_type%5B9%5D=wp-parser-hook&post_type%5B10%5D=wp-parser-method&post_type%5B11%5D=command&post_type%5B12%5D=scf-handbook&post_type%5B13%5D=adv-admin-handbook&post_type%5B14%5D=playground-handbook`
+For sweeping *everything* that changed across the handbooks — an audit needing coverage proof
+rather than an answer — Developer Resources exposes a combined feed. Most people never need this;
+use the handbook links above instead.
 
-Inventory these separate surfaces too:
+```
+https://developer.wordpress.org/feed/?post_type[0]=wporg_explanations&post_type[1]=apis-handbook&post_type[2]=plugin-handbook&post_type[3]=theme-handbook&post_type[4]=blocks-handbook&post_type[5]=wpcs-handbook&post_type[6]=rest-api-handbook&post_type[7]=wp-parser-function&post_type[8]=wp-parser-class&post_type[9]=wp-parser-hook&post_type[10]=wp-parser-method&post_type[11]=command&post_type[12]=scf-handbook&post_type[13]=adv-admin-handbook&post_type[14]=playground-handbook
+```
 
-- Developer Blog feed: `https://developer.wordpress.org/news/feed/`
-- Code Reference: `https://developer.wordpress.org/reference/`
-- WP-CLI command index: `https://developer.wordpress.org/cli/commands/`
-- Registered REST types: `https://developer.wordpress.org/wp-json/wp/v2/types`
-- Static landing pages, handbook indexes, sitemaps, and REST pagination when completeness matters.
+Also: [Developer Blog feed](https://developer.wordpress.org/news/feed/) ·
+[registered REST types](https://developer.wordpress.org/wp-json/wp/v2/types) · handbook indexes and
+sitemaps when pagination matters.
 
-Treat parser-generated Code Reference pages as source-derived API evidence; verify release-specific behavior in the target source and runtime. Treat editorial handbooks as guidance. Treat feeds as discovery, not a completeness proof. Deduplicate cross-posted dev notes by canonical URL.
+A feed proves *discovery*, never *completeness*. Deduplicate cross-posted dev notes by canonical URL.
+
+</details>
 
 ## Tier 3: official but non-durable signals
 
