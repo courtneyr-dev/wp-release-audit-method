@@ -1,0 +1,232 @@
+# WordPress compatibility matrix + trunk canary
+#
+# Copy to .github/workflows/wp-compat.yml in YOUR plugin or theme repo.
+#
+# What it does:
+#   1. Runs your test suite across the WordPress versions you claim to support.
+#   2. Runs a nightly canary against WordPress trunk and opens an issue when it
+#      breaks — so core telling you is automatic, not something you remember.
+#
+# EDIT THESE before first run:
+#   - `wp-versions` matrix: your Requires at least → latest
+#   - `php-versions` matrix: your Requires PHP → newest WordPress supports
+#   - the `Run tests` step: point at your actual test command
+
+name: WordPress compatibility
+
+on:
+  push:
+    branches: [ main, master, trunk, develop ]
+  pull_request:
+  schedule:
+    # Nightly canary. WordPress trunk moves daily during a release cycle.
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write        # only used by the canary job to file a breakage issue
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # The supported matrix: does it work on what you claim to support?
+  # ───────────────────────────────────────────────────────────────────────────
+  matrix:
+    name: WP ${{ matrix.wp }} / PHP ${{ matrix.php }}${{ matrix.multisite && ' / multisite' || '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # EDIT: your floor, a middle version, and current stable.
+        wp: [ '6.5', '6.8', 'latest' ]
+        # EDIT: your Requires PHP floor and the newest version you support.
+        php: [ '7.4', '8.3' ]
+        multisite: [ false ]
+        include:
+          # One multisite cell. Delete if you don't claim multisite support.
+          - wp: 'latest'
+            php: '8.3'
+            multisite: true
+        exclude:
+          # Old PHP with new WordPress isn't a combination real users have.
+          - wp: 'latest'
+            php: '7.4'
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports: [ '3306:3306' ]
+        options: >-
+          --health-cmd="mysqladmin ping" --health-interval=10s
+          --health-timeout=5s --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mysqli, gd, zip
+          tools: composer, wp-cli
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: |
+          if [ -f composer.json ]; then
+            composer install --prefer-dist --no-progress --no-interaction
+          else
+            echo "No composer.json — skipping."
+          fi
+
+      - name: Install the WordPress test suite
+        env:
+          WP_VERSION: ${{ matrix.wp }}
+          WP_MULTISITE: ${{ matrix.multisite && 1 || 0 }}
+        run: |
+          bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:3306 "$WP_VERSION" \
+            || {
+              echo "::warning::bin/install-wp-tests.sh not found."
+              echo "Scaffold it with: wp scaffold plugin-tests <your-slug>"
+              exit 1
+            }
+
+      - name: Run tests
+        env:
+          WP_MULTISITE: ${{ matrix.multisite && 1 || 0 }}
+        # EDIT: your actual test command.
+        run: composer run test || vendor/bin/phpunit
+
+      # A PHP parse error is a white screen, not a graceful failure. This catches
+      # syntax that is valid on your dev PHP but invalid on your declared floor.
+      - name: Lint every PHP file against this PHP version
+        run: find . -name '*.php' -not -path './vendor/*' -not -path './node_modules/*' -print0
+             | xargs -0 -n1 -P4 php -l > /dev/null
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # The canary: does it still work on WordPress trunk?
+  # This is the job that earns the workflow its keep.
+  # ───────────────────────────────────────────────────────────────────────────
+  trunk-canary:
+    name: WordPress trunk (nightly canary)
+    runs-on: ubuntu-latest
+    continue-on-error: true     # trunk breaking is news, not a red build on your PRs
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: wordpress_test
+        ports: [ '3306:3306' ]
+        options: >-
+          --health-cmd="mysqladmin ping" --health-interval=10s
+          --health-timeout=5s --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mysqli, gd, zip
+          tools: composer, wp-cli
+          coverage: none
+
+      - name: Install Composer dependencies
+        run: |
+          [ -f composer.json ] && composer install --prefer-dist --no-progress --no-interaction || true
+
+      - name: Install the WordPress test suite from trunk
+        run: bash bin/install-wp-tests.sh wordpress_test root root 127.0.0.1:3306 trunk
+
+      - name: Run tests against trunk
+        id: trunk_tests
+        run: composer run test || vendor/bin/phpunit
+
+      # Deprecations are the early warning. They are not failures, so surface them
+      # even when the suite passes.
+      - name: Surface deprecation notices
+        if: always()
+        run: |
+          if [ -f wp-content/debug.log ]; then
+            echo "### Deprecations on trunk" >> "$GITHUB_STEP_SUMMARY"
+            grep -iE 'deprecated|doing_it_wrong' wp-content/debug.log \
+              | sort -u | head -50 >> "$GITHUB_STEP_SUMMARY" || echo "None." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Open an issue if trunk broke us
+        if: failure() && github.event_name == 'schedule'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = 'WordPress trunk compatibility broke';
+            const { data: existing } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'wp-trunk'
+            });
+            const body = [
+              'The nightly canary against WordPress trunk failed.',
+              '',
+              `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              '',
+              'Next steps:',
+              '1. Check the dev notes for this cycle: https://make.wordpress.org/core/tag/dev-notes/',
+              '2. Re-run the surface inventory and diff it against your last baseline.',
+              '3. If core is at fault rather than you, search Trac before filing:',
+              '   https://core.trac.wordpress.org/',
+              '',
+              'Method: https://github.com/courtneyr-dev/wp-release-audit-method/tree/main/plugin-theme-authors'
+            ].join('\n');
+            if (existing.length === 0) {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['wp-trunk']
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing[0].number,
+                body: `Still failing as of ${context.sha.substring(0,7)}.\n\n${body}`
+              });
+            }
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Surface inventory: what your code touches, and what changed since last time.
+  # ───────────────────────────────────────────────────────────────────────────
+  surfaces:
+    name: Surface inventory
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch the inventory tool
+        run: |
+          curl -sSLO https://raw.githubusercontent.com/courtneyr-dev/wp-release-audit-method/main/scripts/wp-surface-inventory.sh
+          mkdir -p data
+          curl -sSL -o data/deprecations.csv \
+            https://raw.githubusercontent.com/courtneyr-dev/wp-release-audit-method/main/data/deprecations.csv
+
+      - name: Inventory the surfaces this code touches
+        run: |
+          bash wp-surface-inventory.sh . >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          bash wp-surface-inventory.sh . --csv > surfaces.csv 2>/dev/null || true
+
+      - name: Diff against the committed baseline
+        run: |
+          if [ -f .wp-surfaces-baseline.csv ]; then
+            bash wp-surface-inventory.sh . --baseline .wp-surfaces-baseline.csv \
+              >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+          else
+            echo "No .wp-surfaces-baseline.csv committed yet." >> "$GITHUB_STEP_SUMMARY"
+            echo "Commit surfaces.csv as .wp-surfaces-baseline.csv to enable diffing." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: surface-inventory
+          path: surfaces.csv
+          if-no-files-found: ignore

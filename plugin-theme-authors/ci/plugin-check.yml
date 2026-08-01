@@ -1,0 +1,74 @@
+# Plugin Check on every push — catch directory-review problems before submitting.
+#
+# Copy to .github/workflows/plugin-check.yml in YOUR plugin repo.
+# Themes: use the Theme Check plugin instead; this workflow is plugin-specific.
+#
+# Plugin Check is NOT the review — every submission is still hand-reviewed. But
+# it catches most of what gets plugins rejected, and catching it in CI is cheaper
+# than catching it three weeks into a review queue.
+
+name: Plugin Check
+
+on:
+  push:
+    branches: [ main, master, trunk ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plugin-check:
+    name: WordPress Plugin Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Run Plugin Check
+        uses: wordpress/plugin-check-action@v1
+        with:
+          # EDIT if your plugin lives in a subdirectory.
+          build-dir: './'
+          # Categories: general, plugin_repo, security, performance, accessibility
+          categories: |
+            general
+            plugin_repo
+            security
+            accessibility
+
+  readme:
+    name: readme.txt sanity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required headers exist
+        run: |
+          F=$(ls readme.txt README.txt 2>/dev/null | head -1)
+          [ -z "$F" ] && { echo "::error::No readme.txt found"; exit 1; }
+          fail=0
+          for h in "Requires at least" "Tested up to" "Requires PHP" "Stable tag"; do
+            grep -qi "^$h:" "$F" || { echo "::error::Missing header: $h"; fail=1; }
+          done
+          exit $fail
+
+      # "Tested up to" is a claim you make to every user. This does not verify
+      # that you tested — nothing can. It only catches the case where the field
+      # has drifted far behind current WordPress, which is the usual failure.
+      - name: Warn when "Tested up to" is far behind
+        run: |
+          F=$(ls readme.txt README.txt 2>/dev/null | head -1)
+          TESTED=$(grep -i '^Tested up to:' "$F" | sed 's/.*: *//' | tr -d ' \r')
+          LATEST=$(curl -s https://api.wordpress.org/core/version-check/1.7/ \
+                   | grep -oE '"current":"[0-9.]+"' | head -1 | grep -oE '[0-9.]+')
+          echo "readme says: $TESTED · current WordPress: $LATEST"
+          echo "TESTED=$TESTED LATEST=$LATEST" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$TESTED" != "$LATEST" ]; then
+            echo "::warning::Tested up to ($TESTED) is behind current WordPress ($LATEST). Bump it ONLY after actually testing — see the nine boxes in the guide."
+          fi
