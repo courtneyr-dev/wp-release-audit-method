@@ -1,0 +1,39 @@
+name: Add a deprecation
+description: Add an entry to data/deprecations.csv
+title: "[Deprecation] "
+labels: [ "data" ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        `data/deprecations.csv` is meant to be community-maintained. A pull
+        request is faster than an issue if you're comfortable with one.
+
+  - type: input
+    id: symbol
+    attributes:
+      label: Symbol
+      placeholder: "wp_get_sites"
+    validations: { required: true }
+
+  - type: input
+    id: version
+    attributes:
+      label: Deprecated in which WordPress version
+      placeholder: "4.6"
+    validations: { required: true }
+
+  - type: input
+    id: replacement
+    attributes:
+      label: Replacement
+      description: Leave blank if there isn't a direct one.
+      placeholder: "get_sites()"
+
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: Code Reference page, dev note, or changeset — so a reviewer can verify without guessing.
+      placeholder: "https://developer.wordpress.org/reference/functions/wp_get_sites/"
+    validations: { required: true }

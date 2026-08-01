@@ -1,0 +1,14 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability in WordPress
+    url: https://hackerone.com/wordpress
+    about: Report privately. Never in a public tracker, never here.
+  - name: A bug in WordPress itself
+    url: https://core.trac.wordpress.org/
+    about: Core bugs belong on Trac. Search first — betas generate many duplicates.
+  - name: A bug in the block editor
+    url: https://github.com/WordPress/gutenberg/issues
+    about: Editor and block issues live in the Gutenberg repository.
+  - name: Ask the Test team
+    url: https://make.wordpress.org/chat/
+    about: "#core-test in Making WordPress Slack — the fastest way to check whether something is worth filing."

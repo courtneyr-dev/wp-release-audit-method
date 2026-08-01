@@ -1,0 +1,128 @@
+name: Test report
+description: Report what you found testing a WordPress Beta or RC
+title: "[Test report] "
+labels: [ "test-report" ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing. The fields below are the four things that turn
+        "it broke for me" into something someone can act on — they're the same
+        four the method asks for, so filling this in *is* the method.
+
+        **Found a security vulnerability?** Stop and report it privately at
+        [HackerOne](https://hackerone.com/wordpress). Not here, not Trac.
+
+  - type: input
+    id: build
+    attributes:
+      label: Exact build tested
+      description: Beta 1 ≠ beta 4 ≠ RC 1. Check Dashboard → Updates rather than assuming.
+      placeholder: "7.2-beta3 (db_version 61840)"
+    validations: { required: true }
+
+  - type: dropdown
+    id: lane
+    attributes:
+      label: How did you get that build onto the site?
+      description: These produce different results — the stale-file finding exists only because Core and WP-CLI differ.
+      options:
+        - Beta Tester plugin (WordPress's own updater)
+        - WP-CLI (wp core update)
+        - Manual zip replacement
+        - Fresh install (no upgrade)
+        - WordPress Playground
+    validations: { required: true }
+
+  - type: dropdown
+    id: lane_type
+    attributes:
+      label: Which lane does this result describe?
+      options:
+        - Fresh install
+        - Upgrade from an earlier version
+        - Everyday use once already upgraded
+    validations: { required: true }
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: An accessibility or performance result without an environment is unreproducible.
+      value: |
+        - PHP:
+        - Database:
+        - Single site / multisite (subdirectory or subdomain):
+        - Editor: block / classic (Classic Editor active)
+        - Theme: block / classic — which one:
+        - Browser + version:
+        - Assistive tech (if relevant), and macOS full keyboard navigation on/off:
+    validations: { required: true }
+
+  - type: textarea
+    id: preflight
+    attributes:
+      label: What your environment could and couldn't detect
+      description: Output of `scripts/preflight-sensitivity.sh`, if you ran it. A pass on an insensitive environment isn't evidence.
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Specific enough that a stranger can follow them.
+      value: |
+        1.
+        2.
+        3.
+
+        Expected:
+        Actual:
+    validations: { required: true }
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Commands run and their output, log excerpts, screenshots. Paste the command, not a description of it.
+
+  - type: input
+    id: blueprint
+    attributes:
+      label: Playground blueprint (optional, and very welcome)
+      description: A blueprint link makes this reproducible in one click. See the reporting guide.
+      placeholder: "https://playground.wordpress.net/?blueprint-url=..."
+
+  - type: dropdown
+    id: controls
+    attributes:
+      label: Controls
+      description: Did you confirm the thing you're comparing against actually works?
+      options:
+        - "Yes — a positive and negative control both behaved as expected"
+        - "Partly — I checked one direction"
+        - "No controls run"
+        - "Not applicable to this finding"
+    validations: { required: true }
+
+  - type: textarea
+    id: ceiling
+    attributes:
+      label: Evidence ceiling
+      description: |
+        What you proved, what you didn't, and what would change your mind. This is
+        the field that separates a report that gets fixed from one closed as worksforme.
+      placeholder: |
+        Proven on: ...
+        Not tested: ...
+        Would change my verdict: ...
+    validations: { required: true }
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched [Trac](https://core.trac.wordpress.org/search) — betas generate a lot of duplicates
+        - label: No credentials or local filesystem paths in this report
+        - label: This is not a security vulnerability (those go to HackerOne)
+          required: true

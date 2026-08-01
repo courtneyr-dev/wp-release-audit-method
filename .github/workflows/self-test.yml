@@ -1,0 +1,129 @@
+# This repository tests itself.
+#
+# A repository about testing that isn't tested is easy to dismiss — and the
+# checks here are the ones that were previously run by hand, which is exactly
+# the failure mode the rest of this repo warns about.
+
+name: Self-test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  schedule:
+    # Weekly: catches external link rot without noise on every push.
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Repository checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Install check dependencies
+        run: |
+          pip install --quiet pyyaml
+          sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+
+      - name: Run repository checks
+        run: python3 scripts/check-repo.py
+
+  external-links:
+    name: External links
+    runs-on: ubuntu-latest
+    # Link rot is news, not a broken build — the same reasoning as the trunk
+    # canary in the extension-author workflows.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check every external URL
+        run: |
+          grep -rhoE 'https://[^)"`<> ]+' --include='*.md' . \
+            | sed 's/[.,:]$//' | sort -u > urls.txt
+          echo "Checking $(wc -l < urls.txt) unique URLs"
+          fail=0
+          while read -r u; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -L --max-time 20 \
+                   -A 'Mozilla/5.0 (compatible; wp-release-audit-method link check)' "$u" || echo 000)
+            # 403/405 are bot-blocking and POST-only endpoints, not breakage.
+            case "$code" in
+              200|301|302|403|405) ;;
+              *) echo "::warning::$code $u"; fail=$((fail+1)) ;;
+            esac
+          done < urls.txt
+          echo "$fail non-OK URL(s)" >> "$GITHUB_STEP_SUMMARY"
+
+  surface-inventory:
+    name: Tool smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The inventory tool ships as a deliverable, so prove it runs and produces
+      # the sections it claims to — against a fixture built here, not a real plugin.
+      - name: Build a fixture extension
+        run: |
+          mkdir -p /tmp/fx/templates /tmp/fx/parts
+          printf '/*\nTheme Name: Fixture\n*/\n' > /tmp/fx/style.css
+          printf '{"version":2,"settings":{"color":{}}}\n' > /tmp/fx/theme.json
+          printf '<!-- wp:site-title /-->\n' > /tmp/fx/templates/index.html
+          cat > /tmp/fx/functions.php <<'PHP'
+          <?php
+          add_action( 'init', 'fx_init' );
+          add_filter( 'the_content', 'fx_content' );
+          add_theme_support( 'editor-color-palette', array() );
+          add_meta_box( 'fx_box', 'Box', 'fx_render' );
+          current_user_can( 'manage_options' );
+          get_option( 'fx_settings' );
+          $x = get_page_by_title( 'About' );
+          wp_enqueue_script( 'jquery' );
+          PHP
+
+      - name: Run the inventory tool
+        run: bash scripts/wp-surface-inventory.sh /tmp/fx | tee out.txt
+
+      - name: Assert it produced the sections it documents
+        run: |
+          fail=0
+          for section in "CORE HOOKS CONSUMED" "CAPABILITIES AND ROLES" "PERSISTENCE" \
+                         "DEPRECATION RISK" "CLASSIC EDITOR SURFACES" "BLOCK EDITOR SURFACES" \
+                         "ACCESSIBILITY SURFACES" "ADOPTION CANDIDATES" "THEME TYPE"; do
+            grep -q "$section" out.txt || { echo "::error::missing section: $section"; fail=1; }
+          done
+          # It must annotate a known deprecation with version and replacement.
+          grep -q "get_page_by_title.*6.2.*WP_Query" out.txt \
+            || { echo "::error::deprecation annotation missing"; fail=1; }
+          exit $fail
+
+      - name: CSV mode parses, and --baseline diffs
+        run: |
+          bash scripts/wp-surface-inventory.sh /tmp/fx --csv > a.csv
+          python3 -c "
+          import csv,sys
+          rows=list(csv.reader(open('a.csv')))
+          assert rows[0]==['surface','item','count'], rows[0]
+          assert len(rows)>10, f'only {len(rows)} rows'
+          print(f'{len(rows)-1} surface rows')
+          "
+          echo "add_action( 'save_post', 'fx_save' );" >> /tmp/fx/functions.php
+          bash scripts/wp-surface-inventory.sh /tmp/fx --baseline a.csv | tee diff.txt
+          grep -q "save_post" diff.txt || { echo "::error::baseline diff did not detect the new hook"; exit 1; }

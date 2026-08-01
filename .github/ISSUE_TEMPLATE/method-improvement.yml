@@ -1,0 +1,58 @@
+name: Method improvement
+description: Propose a change to the method, a playbook, or a script
+title: "[Method] "
+labels: [ "method" ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Refuted and inconclusive results are welcome here. A test that checked
+        something and cleared it is useful and gets merged.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What went wrong, or what's missing
+      description: Ideally a specific way the current method produced a wrong or unusable result.
+    validations: { required: true }
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: What happened when you ran it
+      description: |
+        This repo's own rule — a finding is a claim until something runs. If you
+        hit this in practice, show the run.
+    validations: { required: true }
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part
+      multiple: true
+      options:
+        - README / getting started
+        - method/
+        - playbooks/
+        - scripts/
+        - skills/
+        - plugin-theme-authors/
+        - accessibility/
+        - sources/ (official sources register)
+        - data/deprecations.csv
+        - CI workflows
+    validations: { required: true }
+
+  - type: checkboxes
+    id: controls
+    attributes:
+      label: If you're proposing a new detector or check
+      options:
+        - label: It has a positive control (the thing it should catch, caught)
+        - label: It has a negative control (the thing it shouldn't flag, not flagged)
+        - label: I know it fails a control, and I've said which
