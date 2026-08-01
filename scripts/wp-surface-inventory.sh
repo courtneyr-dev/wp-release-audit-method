@@ -6,7 +6,7 @@
 # for every core API it consumes, so you can intersect that list with what the
 # release changed. The intersection is the test plan.
 #
-# Usage: plugin-surface-inventory.sh <plugin-or-theme-dir> [--csv]
+# Usage: wp-surface-inventory.sh <plugin-or-theme-dir> [--csv]
 #
 # Output: a human-readable report, or --csv for surface,item,count,files
 # Reads only. Never modifies the target.
@@ -145,6 +145,96 @@ hdr "VERSION GATES — what you already branch on"
 scan "version-check" "(get_bloginfo\(\s*['\"]version|\\\$wp_version|version_compare\(\s*\\\$wp_version)" \
   "(get_bloginfo|wp_version|version_compare)"
 scan "function_exists" "function_exists\(\s*['\"][a-z_]+" "['\"][a-z_]+$"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# THEME SURFACES — only meaningful if this is a theme, harmless if it isn't.
+# ─────────────────────────────────────────────────────────────────────────────
+THEMEJSON="$DIR/theme.json"
+IS_THEME=""
+[ -f "$THEMEJSON" ] && IS_THEME=1
+[ -f "$DIR/style.css" ] && grep -qiE '^\s*\*?\s*Theme Name:' "$DIR/style.css" 2>/dev/null && IS_THEME=1
+
+if [ -n "$IS_THEME" ]; then
+  hdr "THEME TYPE AND GLOBAL STYLES"
+  BLOCK_THEME=""
+  [ -f "$DIR/templates/index.html" ] && BLOCK_THEME=1
+  if [ -z "$CSV" ]; then
+    echo "  theme type       : $([ -n "$BLOCK_THEME" ] && echo 'BLOCK theme (templates/index.html present)' || echo 'CLASSIC theme (no templates/index.html)')"
+  fi
+  if [ -f "$THEMEJSON" ]; then
+    TJV=$(grep -oE '"version"[[:space:]]*:[[:space:]]*[0-9]+' "$THEMEJSON" | head -1 | grep -oE '[0-9]+$')
+    APPT=$(grep -cE '"appearanceTools"[[:space:]]*:[[:space:]]*true' "$THEMEJSON")
+    if [ -n "$CSV" ]; then
+      echo "theme,theme.json schema version,${TJV:-unknown}"
+      echo "theme,appearanceTools enabled,$APPT"
+    else
+      echo "  theme.json       : present, schema version ${TJV:-unknown} (current is 3, WP 6.6+)"
+      [ "${TJV:-0}" -lt 3 ] 2>/dev/null && echo "     → schema v${TJV} is behind v3. Migrating unlocks newer settings."
+      echo "  appearanceTools  : $([ "$APPT" -gt 0 ] && echo 'enabled' || echo 'NOT enabled — one line unlocks border, link/heading/button color, dimensions, sticky position, spacing, and line-height controls')"
+    fi
+    scan "theme.json:settings" '"(appearanceTools|useRootPaddingAwareAlignments|color|typography|spacing|border|shadow|dimensions|position|background|layout|blocks|custom)"[[:space:]]*:' \
+      '"[a-zA-Z]+"' "$THEMEJSON"
+  else
+    [ -z "$CSV" ] && echo "  theme.json       : ABSENT — no global styles. Every design control is hand-rolled."
+  fi
+
+  hdr "add_theme_support() — several of these are superseded by theme.json"
+  scan "theme-support" "add_theme_support\(\s*['\"][a-z0-9-]+" "['\"][a-z0-9-]+$"
+
+  hdr "TEMPLATES, PARTS, PATTERNS, STYLE VARIATIONS"
+  if [ -z "$CSV" ]; then
+    for d in templates parts patterns styles; do
+      n=$(find "$DIR/$d" -maxdepth 1 -type f \( -name '*.html' -o -name '*.php' -o -name '*.json' \) 2>/dev/null | wc -l | tr -d ' ')
+      [ "$n" != "0" ] && echo "  $d/ : $n file(s)"
+    done
+    CLASSIC=$(find "$DIR" -maxdepth 1 -type f \( -name 'single.php' -o -name 'archive.php' -o -name 'page.php' -o -name 'index.php' -o -name 'front-page.php' -o -name 'search.php' -o -name '404.php' \) 2>/dev/null | wc -l | tr -d ' ')
+    [ "$CLASSIC" != "0" ] && echo "  classic template hierarchy files at root: $CLASSIC"
+    [ -n "$BLOCK_THEME" ] && [ "$CLASSIC" -gt 1 ] && echo "     → both block templates AND classic templates present. Test which one actually wins."
+  fi
+  scan "pattern" "register_block_pattern(_category)?\(\s*['\"][^'\"]+" "['\"][^'\"]+$"
+fi
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ADOPTION CANDIDATES — the opposite of risk. What core now does for you that
+# you may still be hand-rolling. Heuristics: each is a prompt to look, not a verdict.
+# ─────────────────────────────────────────────────────────────────────────────
+hdr "ADOPTION CANDIDATES — core may already do this for you"
+
+flag() { # <condition-count> <label> <recommendation>
+  [ "${1:-0}" -eq 0 ] && return
+  if [ -n "$CSV" ]; then echo "adoption,$2,$1"
+  else printf '  \033[1m%s\033[0m (%s hit(s))\n     → %s\n' "$2" "$1" "$3"; fi
+}
+
+count() { echo "$1" | tr '\n' '\0' | xargs -0 grep -lE "$2" 2>/dev/null | wc -l | tr -d ' '; }
+
+JQ=$(count "$PHP$JS" "(jQuery|\\\$\(document\)\.ready|wp_enqueue_script\(\s*['\"]jquery)")
+flag "$JQ" "jQuery for front-end behavior" \
+  "Interactivity API (WP 6.5+) replaces this for block front ends. Add \"interactivity\": true to block.json supports, use data-wp-* directives and viewScriptModule."
+
+META=$(count "$PHP" "(add_meta_box|register_(post_)?meta)")
+flag "$META" "Custom post meta surfaced in the editor" \
+  "Block Bindings (WP 6.5+) can display post meta directly in core paragraph/heading/image/button blocks — no custom block needed. Requires register_meta with show_in_rest."
+
+CUSTOMATTR=$(count "$(find "$DIR" -name block.json ! -path '*/node_modules/*' 2>/dev/null)" '"(color|backgroundColor|textColor|fontSize|padding|margin|borderColor|borderRadius)"')
+flag "$CUSTOMATTR" "Hand-rolled style attributes in block.json" \
+  "Block supports give you the same controls plus the UI for free — color, spacing, typography, border, shadow, dimensions. Check whether an attribute duplicates a support."
+
+LOCALIZE=$(count "$PHP" "wp_localize_script")
+flag "$LOCALIZE" "wp_localize_script for passing data" \
+  "For non-i18n data prefer wp_add_inline_script, or wp_interactivity_state for Interactivity API blocks. localize_script was designed for translations."
+
+if [ -n "$IS_THEME" ]; then
+  SUPERSEDED=$(echo "$PHP" | tr '\n' '\0' | xargs -0 grep -hoE "add_theme_support\(\s*['\"](editor-color-palette|editor-font-sizes|editor-gradient-presets|custom-line-height|custom-spacing|custom-units|editor-styles|responsive-embeds|align-wide|appearance-tools)" 2>/dev/null | wc -l | tr -d ' ')
+  flag "$SUPERSEDED" "add_theme_support() calls superseded by theme.json" \
+    "editor-color-palette, editor-font-sizes, editor-gradient-presets, custom-line-height, custom-spacing, custom-units, align-wide and friends all belong in theme.json settings now."
+  [ ! -f "$THEMEJSON" ] && flag 1 "No theme.json" \
+    "Even a classic theme benefits — theme.json controls the editor's available styles and is where design tokens belong."
+fi
+
+RENDERCB=$(count "$PHP" "render_callback|register_block_type.*render")
+flag "$RENDERCB" "Server-rendered dynamic blocks" \
+  "These are the natural home for the Interactivity API — the markup is already server-generated, so add directives rather than a separate front-end script."
 
 [ -z "$CSV" ] && cat <<'EOF'
 

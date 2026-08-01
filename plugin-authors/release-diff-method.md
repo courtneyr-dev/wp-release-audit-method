@@ -41,7 +41,7 @@ comprehensive at the same time.
 ## Step 1 — derive your surface inventory
 
 ```bash
-bash scripts/plugin-surface-inventory.sh /path/to/your-plugin
+bash scripts/wp-surface-inventory.sh /path/to/your-plugin
 ```
 
 It reads only; it never modifies the target. It reports every core surface your code touches,
@@ -119,7 +119,7 @@ test. Every miss is a documented non-exposure — which is worth recording too, 
 you'll want to know you already checked.
 
 ```bash
-bash scripts/plugin-surface-inventory.sh ./my-plugin --csv > surfaces.csv
+bash scripts/wp-surface-inventory.sh ./my-plugin --csv > surfaces.csv
 
 # then, for each name from the dev notes:
 grep -i "the_content" surfaces.csv
@@ -158,7 +158,7 @@ covered by a test you wrote long ago.
 git diff --name-only v2.3.0..HEAD -- '*.php' '*.js'
 
 # Which surfaces those files touch
-bash scripts/plugin-surface-inventory.sh ./my-plugin --csv > all-surfaces.csv
+bash scripts/wp-surface-inventory.sh ./my-plugin --csv > all-surfaces.csv
 git diff --name-only v2.3.0..HEAD | grep -E '\.(php|js)$' > changed-files.txt
 ```
 
@@ -331,7 +331,7 @@ is more useful than a vague sense that testing went fine.
 ## WP <VERSION> — compatibility pass
 
 ### Inventories
-- [ ] Surface inventory regenerated: `plugin-surface-inventory.sh . --csv > surfaces-<ver>.csv`
+- [ ] Surface inventory regenerated: `wp-surface-inventory.sh . --csv > surfaces-<ver>.csv`
 - [ ] Diffed against last cycle's — new surfaces noted
 - [ ] Field Guide + dev notes read; flat list of changed names written down
 - [ ] `fast-triage.sh` run on the build

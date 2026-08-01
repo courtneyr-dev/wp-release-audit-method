@@ -15,8 +15,10 @@ Works for any codebase; nothing here assumes a particular framework or build set
 | [Finding what will break](#finding-what-will-break-before-it-does) | Deprecations, removals, and where they're announced |
 | [The "Tested up to" bump](#the-tested-up-to-bump) | What you're claiming, and what to verify before claiming it |
 | [Shipping to the directory](#shipping-to-the-directory) | Guidelines, Plugin Check, and the common rejections |
+| [Themes specifically](#themes-specifically) | The surfaces only themes have |
 | [The release checklist](#the-release-checklist) | Copy-paste, per release |
 | **[The release-diff method](release-diff-method.md)** | **The deep version** — derive what your code touches, intersect it with what the release changed, and prioritize by your own changelog |
+| **[Adopting what the release adds](adopting-new-apis.md)** | The opposite question — what core now does for free that you're still hand-rolling |
 
 ---
 
@@ -166,6 +168,57 @@ The changes that most often affect plugin and theme authors:
 - **Bundled library updates** — jQuery, and other libraries core ships
 
 ---
+
+## Themes specifically
+
+Everything above applies to themes, but themes have surfaces plugins don't — and they're the ones
+most likely to move in a release, because the block editor and Site Editor change fastest.
+
+Run the inventory tool on a theme and it detects the theme-specific surfaces automatically:
+
+```bash
+bash ../scripts/wp-surface-inventory.sh /path/to/your-theme
+```
+
+```
+══ THEME TYPE AND GLOBAL STYLES
+  theme type       : BLOCK theme (templates/index.html present)
+  theme.json       : present, schema version 2 (current is 3, WP 6.6+)
+     → schema v2 is behind v3. Migrating unlocks newer settings.
+  appearanceTools  : NOT enabled — one line unlocks border, link/heading/button
+                     color, dimensions, sticky position, spacing, line-height
+```
+
+### The theme test matrix
+
+| Surface | What breaks | How to check |
+|---|---|---|
+| **theme.json** | Schema changes, new settings you're not opting into, changed resolution order | Load the Site Editor; confirm your palette, type scale, and spacing still appear |
+| **Templates** (`templates/*.html`) | Block markup invalidation, template hierarchy changes | Open each template in the Site Editor — validation errors show as "unexpected or invalid content" |
+| **Template parts** (`parts/*.html`) | Same, plus part-area assignment changes | Confirm header/footer resolve and render |
+| **Patterns** | Registration API changes, category changes, block markup drift | Insert every pattern you ship; check for validation errors |
+| **Style variations** (`styles/*.json`) | Same schema risks as theme.json | Switch to each variation and confirm it applies |
+| **`add_theme_support()`** | Deprecated in favor of theme.json | See the [superseded list](adopting-new-apis.md#addthemesupport-calls-themejson-supersedes) |
+| **Template hierarchy** (classic) | Changes to which file wins | Visit each archetype: single, archive, page, search, 404 |
+| **Editor styles** | Iframe changes, style scoping | Compare editor rendering against front end |
+| **Block style overrides** | Core block markup or class changes | Check each core block you restyle |
+
+### Two traps specific to themes
+
+**Block markup validation is invisible server-side.** If a core block's saved markup changes, your
+templates and patterns containing that block can throw validation errors that appear only when
+someone opens the editor. Your front end may look perfect while the editor is broken. You have to
+open the Site Editor and look.
+
+**A hybrid theme has two answers.** If you ship both `templates/*.html` and classic
+`single.php`-style files, the resolution between them can shift between releases. The tool flags
+this when it sees both. Test which one actually wins for each route rather than assuming.
+
+### Child themes
+
+If your theme supports child themes, test with one active. Child theme resolution — for
+`theme.json`, templates, and parts — is a distinct code path from parent-only, and it's where
+inheritance bugs surface.
 
 ## The "Tested up to" bump
 
