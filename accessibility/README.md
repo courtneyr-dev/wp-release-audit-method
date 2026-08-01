@@ -233,4 +233,4 @@ welcomes testers.
 [WordPress Accessibility knowledge base](https://wpaccessibility.org/docs/testing/) ·
 [Make/Accessibility](https://make.wordpress.org/accessibility/) ·
 [WCAG](https://www.w3.org/WAI/standards-guidelines/wcag/) ·
-[Official sources](../sources/official-sources.md)
+[i18n and RTL](../i18n/) · [Official sources](../sources/official-sources.md)

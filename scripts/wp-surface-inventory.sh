@@ -334,6 +334,28 @@ if [ -z "$CSV" ]; then
   fi
 fi
 
+hdr "INTERNATIONALIZATION — WordPress runs in ~200 locales"
+scan "i18n:textdomain" "load_(plugin|theme|muplugin|default)_textdomain" "load_[a-z]+_textdomain"
+scan "i18n:funcs" "(esc_html__|esc_attr__|esc_html_e|esc_attr_e|_n_noop|_nx?|_ex?|__)\(" "(esc_[a-z]+__|esc_[a-z]+_e|_n_noop|_nx|_n|_ex|_e|__)"
+scan "i18n:js" "wp_set_script_translations" "wp_set_script_translations"
+scan "i18n:format" "(date_i18n|number_format_i18n|wp_date)" "(date_i18n|number_format_i18n|wp_date)"
+
+if [ -z "$CSV" ]; then
+  EARLY=$(echo "$PHP" | tr '\n' '\0' | xargs -0 grep -lE "get_plugin_data\(" 2>/dev/null | wc -l | tr -d ' ')
+  RTLCSS=$(find "$DIR" -name '*-rtl.css' 2>/dev/null | wc -l | tr -d ' ')
+  PHYS=$(find "$DIR" -name '*.css' ! -path '*/node_modules/*' ! -name '*.min.css' -print0 2>/dev/null \
+         | xargs -0 grep -lE "(margin|padding)-(left|right)|text-align:\s*(left|right)|float:\s*(left|right)" 2>/dev/null | wc -l | tr -d ' ')
+  LOGICAL=$(find "$DIR" -name '*.css' ! -path '*/node_modules/*' -print0 2>/dev/null \
+         | xargs -0 grep -lE "(margin|padding)-inline|inset-inline|text-align:\s*(start|end)" 2>/dev/null | wc -l | tr -d ' ')
+  echo
+  printf '  \033[1mLocale and RTL signals\033[0m\n'
+  [ "$EARLY" -gt 0 ] && echo "    ⚠ $EARLY file(s) call get_plugin_data() — pass \$translate=false, or WP 6.7+ warns about early translation."
+  echo "    CSS with physical properties: $PHYS file(s) · with logical properties: $LOGICAL file(s)"
+  [ "$PHYS" -gt 0 ] && echo "    ⚠ Physical properties (margin-left, float:left, text-align:left) do not flip for RTL."
+  [ "$RTLCSS" -gt 0 ] && echo "    $RTLCSS -rtl.css file(s) present — confirm they are regenerated, not stale."
+  echo "    Method: $(dirname "${BASH_SOURCE[0]}")/../i18n/README.md"
+fi
+
 hdr "ACCESSIBILITY SURFACES — every one of these is a keyboard or screen-reader claim"
 scan "a11y:aria"     "aria-[a-z]+"                    "aria-[a-z]+"      "$PHP$JS"
 scan "a11y:role"     "role=['\"][a-z]+"               "role=['\"][a-z]+" "$PHP$JS"

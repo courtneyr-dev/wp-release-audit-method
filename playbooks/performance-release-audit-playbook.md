@@ -23,6 +23,37 @@ related:
 > [handing off performance work](../skills/wordpress-audit-handoff/SKILL.md#performance).
 > Until baselines exist the correct posture word is **unverified**, not *good*.
 
+## How to exercise this playbook
+
+This is the shortest path from **UNEXERCISED** to a validated procedure. It's one afternoon, and it
+is the highest-value open contribution to this repository.
+
+**The minimum viable first benchmark**, which validates the method rather than measuring WordPress:
+
+1. **Two fixtures, one variable.** Same PHP, same site mode, same theme, same content — only the
+   WordPress version differs. Previous stable and the target build.
+2. **Pick one workload the release actually changed.** Not a generic page-load average, which
+   dilutes any signal to nothing. Look at the dev notes and choose the subsystem that moved.
+3. **Establish run-to-run variance first.** Benchmark the *same* build against itself, twenty runs.
+   Whatever spread you see is your noise floor — and **any difference between builds smaller than
+   that floor is not a finding.** Most reported "regressions" die here.
+4. **Then compare builds.** Twenty runs each, interleaved rather than sequential, so machine drift
+   doesn't land entirely on one build.
+5. **Report the distribution, not the mean.** Median and spread. A mean hides the tail, and the tail
+   is what users feel.
+
+**The negative control that makes it credible:** benchmark two *identical* builds and confirm the
+method reports "no difference." A benchmark that has never been shown to produce a null result
+cannot be trusted to produce a positive one.
+
+Record the noise floor with the results. Without it, nobody — including you in six months — can tell
+whether a 4% difference meant anything.
+
+> [!NOTE]
+> If you run this, please [open a PR](../CONTRIBUTING.md). A single exercised benchmark with its
+> noise floor recorded would move this playbook from a design to a procedure, and would be the first
+> performance evidence in the repository.
+
 ## Status: design only — UNEXERCISED
 
 No performance benchmark has been run in this loop. All 15 shadow-run rows (SR-01–SR-15) and all 27 failure-mode rows (FM-01–FM-27) were reviewed for this document: none carries a performance category, a timing measurement, or a throughput measurement. SR-14 and SR-15 are the loop's only UNEXERCISED rows, and both are blocked on an RC1 build for the upgrade-lane detector (D-06) and the accessibility calibration harness (D-07) — neither is a performance test.

@@ -88,6 +88,7 @@ You are **not** expected to read WordPress core code, write PHP, or know what a 
 | **Get going** | [Before you start](#before-you-start) · [Check the build](#step-1-check-the-build-60-seconds) · [Get a test site](#step-2-get-a-test-site) · [The debugging toolkit](#the-debugging-toolkit-works-with-any-option) · [Run the suites](#step-3-run-the-test-suites) · [Preflight](#step-4-check-what-your-setup-can-detect) |
 | **The main event** | [A release party in three acts](#a-release-party-in-three-acts) |
 | **Accessibility** | [Baked in throughout](accessibility/) — automated, keyboard, screen reader, and the calibration rule |
+| **Internationalization** | [i18n and RTL](i18n/) — ~200 locales, and the class of bug English-only testing cannot see |
 | **Get it right** | [Five ways your test can lie to you](#five-ways-your-test-can-lie-to-you) · [How to report](#how-to-report-what-you-find) · [Official sources](#where-official-information-lives) |
 | **Tooling** | [AI assistants](#using-ai-assistants) · [Tools and integrations](#tools-and-integrations) |
 | **Reference** | [What's in here](#whats-in-this-repository) · [Safety](#safety-and-scope) · [Known gaps](#known-gaps) |
@@ -837,6 +838,11 @@ Four things turn "it broke for me" into something someone can act on:
 New to Trac? Read [Reporting Bugs](https://make.wordpress.org/core/handbook/testing/reporting-bugs/) first.
 
 > [!TIP]
+> **Attach a Playground blueprint** and your report becomes reproducible in one click — probably the
+> single highest-leverage thing you can do to get a bug fixed. See
+> [blueprint repros](playbooks/blueprint-repros.md).
+
+> [!TIP]
 > The [**Test Reports**](https://wordpress.org/plugins/test-reports/) plugin (also by Andy
 > Fragen) generates a formatted report with your environment details already filled in —
 > WordPress version, PHP, server, active theme and plugins, browser. It's the successor to
@@ -1042,6 +1048,7 @@ lands.
 ├── scripts/          the test scripts from Step 3
 ├── sources/          where official WordPress information lives
 ├── accessibility/    a11y testing — layered method, tools, and where it's wired in
+├── i18n/             internationalization, translation loading, and RTL
 ├── plugin-theme-authors/   testing your OWN plugin or theme (CI, tests, blocks)
 ├── data/             deprecations.csv — community-maintained, PRs welcome
 ├── skills/           the three acts, as AI assistant skills (optional)

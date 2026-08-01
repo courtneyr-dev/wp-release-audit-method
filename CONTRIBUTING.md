@@ -48,3 +48,39 @@ fixture values on disposable local installs. No local directory layouts in prose
 ## Style
 
 Sentence case headings. Present tense. Say what failed and how you know.
+
+---
+
+## What's in here, and where a change belongs
+
+| Area | For |
+|---|---|
+| `README.md`, `sources/` | Testing WordPress releases themselves |
+| `plugin-theme-authors/` | Testing your own plugin or theme against a release |
+| `accessibility/`, `i18n/` | Dimensions that apply to everything |
+| `method/`, `playbooks/` | Why the rules exist, and per-axis runbooks |
+| `scripts/`, `data/` | Executables and the data they read |
+| `skills/`, `prompts/` | AI-assisted workflow |
+| `examples/` | Worked investigations with evidence |
+
+## Before you open a pull request
+
+```bash
+python3 scripts/check-repo.py
+```
+
+That runs what CI runs: internal links and anchors, code fences, absence of personal paths and
+secrets, shell/PHP/JS syntax, YAML parsing, data-file shape, mermaid rendering, and script metadata.
+`--quick` skips the slow external checks.
+
+Adding a deprecation? `data/deprecations.csv` is meant to be community-maintained — one row, with a
+source link so a reviewer can verify it without guessing.
+
+## The highest-value open contributions
+
+1. **Exercise the [performance playbook](playbooks/performance-release-audit-playbook.md).** It has
+   never been run. One benchmark with its noise floor recorded would turn a design into a procedure.
+2. **A worked example for a plugin or theme author.** `examples/` is all core testing.
+3. **`wp menu` coverage in `crud-suite.sh`** — nav menus are on the browser checklist but no script
+   asserts them.
+4. **Parameterize the five scripts** that still hardcode a release zip URL.

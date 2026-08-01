@@ -30,6 +30,7 @@ Works for any codebase; nothing here assumes a particular framework or build set
 | [Co-installed plugins](co-installed-plugins.md) | The seam bugs no static method can find |
 | [The extender digest](extender-digest.md) | Turn a release's dev notes into a greppable list of names |
 | [Accessibility](../accessibility/) | The layered method, and the accessibility-ready theme guidelines |
+| [i18n and RTL](../i18n/) | Translation loading, RTL layout, and the WP 6.7 change that broke thousands of plugins |
 
 ---
 
@@ -147,6 +148,7 @@ You don't need every combination — you need the ones your users actually run:
 | **Theme** | A block theme **and** a classic theme |
 | **Other plugins** | [Your top three co-installed](co-installed-plugins.md) |
 | **Accessibility** | Keyboard pass on every screen you add — [method](../accessibility/) |
+| **Locale** | One non-English locale, and one RTL locale — [method](../i18n/) |
 
 > [!IMPORTANT]
 > **Your PHP floor is a real claim too.** If your readme says `Requires PHP: 7.4` and you only ever
