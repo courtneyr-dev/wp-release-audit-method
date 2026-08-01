@@ -17,6 +17,9 @@ related:
 
 # Source-and-content audit playbook
 
+> **Where this fits:** the documentation axis of [`wp-release-followup`](../skills/wp-release-followup/SKILL.md) §3.
+> Source authority: [official sources register](../sources/official-sources.md).
+
 Operator-grade procedure for source-of-record and content-claim verification. Every rule cites the FM-/MC-/SR- row it comes from; where the task scope named something this loop's four registers don't define, that gap is called out rather than invented.
 
 ## The four-register source universe

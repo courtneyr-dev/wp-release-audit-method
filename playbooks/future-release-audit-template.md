@@ -17,6 +17,9 @@ related:
 
 # Future release-audit template
 
+> **Where this fits:** starting a cycle cold. Then [`wp-release-prep`](../skills/wp-release-prep/SKILL.md) →
+> [`wp-release-party`](../skills/wp-release-party/SKILL.md) → [`wp-release-followup`](../skills/wp-release-followup/SKILL.md).
+
 A release-parameterized checklist. Every placeholder below must be substituted before use; no version number, ticket number, date, fixture path, or db_version from a prior cycle should appear here unsubstituted.
 
 ## Placeholders

@@ -21,6 +21,12 @@ related:
 
 # Release-day sweep playbook
 
+> **Runs as:** [`wp-release-party`](../skills/wp-release-party/SKILL.md) (Act II). Depth afterwards is
+> [`wp-release-followup`](../skills/wp-release-followup/SKILL.md), whose
+> [method index](../skills/wp-release-followup/SKILL.md#where-this-fits--the-whole-method-in-one-screen)
+> maps every playbook and method doc. Report form:
+> [Slack template](slack-test-report-template.md).
+
 Two testing times with different jobs. **Phase 1 (release day) buys breadth fast: does the release break the ordinary things people do?** **Phase 2 (comprehensive) buys depth: every variation, driven by the chain register.** Phase 1's findings select Phase 2's targets — running them in the other order wastes the deep pass on surfaces that were never at risk.
 
 Matrices and scripts live in the run root: `pilots/release-day/sweep-matrix.csv`, `pilots/release-day/upgrade-ladder.csv`, `scripts/build_release_day_matrices.py` (deterministic regenerator — re-run it per release rather than editing the CSVs by hand).

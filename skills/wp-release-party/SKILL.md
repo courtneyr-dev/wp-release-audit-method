@@ -5,9 +5,18 @@ description: Run the release-day smoke sweep and produce the Slack-formatted tes
 
 # wp-release-party
 
-Phase 1. Breadth, fast: **does the release break the ordinary things people do?** Depth belongs to `wp-release-followup`.
+Phase 1. Breadth, fast: **does the release break the ordinary things people do?** Depth belongs to [`wp-release-followup`](../wp-release-followup/SKILL.md).
 
-Assumes `wp-release-prep` has run — fixtures built, seeded, asserted, controls calibrated. If not, run that first; testing an unasserted fixture produces results nobody can trust.
+Assumes [`wp-release-prep`](../wp-release-prep/SKILL.md) has run — fixtures built, seeded, asserted, controls calibrated. If not, run that first; testing an unasserted fixture produces results nobody can trust.
+
+| | |
+|---|---|
+| **Previous phase** | [`wp-release-prep`](../wp-release-prep/SKILL.md) — Act I, before the build drops |
+| **Next phase** | [`wp-release-followup`](../wp-release-followup/SKILL.md) — Act III, depth |
+| **Playbook** | [release-day sweep](../../playbooks/release-day-sweep-playbook.md) |
+| **Report form** | [Slack test-report template](../../playbooks/slack-test-report-template.md) *(blank; filled example [below](#example-output))* |
+| **Scripts** | [`crud-suite.sh`](../../scripts/crud-suite.sh) · [`users-pages-install.sh`](../../scripts/users-pages-install.sh) · [`multisite-suite.sh`](../../scripts/multisite-suite.sh) · [`direct-jump-matrix.sh`](../../scripts/direct-jump-matrix.sh) · [`stepped-chain.sh`](../../scripts/stepped-chain.sh) |
+| **Why these rules** | [release-audit learning loop](../../method/release-audit-learning-loop.md) — the five laws and the calibrated detectors |
 
 ## 1. Re-run the build-identity gate
 
@@ -109,7 +118,12 @@ Before posting, verify: the header names the build **actually tested** (beta ≠
 
 ### Example output
 
-An abridged real-shape report — full render is 64 checks across 9 sections. Note what it does *and doesn't* claim.
+The **blank form** — all 64 checks across 9 sections, unmarked — lives in
+[`playbooks/slack-test-report-template.md`](../../playbooks/slack-test-report-template.md).
+Copy from there; the version below is the same form *filled in*, to show what a finished
+report looks like.
+
+An abridged real-shape report. Note what it does *and doesn't* claim.
 
 ```
 *WordPress 7.1-RC1* — upgraded from *7.0.2* via *Beta Tester plugin (Core updater)*

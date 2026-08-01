@@ -20,6 +20,10 @@ related:
 
 # Release-audit learning loop
 
+> **Run these rules:** [`wp-release-prep`](../skills/wp-release-prep/SKILL.md) →
+> [`wp-release-party`](../skills/wp-release-party/SKILL.md) → [`wp-release-followup`](../skills/wp-release-followup/SKILL.md).
+> Worked examples: [`examples/chains/`](../examples/chains/). Start-here guide: [README](../README.md).
+
 Generalizes the vault's *prove-by-firing* discipline from owned plugins to **WordPress core release auditing**. Built 2026-07-30 from WordPress 7.1 Beta 4 runtime QA, the 7.1 Learn content audit (runs 1 + 2), and an independent adversarial review of run 1.
 
 Run root (evidence lives there, not here): `$WP_AUDIT_ROOT/`. Frozen predecessors: `$WP_LEARN_AUDIT_ROOT_R1/`, `$WP_LEARN_AUDIT_ROOT/`.

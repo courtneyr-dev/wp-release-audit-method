@@ -17,6 +17,9 @@ related:
 
 # Performance release-audit playbook
 
+> **Where this fits:** the performance axis of [`wp-release-followup`](../skills/wp-release-followup/SKILL.md) §3.
+> **This playbook is unexercised** — it states acceptance criteria; no benchmark has been run against it.
+
 ## Status: design only — UNEXERCISED
 
 No performance benchmark has been run in this loop. All 15 shadow-run rows (SR-01–SR-15) and all 27 failure-mode rows (FM-01–FM-27) were reviewed for this document: none carries a performance category, a timing measurement, or a throughput measurement. SR-14 and SR-15 are the loop's only UNEXERCISED rows, and both are blocked on an RC1 build for the upgrade-lane detector (D-06) and the accessibility calibration harness (D-07) — neither is a performance test.

@@ -17,6 +17,9 @@ related:
 
 # Validation, proof & finding templates
 
+> **Applied in:** [`wp-release-followup`](../skills/wp-release-followup/SKILL.md) §2 and §4.
+> Worked example: [`examples/chains/C-02/`](../examples/chains/C-02/).
+
 ## Evaluation-gate ladder (report §11)
 A model may *propose* a transition; **evidence** justifies it.
 | Status | Evidence required to enter |

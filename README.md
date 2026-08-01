@@ -1001,6 +1001,11 @@ shipped. Testing features individually finds none of those.
 Start with [`examples/chains/C-02/`](examples/chains/C-02/) — the leftover-files finding,
 start to finish. Then [`method/release-audit-learning-loop.md`](method/release-audit-learning-loop.md).
 
+> [!TIP]
+> **Lost in the layers?** [`skills/wp-release-followup`](skills/wp-release-followup/SKILL.md#where-this-fits--the-whole-method-in-one-screen)
+> carries a one-screen index of every playbook, method document, and prompt in this repo,
+> with a line on when each is worth reading. It's the map.
+
 ---
 
 ## Safety and scope

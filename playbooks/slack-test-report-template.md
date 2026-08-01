@@ -18,6 +18,16 @@ related:
 
 # Slack test-report template
 
+> **This is the blank form — 64 checks, all unmarked.** For a *filled-in* version with
+> realistic mixed verdicts, a threaded finding, and the rules for what to say in the thread,
+> see [`skills/wp-release-party`](../skills/wp-release-party/SKILL.md#example-output). That
+> skill also carries the [entity × operation coverage matrix](../skills/wp-release-party/SKILL.md#what-gets-checked--entity--operation)
+> showing which of these checks a script covers and which are browser-only.
+>
+> Where this sits in the cycle: [Act II](../README.md#act-ii--the-party) ·
+> [release-day sweep playbook](release-day-sweep-playbook.md) · next step is
+> [`wp-release-followup`](../skills/wp-release-followup/SKILL.md).
+
 Generated, not hand-maintained. Regenerate rather than editing this note:
 
 ```bash

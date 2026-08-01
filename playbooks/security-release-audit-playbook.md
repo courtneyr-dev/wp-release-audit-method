@@ -17,6 +17,11 @@ related:
 
 # Security release-audit playbook
 
+> **Where this fits:** the security axis of [`wp-release-followup`](../skills/wp-release-followup/SKILL.md) §3.
+> Grounded in [security invariants](../method/security-invariants.md) and
+> [attack surfaces](../method/wordpress-attack-surfaces.md). Proof standard:
+> [validation and proof](../method/validation-and-proof.md).
+
 Operator-grade procedure for security-relevant findings in the WordPress release-audit loop. Every rule below cites the FM-/MC-/SR- row it comes from. Do not add a rule here without a citation.
 
 ## Scope and authorization boundary

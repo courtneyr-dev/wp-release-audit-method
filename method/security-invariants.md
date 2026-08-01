@@ -17,6 +17,9 @@ related:
 
 # Security-invariant catalog
 
+> **Applied in:** [security release-audit playbook](../playbooks/security-release-audit-playbook.md)
+> and [`wp-release-followup`](../skills/wp-release-followup/SKILL.md) §3.
+
 Hunt **broken assumptions**, not dangerous functions. Each invariant: what it asserts · where it breaks · how to test · the negative control that would disprove the hypothesis. The article's chain broke five of these at once (marked ⚑).
 
 ## Representation & alignment

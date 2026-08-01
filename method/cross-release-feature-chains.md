@@ -19,6 +19,10 @@ related:
 
 # Cross-release feature chains
 
+> **Applied in:** [`wp-release-followup`](../skills/wp-release-followup/SKILL.md) §3.
+> Worked examples: [`examples/chains/`](../examples/chains/). Generator prompt:
+> [chain test generation](../prompts/codex-feature-chain-test-generation-prompt.md).
+
 Method page. Data lives at `$WP_AUDIT_ROOT/learning/` — `cross-release-feature-ledger.csv` (200 features, 6.3–7.0) and `cross-release-chain-register.csv` (36 adjudicated chains). Not duplicated here.
 
 ## Why chain at all
