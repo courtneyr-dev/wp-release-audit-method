@@ -15,8 +15,71 @@ set -uo pipefail
 
 DIR="${1:-}"
 FORMAT="${2:-text}"
-[ -d "$DIR" ] || { echo "Usage: $0 <plugin-or-theme-dir> [--csv]" >&2; exit 1; }
+BASELINE="${3:-}"
+[ -d "$DIR" ] || { cat >&2 <<'USAGE'
+Usage: wp-surface-inventory.sh <plugin-or-theme-dir> [--csv]
+       wp-surface-inventory.sh <dir> --baseline <previous.csv>
+
+  --csv                  machine-readable: surface,item,count
+  --baseline <file>      diff against a previous --csv run and report only
+                         what changed. New surfaces are surfaces you have
+                         never tested through an upgrade.
+
+Typical cycle:
+  wp-surface-inventory.sh . --csv > surfaces-7.1.csv     # this release
+  wp-surface-inventory.sh . --baseline surfaces-7.1.csv  # next release
+USAGE
+exit 1; }
 DIR="${DIR%/}"
+
+# ── Baseline diff mode ───────────────────────────────────────────────────────
+if [ "$FORMAT" = "--baseline" ]; then
+  [ -f "$BASELINE" ] || { echo "Baseline file not found: $BASELINE" >&2; exit 1; }
+  CUR=$(mktemp); trap 'rm -f "$CUR"' EXIT
+  "$0" "$DIR" --csv > "$CUR" 2>/dev/null
+  printf '\033[1mSurface diff: %s\033[0m\n' "$(basename "$DIR")"
+  echo "baseline: $BASELINE"
+  echo
+
+  # Compare on surface+item, ignoring counts.
+  key() { awk -F, 'NR>1 && NF>=2 {print $1 "," $2}' "$1" | sort -u; }
+  ADDED=$(comm -13 <(key "$BASELINE") <(key "$CUR"))
+  GONE=$(comm -23 <(key "$BASELINE") <(key "$CUR"))
+
+  if [ -n "$ADDED" ]; then
+    printf '\033[1;32m NEW since baseline — never tested through an upgrade\033[0m\n'
+    echo "$ADDED" | sed 's/^/  + /'
+  else
+    echo " No new surfaces."
+  fi
+  echo
+  if [ -n "$GONE" ]; then
+    printf '\033[1;33m GONE since baseline — confirm this was deliberate\033[0m\n'
+    echo "$GONE" | sed 's/^/  - /'
+  else
+    echo " No surfaces dropped."
+  fi
+  echo
+  CHANGED=$(awk -F, '
+    FNR==NR { if (FNR>1 && NF>=3) old[$1 "\x1f" $2] = $NF; next }
+    FNR>1 && NF>=3 {
+      k = $1 "\x1f" $2
+      if (k in old && old[k] != $NF) {
+        split(k, p, "\x1f")
+        printf "  ~ %s / %s: %s → %s\n", p[1], p[2], old[k], $NF
+      }
+    }' "$BASELINE" "$CUR")
+  if [ -n "$CHANGED" ]; then
+    printf '\033[1m Usage changed (same surface, different call count)\033[0m\n'
+    echo "$CHANGED" | head -25
+  else
+    echo " No usage-count changes."
+  fi
+  echo
+  echo " Anything under NEW is a surface your existing tests have never covered."
+  echo " Cross-reference it against this release's dev notes first."
+  exit 0
+fi
 
 # Only source files. Skip vendor, node_modules, build output, and minified assets.
 php_files() { find "$DIR" -type f -name '*.php' \
@@ -138,8 +201,26 @@ else
 fi
 
 hdr "DEPRECATION RISK — already-deprecated APIs still in use"
-DEPRECATED='wp_get_sites|get_page_by_title|wp_make_content_images_responsive|screen_icon|get_currentuserinfo|wp_get_http|create_function|wp_localize_script|get_theme_data|attribute_escape|clean_url|js_escape|wp_specialchars|get_settings|the_search_query|get_links|debug_fopen|force_ssl_login|wp_clone|wp_get_attachment_thumb_file'
-scan "deprecated" "($DEPRECATED)\s*\(" "($DEPRECATED)"
+# The list lives in data/deprecations.csv so it can be extended by pull request
+# each cycle instead of being edited inside this script.
+DEPFILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." 2>/dev/null && pwd)/data/deprecations.csv"
+if [ -f "$DEPFILE" ]; then
+  DEPRECATED=$(awk -F, 'NR>1 && $1!="" {printf "%s|", $1}' "$DEPFILE" | sed 's/|$//')
+  scan "deprecated" "($DEPRECATED)\s*\(" "($DEPRECATED)"
+  if [ -z "$CSV" ]; then
+    HITS=$(echo "$PHP" | tr '\n' '\0' | xargs -0 grep -hoE "($DEPRECATED)\s*\(" 2>/dev/null \
+           | grep -oE "($DEPRECATED)" | sort -u)
+    if [ -n "$HITS" ]; then
+      echo
+      echo "$HITS" | while read -r h; do
+        [ -z "$h" ] && continue
+        awk -F, -v s="$h" 'NR>1 && $1==s {printf "  %-36s deprecated in %-8s → %s\n", $1, $3, ($4==""?"no direct replacement":$4)}' "$DEPFILE"
+      done
+    fi
+  fi
+else
+  [ -z "$CSV" ] && echo "  (data/deprecations.csv not found — run this from the repo checkout to get versions and replacements)"
+fi
 
 hdr "VERSION GATES — what you already branch on"
 scan "version-check" "(get_bloginfo\(\s*['\"]version|\\\$wp_version|version_compare\(\s*\\\$wp_version)" \

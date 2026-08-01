@@ -1,0 +1,38 @@
+symbol,type,deprecated_in,replacement,notes
+attribute_escape,function,2.8,esc_attr(),
+js_escape,function,2.8,esc_js(),
+wp_specialchars,function,2.8,esc_html(),
+get_the_author_ID,function,2.8,get_the_author_meta('ID'),
+clean_url,function,3.0,esc_url(),
+is_taxonomy,function,3.0,taxonomy_exists(),
+is_term,function,3.0,term_exists(),
+wp_dropdown_cats,function,3.0,wp_dropdown_categories(),
+get_userdatabylogin,function,3.3,get_user_by('login'),
+get_user_by_email,function,3.3,get_user_by('email'),
+get_theme_data,function,3.4,wp_get_theme(),
+debug_fopen,function,3.5,error_log(),
+debug_fwrite,function,3.5,error_log(),
+debug_fclose,function,3.5,error_log(),
+wp_convert_bytes_to_hr,function,3.6,size_format(),
+screen_icon,function,3.8,none,Removed from the admin UI entirely
+get_screen_icon,function,3.8,none,
+wp_htmledit_pre,function,4.3,format_for_editor(),
+wp_richedit_pre,function,4.3,format_for_editor(),
+wp_get_http,function,4.4,WP_Http,Use wp_remote_get() in practice
+force_ssl_login,function,4.4,force_ssl_admin(),
+get_currentuserinfo,function,4.5,wp_get_current_user(),
+add_object_page,function,4.5,add_menu_page(),
+add_utility_page,function,4.5,add_menu_page(),
+wp_get_sites,function,4.6,get_sites(),Returns different shape — check your callers
+wp_make_content_images_responsive,function,5.5,wp_filter_content_tags(),
+wp_clone,function,5.3,clone,PHP native clone
+wp_get_attachment_thumb_file,function,6.1,none,
+global_terms,function,6.1,none,Global terms removed
+global_terms_enabled,function,6.1,none,
+get_page_by_title,function,6.2,WP_Query,"Returns a post object; WP_Query with title arg is the replacement"
+wp_img_tag_add_loading_attr,function,6.3,wp_img_tag_add_loading_optimization_attr(),
+wp_get_loading_attr_default,function,6.3,wp_get_loading_optimization_attributes(),
+image_attachment_fields_to_save,function,6.3,none,
+print_emoji_styles,function,6.4,none,
+the_block_template_skip_link,function,6.4,wp_enqueue_block_template_skip_link(),
+create_function,php-function,php-7.2,anonymous function,Removed in PHP 8. Not a WordPress function but a common rejection
