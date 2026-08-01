@@ -354,6 +354,7 @@ bash scripts/crud-suite.sh ~/wp-test http://localhost:8888
 | `multisite-11.sh` | 10 subsites, built old then upgraded | 20 min |
 | `seed-screenshot-rig.sh` | A site that makes presentable screenshots | 10 min |
 | `lib-fast.sh` | Not a test — makes long suites ~12× faster | — |
+| `plugin-surface-inventory.sh` | **For plugin/theme authors** — derives which core surfaces your code touches | 10 sec |
 
 Save the output. You'll want it when reporting.
 

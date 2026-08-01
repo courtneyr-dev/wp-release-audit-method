@@ -16,6 +16,7 @@ Works for any codebase; nothing here assumes a particular framework or build set
 | [The "Tested up to" bump](#the-tested-up-to-bump) | What you're claiming, and what to verify before claiming it |
 | [Shipping to the directory](#shipping-to-the-directory) | Guidelines, Plugin Check, and the common rejections |
 | [The release checklist](#the-release-checklist) | Copy-paste, per release |
+| **[The release-diff method](release-diff-method.md)** | **The deep version** — derive what your code touches, intersect it with what the release changed, and prioritize by your own changelog |
 
 ---
 
