@@ -23,6 +23,7 @@ Plus a Playwright pair for what PHPUnit structurally can't see:
 |---|---|
 | [`editor-block.spec.js`](playwright/editor-block.spec.js) | Your block inserts, saves, reloads **without a validation error** |
 | [`admin-smoke.spec.js`](playwright/admin-smoke.spec.js) | Settings screen loads and saves, with **zero console errors** |
+| [`accessibility.spec.js`](playwright/accessibility.spec.js) | axe scan **plus** keyboard checks automation misses — focus visibility, skip links, modal focus return |
 
 ## Setup
 

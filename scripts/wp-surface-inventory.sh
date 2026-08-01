@@ -334,6 +334,37 @@ if [ -z "$CSV" ]; then
   fi
 fi
 
+hdr "ACCESSIBILITY SURFACES — every one of these is a keyboard or screen-reader claim"
+scan "a11y:aria"     "aria-[a-z]+"                    "aria-[a-z]+"      "$PHP$JS"
+scan "a11y:role"     "role=['\"][a-z]+"               "role=['\"][a-z]+" "$PHP$JS"
+scan "a11y:tabindex" "tabindex=['\"]-?[0-9]+"         "tabindex=['\"]-?[0-9]+" "$PHP$JS"
+scan "a11y:sr-text"  "(screen-reader-text|sr-only|visually-hidden|wp-a11y|speak\()" \
+                     "(screen-reader-text|sr-only|visually-hidden|wp-a11y|speak)" "$PHP$JS"
+scan "a11y:label"    "(aria-label|aria-labelledby|aria-describedby|<label)" \
+                     "(aria-label[a-z]*|aria-describedby|<label)" "$PHP$JS"
+
+if [ -z "$CSV" ]; then
+  CLICK=$(echo "$JS" | tr '\n' '\0' | xargs -0 grep -lE "addEventListener\(\s*['\"]click" 2>/dev/null | wc -l | tr -d ' ')
+  KEY=$(echo "$JS" | tr '\n' '\0' | xargs -0 grep -lE "addEventListener\(\s*['\"]key(down|up|press)" 2>/dev/null | wc -l | tr -d ' ')
+  DIVCLICK=$(echo "$PHP$JS" | tr '\n' '\0' | xargs -0 grep -lE "<(div|span)[^>]*onclick" 2>/dev/null | wc -l | tr -d ' ')
+  OUTLINE=$(echo "$PHP$JS" | tr '\n' '\0' | xargs -0 grep -lE "outline:\s*(none|0)" 2>/dev/null | wc -l | tr -d ' ')
+  CSSOUT=$(find "$DIR" -name '*.css' ! -path '*/node_modules/*' ! -name '*.min.css' -print0 2>/dev/null \
+           | xargs -0 grep -lE "outline:\s*(none|0)" 2>/dev/null | wc -l | tr -d ' ')
+  echo
+  printf '  \033[1mKeyboard-parity signals\033[0m\n'
+  echo "    click handlers: $CLICK file(s) · key handlers: $KEY file(s)"
+  if [ "$CLICK" -gt 0 ] && [ "$KEY" -eq 0 ]; then
+    echo "    ⚠ Click handlers with no keyboard handlers anywhere. Anything doable with a mouse"
+    echo "      must be doable from the keyboard — check these are on native buttons/links."
+  fi
+  [ "$DIVCLICK" -gt 0 ] && echo "    ⚠ $DIVCLICK file(s) put click handlers on div/span — not focusable or activatable by default."
+  if [ $(( OUTLINE + CSSOUT )) -gt 0 ]; then
+    echo "    ⚠ $(( OUTLINE + CSSOUT )) file(s) set outline:none — the most common cause of invisible focus."
+    echo "      Removing the default outline is fine only if you replace it with a strong visible one."
+  fi
+  echo "    Method: https://wpaccessibility.org/docs/testing/keyboard/"
+fi
+
 hdr "ADOPTION CANDIDATES — core may already do this for you"
 
 flag() { # <condition-count> <label> <recommendation>

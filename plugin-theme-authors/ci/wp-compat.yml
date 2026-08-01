@@ -251,6 +251,67 @@ jobs:
         run: composer run test || vendor/bin/phpunit
 
   # ───────────────────────────────────────────────────────────────────────────
+  # Accessibility. Automated testing catches only a fraction of accessibility
+  # errors — the WordPress Accessibility knowledge base is explicit about that —
+  # so treat a green run as "no detectable violations", never as "accessible".
+  # Manual keyboard testing still has to happen:
+  # https://wpaccessibility.org/docs/testing/keyboard/
+  # ───────────────────────────────────────────────────────────────────────────
+  accessibility:
+    name: Accessibility (axe + pa11y)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Start WordPress with this extension active
+        run: |
+          npm install -g @wordpress/env
+          wp-env start
+        # Requires a .wp-env.json. See ../README.md → Option D.
+
+      - name: Run axe against the front end
+        run: |
+          npx --yes @axe-core/cli http://localhost:8888 \
+            --exit --tags wcag2a,wcag2aa,wcag21a,wcag21aa \
+            | tee axe-frontend.txt
+        continue-on-error: true
+
+      - name: Run pa11y as a second engine
+        # Two engines implement different rule sets; the delta is informative.
+        run: |
+          npx --yes pa11y http://localhost:8888 \
+            --standard WCAG2AA --reporter cli | tee pa11y-frontend.txt
+        continue-on-error: true
+
+      - name: Summarize
+        if: always()
+        run: |
+          {
+            echo "## Accessibility"
+            echo ""
+            echo "Automated testing catches a fraction of accessibility errors."
+            echo "A clean run means no *detectable* violations — not accessible."
+            echo "Manual keyboard testing is still required:"
+            echo "<https://wpaccessibility.org/docs/testing/keyboard/>"
+            echo ""
+            echo '### axe'; echo '```'; tail -40 axe-frontend.txt 2>/dev/null || echo 'no output'; echo '```'
+            echo '### pa11y'; echo '```'; tail -40 pa11y-frontend.txt 2>/dev/null || echo 'no output'; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-reports
+          path: |
+            axe-frontend.txt
+            pa11y-frontend.txt
+          if-no-files-found: ignore
+
+  # ───────────────────────────────────────────────────────────────────────────
   # Surface inventory: what your code touches, and what changed since last time.
   # ───────────────────────────────────────────────────────────────────────────
   surfaces:

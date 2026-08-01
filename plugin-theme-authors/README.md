@@ -29,6 +29,7 @@ Works for any codebase; nothing here assumes a particular framework or build set
 | [Testing blocks](testing-blocks.md) | The highest-churn surface, where failures are invisible server-side |
 | [Co-installed plugins](co-installed-plugins.md) | The seam bugs no static method can find |
 | [The extender digest](extender-digest.md) | Turn a release's dev notes into a greppable list of names |
+| [Accessibility](../accessibility/) | The layered method, and the accessibility-ready theme guidelines |
 
 ---
 
@@ -145,6 +146,7 @@ You don't need every combination — you need the ones your users actually run:
 | **Editor** | Block editor **and** classic (Classic Editor plugin active) — [see the four cells](#classic-and-block-four-deployments-not-one) |
 | **Theme** | A block theme **and** a classic theme |
 | **Other plugins** | [Your top three co-installed](co-installed-plugins.md) |
+| **Accessibility** | Keyboard pass on every screen you add — [method](../accessibility/) |
 
 > [!IMPORTANT]
 > **Your PHP floor is a real claim too.** If your readme says `Requires PHP: 7.4` and you only ever

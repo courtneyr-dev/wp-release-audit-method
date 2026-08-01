@@ -154,6 +154,22 @@ rich-text format API, you're extending internals that move faster than the block
   for the packages the [surface inventory](../scripts/wp-surface-inventory.sh) says you import.
 - Component removals and prop changes are the usual breakage. Dev notes call them out.
 
+### Accessibility in the editor
+
+Block and editor accessibility regressions concentrate here, because custom controls replace native
+ones. Every custom control you add to the block inspector or toolbar is a keyboard claim.
+
+- **Can every inspector control be reached and operated by keyboard?** Sidebar panels, toolbar
+  buttons, and popovers all need to work without a mouse.
+- **Does your block announce itself?** Blocks need accessible names; a block that announces as
+  "Block" tells a screen-reader user nothing.
+- **Does focus return sensibly** after a popover or modal closes?
+- **Is your block usable at 200% zoom** in the editor canvas, not just on the front end?
+
+Core ships `@wordpress/a11y` — use `speak()` for status messages rather than inventing your own live
+region. See [the accessibility method](../accessibility/) and
+[the keyboard procedure](https://wpaccessibility.org/docs/testing/keyboard/).
+
 ### Patterns and templates
 
 Patterns are just block markup, so they inherit every validation risk above — **and nobody opens

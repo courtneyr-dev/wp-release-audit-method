@@ -9,6 +9,7 @@ minutes.
 | File | What it does |
 |---|---|
 | [`wp-compat.yml`](wp-compat.yml) | Test matrix across the WordPress and PHP versions you claim to support, **plus a nightly canary against trunk that opens an issue when core breaks you** |
+| **accessibility job** (in `wp-compat.yml`) | axe **and** pa11y against your screens on every push — two engines, different rule sets |
 | [`plugin-check.yml`](plugin-check.yml) | Plugin Check on every push, plus readme.txt header validation and a "Tested up to is drifting" warning |
 
 ## Install
