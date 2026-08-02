@@ -60,3 +60,6 @@ From `1. Projects/Plugin Security Audit/adversarial-plugin-security-audit-method
 
 ## Karpathy + Loop Engineering
 Translated into concrete project rules in [loop-engineering-ledger](../method/loop-engineering-ledger.md) (not merely cited).
+Neither idea originates here — that file's [Sources](../method/loop-engineering-ledger.md#sources)
+section credits the four loop-engineering pieces it draws on, and is explicit about which
+Karpathy attributions are secondhand and which link in the chain is still missing.
