@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# C-03 — multisite status flags x network upgrade x first load. See README.md.
 set -u
 
 SC="${STUDIO_CLI:-/Applications/Studio.app/Contents/Resources/bin/studio-cli.sh}"

@@ -10,11 +10,11 @@ The same intersection method works in reverse:
 
 ```mermaid
 flowchart LR
-    A["<b>Your surface inventory</b><br/><i>what you hand-roll</i>"]
-    B["<b>What core now provides</b><br/><i>APIs, supports, bindings</i>"]
+    A["Your surface inventory<br/>what you hand-roll"]
+    B["What core now provides<br/>APIs, supports, bindings"]
     A --> C{"∩"}
     B --> C
-    C --> D["<b>Adoption candidates</b><br/><i>code you can delete</i>"]
+    C --> D["Adoption candidates<br/>code you can delete"]
 
     style A fill:#e8f4f8,stroke:#21759B,color:#000
     style B fill:#fff4e6,stroke:#D54E21,color:#000

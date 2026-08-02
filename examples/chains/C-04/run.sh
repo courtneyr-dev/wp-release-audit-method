@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# C-04 — plugin activation scope x dependency resolution x UI and REST affordance. See README.md.
 set -u
 
 SC="${STUDIO_CLI:-/Applications/Studio.app/Contents/Resources/bin/studio-cli.sh}"

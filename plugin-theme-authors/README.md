@@ -193,10 +193,10 @@ give four combinations, and all four are real sites in large numbers.
 flowchart TD
     subgraph M[" "]
       direction TB
-      A["<b>Block editor<br/>+ block theme</b><br/><i>the modern default</i>"]
-      B["<b>Block editor<br/>+ classic theme</b><br/><i>very common — theme updated slower</i>"]
-      C["<b>Classic editor<br/>+ classic theme</b><br/><i>~9M sites run Classic Editor</i>"]
-      D["<b>Classic editor<br/>+ block theme</b><br/><i>rare but real</i>"]
+      A["Block editor<br/>+ block theme<br/>the modern default"]
+      B["Block editor<br/>+ classic theme<br/>very common — theme updated slower"]
+      C["Classic editor<br/>+ classic theme<br/>~9M sites run Classic Editor"]
+      D["Classic editor<br/>+ block theme<br/>rare but real"]
     end
     style A fill:#e8f4f8,stroke:#21759B,stroke-width:2px,color:#000
     style B fill:#fff4e6,stroke:#D54E21,stroke-width:2px,color:#000

@@ -72,6 +72,110 @@ jobs:
           done < urls.txt
           echo "$fail non-OK URL(s)" >> "$GITHUB_STEP_SUMMARY"
 
+  live-wordpress:
+    name: Suite against live WordPress (DDEV)
+    runs-on: ubuntu-latest
+    # Until this job existed, CI checked syntax and never once booted WordPress —
+    # a repository about testing whose own tests never ran the thing under test.
+    # DDEV is the reference driver, so this is also the check that the driver
+    # interface works somewhere other than the author's laptop.
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ddev/github-action-setup-ddev@v1
+        with:
+          autostart: false
+
+      - name: Build an Act I fixture on the CURRENT stable
+        run: |
+          mkdir -p /tmp/fixture/.ddev
+          cp fixtures/ddev/config.yaml /tmp/fixture/.ddev/config.yaml
+          cd /tmp/fixture
+          ddev start -y
+          # Deliberately an OLDER release: a site installed fresh on the target
+          # cannot test an upgrade, which is lie #2 in the README.
+          ddev wp core download --version=6.7.2
+          ddev wp core install --url="$(ddev exec -- sh -c 'echo $DDEV_PRIMARY_URL')" \
+            --title='audit fixture' --admin_user=admin \
+            --admin_password=password --admin_email=a@example.com
+          ddev wp core version
+
+      - name: Capabilities are declared, and honestly
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          . scripts/lib-env.sh
+          env_init ddev /tmp/fixture
+          env_caps_report | tee caps.txt
+          # On Linux the mount is a real bind mount, so the host view is synchronous.
+          grep -q 'hostfs' caps.txt || { echo "::error::no host filesystem capability"; exit 1; }
+          # Over-claiming is the failure that corrupts results: DDEV is not SQLite.
+          env_has sqlite && { echo "::error::driver over-claims sqlite"; exit 1; }
+          env_has core-updater || { echo "::error::DDEV should reach the core updater"; exit 1; }
+
+      - name: A cell needing a missing capability reports BLOCKED, not PASS
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          . scripts/lib-env.sh
+          env_init ddev /tmp/fixture
+          # `rc=0; x="$(cmd)" || rc=$?` and NOT `x="$(cmd)"; rc=$?` — Actions runs each
+          # step under `bash -e`, so the plain assignment aborts the step on exactly the
+          # non-zero status this test exists to observe.
+          rc=0
+          out="$(env_require T1-44 sqlite)" || rc=$?
+          echo "$out"
+          [ "$rc" = "2" ] || { echo "::error::env_require returned $rc, expected 2"; exit 1; }
+          echo "$out" | grep -q 'BLOCKED  T1-44' || { echo "::error::no BLOCKED verdict"; exit 1; }
+          echo "$out" | grep -q 'sqlite'         || { echo "::error::missing cap not named"; exit 1; }
+
+      - name: Run the CRUD suite for real
+        run: bash scripts/crud-suite.sh --env=ddev /tmp/fixture | tee crud.txt
+
+      - name: Assert the suite actually exercised WordPress
+        run: |
+          fail=0
+          grep -q 'driver=ddev'            crud.txt || { echo "::error::driver not reported"; fail=1; }
+          grep -q 'final_fatal_scan=0'     crud.txt || { echo "::error::fatals on the front end"; fail=1; }
+          grep -q 'after_force_delete exists=gone' crud.txt || { echo "::error::post delete did not take"; fail=1; }
+          grep -q 'cpt registered=1'       crud.txt || { echo "::error::CPT cell did not run"; fail=1; }
+          exit $fail
+
+      - name: Upgrade to a newer core and diff the file tree from the host
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          . scripts/lib-env.sh
+          env_init ddev /tmp/fixture
+          env_tree before.txt
+          env_core_install 6.9
+          env_tree after.txt
+          # Two consecutive reads must agree, or the host view is stale and every
+          # file-integrity finding taken through it is a harness fault, not a result.
+          env_tree after2.txt
+          cmp -s after.txt after2.txt || { echo "::error::host file view is unstable"; exit 1; }
+          echo "changed paths: $(comm -3 before.txt after.txt | wc -l)"
+          comm -3 before.txt after.txt | head -20
+
+      - name: Snapshot round-trip
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          . scripts/lib-env.sh
+          env_init ddev /tmp/fixture
+          if env_has snapshot; then
+            env_wp post create --post_title=SNAPMARKER --post_status=publish
+            before="$(env_wp post list --post_status=publish --format=count)"
+            env_db_snapshot ci-fx
+            env_wp post delete "$(env_wp post list --title=SNAPMARKER --field=ID | head -1)" --force
+            env_db_restore ci-fx
+            after="$(env_wp post list --post_status=publish --format=count)"
+            echo "before=$before after=$after"
+            [ "$before" = "$after" ] || { echo "::error::snapshot did not round-trip"; exit 1; }
+          else
+            echo "snapshot capability not declared here — skipping, and that is the point"
+          fi
+
+      - name: Tear down
+        if: always()
+        run: cd /tmp/fixture && ddev delete -O -y || true
+
   surface-inventory:
     name: Tool smoke test
     runs-on: ubuntu-latest

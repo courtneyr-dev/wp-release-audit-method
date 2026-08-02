@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# C-03 cleanup — re-archives site 3 after the first-load observation.
 set -u
 SC="${STUDIO_CLI:-/Applications/Studio.app/Contents/Resources/bin/studio-cli.sh}"
 SITE="$HOME/Studio/codex-wp71-beta4-multisite"

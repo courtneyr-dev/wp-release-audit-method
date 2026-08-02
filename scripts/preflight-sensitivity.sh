@@ -3,16 +3,44 @@
 # Run before any release pass and log the output beside the results — a passing
 # test on an insensitive environment is not evidence.
 #
-# Usage: preflight-sensitivity.sh <wp-env-project-dir>
+#   bash scripts/preflight-sensitivity.sh --env=ddev ~/wp-test
+#   bash scripts/preflight-sensitivity.sh ~/wp-test        # legacy, = wp-env
+#
+# Two layers, and the first one is newer than the second.
+#
+# The ENVIRONMENT CAPABILITIES block asks what the environment TOOL can do — can it reach
+# WordPress's own updater, can the host read the document root, can it snapshot. The
+# sensitivity table below asks what the PHP RUNTIME can notice — zip library, image
+# delegates, mbstring, locale.
+#
+# Both are the same argument. The runtime layer has been here since the beginning; the
+# environment layer was added when the suites learned to run on more than one tool, at
+# which point "the suite passed" started meaning materially different things depending on
+# where you ran it. A capability the driver lacks makes its cells BLOCKED, not PASS.
 
-PROJ="${1:-$HOME/projects/wp71-test-suite}"
-cd "$PROJ" || exit 1
-w() { npx --yes @wordpress/env@latest run cli -- "$@" 2>/dev/null | grep -vE "^(ℹ|✔|npm warn)" | tr -d '\r'; }
+DRIVER="${WP_AUDIT_ENV:-}"
+ARGS=()
+for a in "$@"; do
+  case "$a" in
+    --env=*) DRIVER="${a#--env=}" ;;
+    *)       ARGS+=("$a") ;;
+  esac
+done
+PROJ="${ARGS[0]:-$HOME/projects/wp71-test-suite}"
+DRIVER="${DRIVER:-wp-env}"
+
+# shellcheck source=/dev/null
+. "$(cd "$(dirname "$0")" && pwd)/lib-env.sh" || exit 1
+env_init "$DRIVER" "$PROJ" || exit 1
 
 echo "=== Environment sensitivity report — $(basename "$PROJ")"
 echo
+env_caps_report
+echo
+echo "=== Runtime sensitivity"
+echo
 
-w wp eval '
+env_wp eval '
 $out = array();
 
 // libzip — CHECKCONS zip regressions (Trac #60398) only reproduce below 1.10.1
@@ -88,5 +116,8 @@ foreach ($out as $r) { printf("%-22s %-34s %s\n", $r[0], $r[1], $r[2]); }
 
 echo
 echo "=== curl / HTTP stack"
-w bash -c 'php -r "\$v = curl_version(); echo \"curl \" . \$v[\"version\"] . \"  ssl \" . \$v[\"ssl_version\"] . \"\n\";"'
+# Through wp eval rather than a shell, so this still reports on the drivers with no
+# `shell` capability — Playground runs PHP in WASM and has no shell at all, and the curl
+# build is exactly the kind of thing you want to know about there.
+env_wp eval '$v = curl_version(); echo "curl " . $v["version"] . "  ssl " . $v["ssl_version"] . "\n";'
 echo "  (old-cURL regressions like the 6.4 'error 28' need libcurl ~7.29 — modern builds CANNOT detect them)"

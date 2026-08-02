@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# C-02 — upgrade path x file-removal ledger x clean-tree integrity. See README.md.
 set -u
 
 SC="${STUDIO_CLI:-/Applications/Studio.app/Contents/Resources/bin/studio-cli.sh}"
