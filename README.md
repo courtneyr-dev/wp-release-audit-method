@@ -333,9 +333,30 @@ can hand to someone else so they rebuild the same thing.
 
 ## Which setup can detect what
 
-Every option above can run the suites. They are **not** equivalent, and the differences
-decide which findings are reachable for you rather than merely how convenient the setup
-is.
+Every option above can run the suites — pass `--env=` and the scripts do the rest:
+
+```bash
+bash scripts/crud-suite.sh --env=ddev ~/wp-test
+```
+
+| Your setup | `--env=` | Needs | What it can't do |
+|---|---|---|---|
+| **DDEV** | `ddev` | Docker | nothing — it supports every capability |
+| **wp-env** | `wp-env` | Docker + Node | no HTTPS |
+| **Studio** | `studio` | the Studio app | no nginx/Apache (it runs PHP itself), no `db-reset`, SQLite by default |
+| **Playground** | `playground` | Node 20+ | no shell, no HTTPS, no subdomain multisite, SQLite. The **only** one that takes `--wp=beta\|RC\|nightly` directly |
+| **Local · MAMP · XAMPP · staging · a Beta Tester site** | `cli` | a WordPress that already exists | can't switch PHP, can't create or destroy the site |
+| **Lando** | `lando` | Docker | unknown — **[not yet tested by anyone](#known-gaps)** |
+
+That fifth row is the one that covers the most ground. `cli` is just WP-CLI pointed at an
+install you already have, so [Option A](#option-a--the-beta-tester-plugin-how-most-people-do-it)
+and [Option C](#option-c--a-local-app) finally get a scripted path — point it at
+`~/Local Sites/<site>/app/public`, or at a `wp @staging` alias. It refuses to run until
+you set `WP_AUDIT_CLI_DISPOSABLE=1`, because it's the only one that can be aimed at
+something you'd miss.
+
+They are **not** equivalent, and the differences decide which findings are reachable for
+you rather than merely how convenient the setup is.
 
 The clearest case is this repo's best-known finding. Catching 243 files left behind by an
 upgrade needs three things at once: WordPress's **own** updater (WP-CLI's cleans them up
@@ -1195,6 +1216,34 @@ Stated plainly so you don't mistake them for tested ground:
 - Two checks (Core updater vs. WP-CLI, real-input accessibility) are written but haven't been
   exercised against a release candidate.
 - A complete list of open Trac tickets still needs a human with a browser.
+- **The Lando driver has never been run — testers wanted.** See below.
+- The `cli` driver has not been exercised over SSH against a `wp @alias`. Local paths are
+  tested; a remote target is written to fail safely (it drops `hostfs` and `shell` rather
+  than guessing) but that path is unproven.
+
+### Wanted: someone with Lando
+
+[`scripts/env/lando.sh`](scripts/env/lando.sh) is written and passes every static check,
+and **not one line of it has been executed.** Lando wasn't installed on the machine it was
+written on, so every behavioural claim in it is read off the docs rather than off a
+terminal. By this repo's own standard that makes all of it a hypothesis.
+
+It's deliberately built to fail honestly rather than optimistically — capabilities are
+probed at runtime instead of declared, so on a machine nobody has seen it should
+under-claim rather than over-claim. But that itself is untested.
+
+If you run Lando, this is a genuinely useful hour:
+
+```bash
+bash scripts/env/conformance.sh lando          # contract checks, no WordPress needed
+bash scripts/crud-suite.sh --env=lando ~/my-lando-site
+```
+
+The file header carries a verification checklist, one line per claim, naming what each
+command would settle. Report back either way — **"I ran it and it worked" is as valuable
+as a bug**, and if it turns out the driver over-claims a capability that's exactly the
+failure the whole design exists to prevent. Open an issue or a PR; a result that removes
+the "unverified" banner is a merge on its own.
 
 ## Contributing
 

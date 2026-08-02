@@ -108,9 +108,16 @@ source link so a reviewer can verify it without guessing.
 
 ## The highest-value open contributions
 
-1. **Exercise the [performance playbook](playbooks/performance-release-audit-playbook.md).** It has
+1. **Run the [Lando driver](scripts/env/lando.sh) once.** It has never been executed —
+   written against the docs on a machine with no Lando installed, so every capability it
+   reports is a hypothesis. `bash scripts/env/conformance.sh lando`, then the CRUD suite
+   against a real site. Its header has a verification checklist, one line per claim.
+   **A report that it works is as valuable as a bug report**, and either one removes the
+   unverified banner.
+2. **Exercise the [performance playbook](playbooks/performance-release-audit-playbook.md).** It has
    never been run. One benchmark with its noise floor recorded would turn a design into a procedure.
-2. **A worked example for a plugin or theme author.** `examples/` is all core testing.
-3. **`wp menu` coverage in `crud-suite.sh`** — nav menus are on the browser checklist but no script
+3. **A worked example for a plugin or theme author.** `examples/` is all core testing.
+4. **`wp menu` coverage in `crud-suite.sh`** — nav menus are on the browser checklist but no script
    asserts them.
-4. **Parameterize the five scripts** that still hardcode a release zip URL.
+5. **Parameterize the five scripts** that still hardcode a release zip URL.
+6. **The `cli` driver over SSH.** Local targets are tested; a remote `wp @alias` is not.
