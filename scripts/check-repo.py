@@ -125,10 +125,21 @@ def check_no_personal_data():
 
 
 # ── 4. Shell scripts ─────────────────────────────────────────────────────────
+def shell_scripts():
+    """Every shell script in the repo, vendored trees excluded.
+
+    Recursive and rooted at the repo, not at scripts/: a non-recursive glob
+    silently skipped every driver in scripts/env/ while CONTRIBUTING told driver
+    authors CI enforced these checks, and a scripts/-only glob still missed
+    examples/chains/ and skills/. One helper, because this gap opened in the
+    first place by two callers each carrying their own copy of the pattern.
+    """
+    skip = {".git", "node_modules", "vendor"}
+    return sorted(p for p in ROOT.rglob("*.sh") if not skip & set(p.parts))
+
+
 def check_shell():
-    scripts = sorted((ROOT / "scripts").glob("*.sh")) + sorted(
-        ROOT.rglob("plugin-theme-authors/**/*.sh")
-    )
+    scripts = shell_scripts()
     bad = []
     for s in scripts:
         r = subprocess.run(["bash", "-n", str(s)], capture_output=True, text=True)
@@ -233,29 +244,73 @@ def check_mermaid():
 
     bad = []
     with tempfile.TemporaryDirectory() as td:
+        # Render the way GITHUB does, not the way mermaid-cli does by default.
+        #
+        # This mattered: every diagram in README.md passed this check while GitHub
+        # refused all five with "Cannot read properties of undefined (reading
+        # 'render')". mermaid-cli defaults to htmlLabels:true, so <b>/<i> inside node
+        # labels sail through locally; GitHub disables HTML labels for security and
+        # renders those diagrams differently or not at all. A check that is more
+        # permissive than the thing it stands in for reports a pass that means nothing
+        # — which is the same failure this repo warns about everywhere else.
+        cfg = Path(td) / "github.json"
+        cfg.write_text(
+            '{"securityLevel":"strict","htmlLabels":false,'
+            '"flowchart":{"htmlLabels":false}}', encoding="utf-8"
+        )
         for path, idx, body in blocks:
             src = Path(td) / f"d{len(bad)}_{idx}.mmd"
             src.write_text(body, encoding="utf-8")
             out = src.with_suffix(".svg")
             r = subprocess.run(
-                ["npx", "-y", "@mermaid-js/mermaid-cli@latest", "-i", str(src), "-o", str(out)],
+                ["npx", "-y", "-p", "@mermaid-js/mermaid-cli@11", "mmdc",
+                 "--configFile", str(cfg), "-i", str(src), "-o", str(out)],
                 capture_output=True, text=True,
             )
             if not out.exists():
                 bad.append(f"{path} diagram {idx}: {r.stderr.strip().splitlines()[-1] if r.stderr else 'render failed'}")
-    report(f"mermaid renders ({len(blocks)} diagrams)", bad)
+                continue
+            # Rendering is necessary but not sufficient. With htmlLabels off, an <b> in
+            # a label does not error — it renders as the literal text "&lt;b&gt;", so
+            # the diagram silently displays its own markup. Catch that too.
+            svg = out.read_text(encoding="utf-8", errors="replace")
+            if "&lt;b&gt;" in svg or "&lt;i&gt;" in svg:
+                bad.append(
+                    f"{path} diagram {idx}: HTML tags in labels render as literal text "
+                    f"on GitHub — remove <b>/<i> (<br/> is fine)"
+                )
+    report(f"mermaid renders as GitHub renders it ({len(blocks)} diagrams)", bad)
 
 
-# ── 9. Scripts are executable and documented ─────────────────────────────────
+# ── 9. Scripts have a shebang and a description ──────────────────────────────
 def check_scripts_meta():
     bad = []
-    for s in sorted((ROOT / "scripts").glob("*.sh")):
+    for s in shell_scripts():
+        rel = s.relative_to(ROOT)
         text = s.read_text(encoding="utf-8")
         if not text.startswith("#!"):
-            bad.append(f"{s.name}: no shebang")
+            bad.append(f"{rel}: no shebang")
         if not re.search(r"^#\s*\S", text.split("\n", 1)[1] if "\n" in text else "", re.M):
-            bad.append(f"{s.name}: no description comment")
+            bad.append(f"{rel}: no description comment")
     report("scripts have shebang and description", bad)
+
+
+# ── 10. Environment drivers honour the driver contract ───────────────────────
+def check_driver_conformance():
+    """Every driver, against the contract in scripts/env/README.md.
+
+    Syntax-clean is not the failure that matters for a driver. One that swallows
+    WP-CLI's exit status is valid shell that turns every failure into a silent
+    PASS — three of the first six shipped with exactly that bug. This runs the
+    conformance harness, which needs no WordPress and no container.
+    """
+    harness = ROOT / "scripts" / "env" / "conformance.sh"
+    if not harness.exists():
+        SKIPPED.append("driver conformance (no harness)")
+        return
+    r = subprocess.run(["bash", str(harness)], capture_output=True, text=True)
+    bad = [l.strip() for l in r.stdout.splitlines() if l.strip().startswith("FAIL")]
+    report("environment drivers honour the contract", bad)
 
 
 def main():
@@ -269,6 +324,7 @@ def main():
     check_data()
     check_mermaid()
     check_scripts_meta()
+    check_driver_conformance()
 
     print()
     if SKIPPED:

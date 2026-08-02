@@ -1,0 +1,56 @@
+# Reference DDEV fixture for release-audit work.
+#
+# Copy to .ddev/config.yaml in an empty directory, then:
+#
+#   ddev start
+#   ddev wp core download --version=<the CURRENT stable, not the beta>
+#   ddev wp core install --url='$DDEV_PRIMARY_URL' --title='audit fixture' \
+#     --admin_user=admin --admin_password=password --admin_email=a@example.com
+#
+# Note the single quotes around $DDEV_PRIMARY_URL — it expands inside the container.
+#
+# WHY THIS FILE EXISTS: an Act I fixture is supposed to be reproducible by someone
+# else, and under wp-env it lives in the operator's head as a paragraph of setup prose.
+# Here it's a checked-in file, so "build the same fixture I did" is a copy instead of
+# an instruction. That is most of the argument for DDEV in this repo.
+#
+# Install the CURRENT stable here, add content, and THEN upgrade to the beta or RC.
+# A site you spin up during the release party is not an upgrade source — see Act I.
+
+name: wp-release-audit
+type: wordpress
+docroot: ""
+php_version: "8.3"
+
+# nginx-fpm is the default. Switch to apache-fpm to exercise .htaccess and the
+# Apache rewrite path — permalink and rewrite bugs live in the difference, and it's a
+# class of failure a single-webserver harness structurally cannot see.
+webserver_type: nginx-fpm
+
+database:
+  type: mariadb
+  version: "11.8"
+
+# The wildcard is what makes SUBDOMAIN multisite possible. WP-CLI refuses
+# `core multisite-convert --subdomains` on a localhost:PORT site, so every driver
+# without real wildcard hostnames is limited to subdirectory networks. Removing this
+# line is not cosmetic: scripts/env/ddev.sh probes for it and will stop declaring the
+# multisite-subdomain capability, and any cell needing it then reports BLOCKED.
+additional_hostnames:
+  - "*.wp-release-audit"
+
+# The multisite fixture in Act I needs archived and spam sites to be worth building —
+# a network upgrade once reported "2 of 2 sites upgraded" when there were five.
+
+# Xdebug stays off; it changes timing enough to make performance observations
+# meaningless. `ddev xdebug on` when you actually want to step through something,
+# and note it in the report if it was on during any measurement.
+xdebug_enabled: false
+
+# Keep the host file view synchronous where the platform allows it. On macOS and
+# Windows DDEV defaults to Mutagen, which is ASYNC — scripts/env/ddev.sh detects that
+# and declares hostfs-synced instead of hostfs, and env_tree calls env_sync before
+# reading. If you hash the document root yourself, flush first with `ddev mutagen sync`
+# or you will get a stale answer that reads exactly like a WordPress finding.
+# Uncomment to force a true bind mount at some performance cost on macOS:
+# performance_mode: none

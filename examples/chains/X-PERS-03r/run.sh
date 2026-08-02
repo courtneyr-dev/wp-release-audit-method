@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# X-PERS-03r — KSES URL-value reparse x legacy stored background declarations. See README.md.
 set -u
 
 SC="${STUDIO_CLI:-/Applications/Studio.app/Contents/Resources/bin/studio-cli.sh}"

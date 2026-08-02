@@ -60,8 +60,23 @@ Sentence case headings. Present tense. Say what failed and how you know.
 | `accessibility/`, `i18n/` | Dimensions that apply to everything |
 | `method/`, `playbooks/` | Why the rules exist, and per-axis runbooks |
 | `scripts/`, `data/` | Executables and the data they read |
+| `scripts/env/` | Environment drivers — where WordPress runs. [Its own README](scripts/env/README.md) |
+| `fixtures/` | Checked-in environment configs, so a fixture is a file rather than a paragraph |
 | `skills/`, `prompts/` | AI-assisted workflow |
 | `examples/` | Worked investigations with evidence |
+
+## Adding an environment
+
+A driver teaches the suites to run somewhere new — DDEV, Lando, Playground, a Local site,
+a staging box. It's about 150 lines, it's self-contained, and it's a good first
+contribution. [`scripts/env/README.md`](scripts/env/README.md) has the interface;
+[`ddev.sh`](scripts/env/ddev.sh) is the reference implementation to copy from.
+
+The bar is the same as for a finding, for the same reason. **Declare only capabilities you
+have actually exercised.** Under-claiming costs a few `BLOCKED` cells; over-claiming turns
+a cell that could never have failed into a `PASS`, and nobody downstream can tell. If you
+can't test something, say so in the header — an unverified driver is welcome and useful,
+an unverified driver that reads as tested is not.
 
 ## Before you open a pull request
 
@@ -69,9 +84,24 @@ Sentence case headings. Present tense. Say what failed and how you know.
 python3 scripts/check-repo.py
 ```
 
-That runs what CI runs: internal links and anchors, code fences, absence of personal paths and
-secrets, shell/PHP/JS syntax, YAML parsing, data-file shape, mermaid rendering, and script metadata.
-`--quick` skips the slow external checks.
+That covers internal links and anchors, code fences, absence of personal paths and secrets,
+shell/PHP/JS syntax, **shellcheck** (errors only, and silently skipped if it isn't installed
+— `brew install shellcheck` / `apt install shellcheck`), YAML parsing, data-file shape,
+mermaid rendering, and script metadata. `--quick` skips the slow external checks *and
+shellcheck*, so run it without `--quick` at least once before opening a PR.
+
+It is **one of four CI jobs**, not all of them. The others need a network or a container and
+so aren't part of this script:
+
+| CI job | What it does | Runs locally? |
+|---|---|---|
+| `check` | `check-repo.py`, as above | yes |
+| `external-links` | curls every external URL in the docs | no — advisory, `continue-on-error` |
+| `live-wordpress` | boots a real WordPress on DDEV and runs the CRUD suite against it | only if you have DDEV |
+| `surface-inventory` | smoke-tests `wp-surface-inventory.sh` against a fixture | yes, see the workflow |
+
+So a green `check-repo.py` means your change is well-formed, not that it works. If you touched
+anything under `scripts/`, run the thing you changed against a real site too.
 
 Adding a deprecation? `data/deprecations.csv` is meant to be community-maintained — one row, with a
 source link so a reviewer can verify it without guessing.
