@@ -16,10 +16,10 @@ survives testing that isn't looking.
 
 ```mermaid
 flowchart LR
-    A["<b>Automated</b><br/><i>axe, pa11y, Lighthouse</i><br/>catches a fraction"]
-    B["<b>Keyboard</b><br/><i>tab through everything</i><br/>catches most of the rest"]
-    C["<b>Screen reader</b><br/><i>is it announced?</i>"]
-    D["<b>Manual review</b><br/><i>content, design, code</i>"]
+    A["Automated<br/>axe, pa11y, Lighthouse<br/>catches a fraction"]
+    B["Keyboard<br/>tab through everything<br/>catches most of the rest"]
+    C["Screen reader<br/>is it announced?"]
+    D["Manual review<br/>content, design, code"]
     A --> B --> C --> D
     D --> V["Verdict"]
 

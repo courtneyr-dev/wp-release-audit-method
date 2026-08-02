@@ -13,10 +13,10 @@ failure is actionable.
 
 ```mermaid
 flowchart LR
-    A["<b>Act I</b><br/>Before the drop<br/><i>build environments on the<br/>current release, ready to upgrade</i>"]
-    B(["📦 <b>Beta / RC drops</b>"])
-    C["<b>Act II</b><br/>The party<br/><i>breadth, fast</i>"]
-    D["<b>Act III</b><br/>After the party<br/><i>depth, honest</i>"]
+    A["Act I<br/>Before the drop<br/>build environments on the<br/>current release, ready to upgrade"]
+    B(["📦 Beta / RC drops"])
+    C["Act II<br/>The party<br/>breadth, fast"]
+    D["Act III<br/>After the party<br/>depth, honest"]
     E["🐛 Filed tickets<br/>+ better instruments"]
 
     A --> B --> C --> D --> E
@@ -178,21 +178,26 @@ bash scripts/fast-triage.sh ~/Downloads/wordpress-7.2-RC1.zip ~/Downloads/wordpr
 flowchart TD
     Q{"Where will you test?"}
 
-    Q -->|"Nowhere yet —<br/>I just want to look"| P["<b>Playground</b><br/>browser only, zero install"]
-    Q -->|"A site I already have<br/><i>staging · shared host · local</i>"| BT["<b>Beta Tester plugin</b><br/>flip a channel, click update"]
-    Q -->|"A fresh throwaway<br/>on my machine"| L["<b>Local / Studio / MAMP</b><br/>real install, few clicks"]
-    Q -->|"I want to run<br/>the scripts in this repo"| W["<b>wp-env</b><br/>Docker, scriptable"]
+    Q -->|"Nowhere yet —<br/>I just want to look"| P["Playground<br/>browser only, zero install"]
+    Q -->|"A site I already have<br/>staging · shared host · local"| BT["Beta Tester plugin<br/>flip a channel, click update"]
+    Q -->|"A fresh throwaway<br/>on my machine"| L["Local / Studio / MAMP<br/>real install, few clicks"]
+    Q -->|"I want the most<br/>capable setup"| W["DDEV or wp-env<br/>Docker, scriptable"]
 
     P --> PN["✅ nothing to install<br/>❌ can't test upgrades<br/>❌ not your real server"]
     BT --> BTN["✅ your real host and PHP<br/>✅ no Docker, no terminal<br/>⚠️ back it up first"]
     L --> LN["✅ realistic, upgradeable<br/>❌ manual"]
-    W --> WN["✅ resettable, scriptable<br/>❌ needs Docker"]
+    W --> WN["✅ resettable, snapshottable<br/>✅ PHP + DB versions on demand<br/>❌ needs Docker"]
 
     style P fill:#e8f4f8,stroke:#21759B,color:#000
     style BT fill:#d4edda,stroke:#28a745,stroke-width:3px,color:#000
     style L fill:#fff4e6,stroke:#D54E21,color:#000
     style W fill:#f0e8f8,stroke:#826EB4,color:#000
 ```
+
+> [!TIP]
+> **The scripts run on all of these**, not just wp-env — pass `--env=`. See
+> [what each one can and can't detect](#which-setup-can-detect-what) below before you
+> pick, because that difference decides which findings are even reachable for you.
 
 ### Option A — the Beta Tester plugin *(how most people do it)*
 
@@ -295,8 +300,79 @@ echo '{"core":"WordPress/WordPress#master"}' > .wp-env.json
 wp-env start
 ```
 
-It prints your URL (usually `http://localhost:8888`). Pass that directory and URL to the
-scripts below.
+It prints your URL (usually `http://localhost:8888`). Pass that directory to the scripts
+below with `--env=wp-env`.
+
+### Option E — DDEV *(the most capable, if you're willing to install it)*
+
+[DDEV](https://ddev.com/) is a Docker environment widely used across the WordPress and
+Drupal worlds. It costs one more install than wp-env and buys several things nothing else
+here has: **database snapshots** (so an Act I fixture is restored in seconds instead of
+rebuilt), **PHP and MariaDB/MySQL versions as one-line settings**, **trusted HTTPS**,
+Apache *or* nginx, and wildcard hostnames — which are what make **subdomain** multisite
+possible at all, since WP-CLI refuses to convert a `localhost:PORT` site.
+
+```bash
+mkdir ~/wp-test && cd ~/wp-test
+mkdir .ddev && cp /path/to/this/repo/fixtures/ddev/config.yaml .ddev/config.yaml
+ddev start
+ddev wp core download --version=<the current stable, not the beta>
+ddev wp core install --url='$DDEV_PRIMARY_URL' --title='audit fixture' \
+  --admin_user=admin --admin_password=password --admin_email=a@example.com
+```
+
+Those single quotes around `$DDEV_PRIMARY_URL` are deliberate — it expands inside the
+container. And note the **current stable**, not the beta: a site installed fresh on the
+build you're testing cannot test an upgrade to it.
+
+[`fixtures/ddev/config.yaml`](fixtures/ddev/config.yaml) is the point of this option.
+Under wp-env a fixture is a paragraph of setup prose in your head; here it's a file you
+can hand to someone else so they rebuild the same thing.
+
+---
+
+## Which setup can detect what
+
+Every option above can run the suites. They are **not** equivalent, and the differences
+decide which findings are reachable for you rather than merely how convenient the setup
+is.
+
+The clearest case is this repo's best-known finding. Catching 243 files left behind by an
+upgrade needs three things at once: WordPress's **own** updater (WP-CLI's cleans them up
+and says so), a **host-readable** copy of the files to diff, and a **real upgrade** from
+an older install. A remote staging site has the first and third but not the second, so
+the diff is simply impossible there. That's not a ranking — it's the reason your report
+has to say which setup you used.
+
+> [!TIP]
+> Don't guess which of these your setup has, and don't trust folklore about it either.
+> While this was being built, a confident and widely-repeated claim — that Playground
+> can't reach WordPress's own updater — turned out to be false the first time anyone ran
+> it. Ask your setup instead: `env_caps_report`, below.
+
+Ask any setup what it can do:
+
+```bash
+. scripts/lib-env.sh
+env_init ddev ~/wp-test
+env_caps_report
+```
+
+```
+════ ENVIRONMENT CAPABILITIES  (driver: ddev)
+  has:    core-updater db-reset snapshot php-switch core-zip https xdebug shell …
+  MISSING: sqlite apache mysql
+
+  A cell needing any MISSING capability reports BLOCKED, not PASS.
+```
+
+**A cell that needs something your setup can't do reports `BLOCKED`, never `PASS`.** That
+is the same rule as [Step 4](#step-4-check-what-your-setup-can-detect), applied to the
+environment itself instead of to your zip library — and it's what stops "the suite passed"
+from quietly meaning "the suite couldn't have failed."
+
+Full details, and how to add a setup that isn't listed:
+[`scripts/env/README.md`](scripts/env/README.md).
 
 ---
 
@@ -407,25 +483,25 @@ three acts.
 
 ```mermaid
 flowchart LR
-    subgraph ACT1["<b>Act I · Before the drop</b>"]
+    subgraph ACT1["Act I · Before the drop"]
         direction TB
-        A1["Watch for the build<br/><i>is it out yet?</i>"] --> A2["Build fixtures on the<br/><b>current</b> release"]
+        A1["Watch for the build<br/>is it out yet?"] --> A2["Build fixtures on the<br/>current release"]
         A2 --> A3["Seed content"]
         A3 --> A4["Assert state"]
         A4 --> A5["Calibrate controls"]
     end
 
-    DROP(["📦 <b>Beta / RC drops</b>"])
+    DROP(["📦 Beta / RC drops"])
 
-    subgraph ACT2["<b>Act II · The party</b>"]
+    subgraph ACT2["Act II · The party"]
         direction TB
-        B1["Build-identity gate"] --> B2["<b>Fresh install</b><br/><i>does it install clean?</i>"]
-        B2 --> B3["<b>Upgrade ladder</b><br/><i>9 cells, PHP 7.4</i>"]
-        B3 --> B4["<b>T1 sweep</b><br/><i>~61 cells</i>"]
+        B1["Build-identity gate"] --> B2["Fresh install<br/>does it install clean?"]
+        B2 --> B3["Upgrade ladder<br/>9 cells, PHP 7.4"]
+        B3 --> B4["T1 sweep<br/>~61 cells"]
         B4 --> B5["Post the checklist"]
     end
 
-    subgraph ACT3["<b>Act III · After</b>"]
+    subgraph ACT3["Act III · After"]
         direction TB
         C1["Recheck filed tickets"] --> C2["Retest the fixes"]
         C2 --> C3["Deep chain audit"]
@@ -620,22 +696,22 @@ Browser alone would have missed it.
 
 ```mermaid
 flowchart LR
-    subgraph LANES["<b>Lanes</b>"]
+    subgraph LANES["Lanes"]
         direction TB
         L1["Fresh install"]
         L2["Upgrade"]
         L3["Everyday use"]
     end
 
-    subgraph SURF["<b>Surfaces — run each lane on as many as you can</b>"]
+    subgraph SURF["Surfaces — run each lane on as many as you can"]
         direction TB
-        S1["WP-CLI<br/><i>scriptable, exact</i>"]
-        S2["Browser<br/><i>what humans hit</i>"]
-        S3["Docker / wp-env<br/><i>clean, resettable</i>"]
-        S4["REST API<br/><i>headless + editor</i>"]
+        S1["WP-CLI<br/>scriptable, exact"]
+        S2["Browser<br/>what humans hit"]
+        S3["Docker / wp-env<br/>clean, resettable"]
+        S4["REST API<br/>headless + editor"]
     end
 
-    LANES --> SURF --> R["Disagreement between<br/>surfaces <b>is</b> a finding"]
+    LANES --> SURF --> R["Disagreement between<br/>surfaces is a finding"]
 
     style LANES fill:#e8f4f8,stroke:#21759B,stroke-width:2px,color:#000
     style SURF fill:#fff4e6,stroke:#D54E21,stroke-width:2px,color:#000
@@ -656,12 +732,12 @@ Each cell gets a verdict:
 ```mermaid
 flowchart LR
     C["Test cell"] --> V{"Verdict"}
-    V --> P["<b>PASS</b><br/>worked"]
-    V --> F["<b>FAIL</b><br/>didn't"]
-    V --> PA["<b>PARTIAL</b><br/>mostly"]
-    V --> B["<b>BLOCKED</b><br/>couldn't run"]
-    V --> S["<b>SKIP</b><br/>n/a here"]
-    V --> I["<b>INVALID</b><br/>harness broke"]
+    V --> P["PASS<br/>worked"]
+    V --> F["FAIL<br/>didn't"]
+    V --> PA["PARTIAL<br/>mostly"]
+    V --> B["BLOCKED<br/>couldn't run"]
+    V --> S["SKIP<br/>n/a here"]
+    V --> I["INVALID<br/>harness broke"]
 
     I -.->|"diagnose,<br/>preserve,<br/>exclude"| X["not a<br/>product result"]
 

@@ -19,12 +19,12 @@ So the method is a set intersection:
 
 ```mermaid
 flowchart LR
-    A["<b>Your surface inventory</b><br/><i>what your code touches</i><br/>derived by grep"]
-    B["<b>Release change inventory</b><br/><i>what core changed</i><br/>derived from dev notes"]
+    A["Your surface inventory<br/>what your code touches<br/>derived by grep"]
+    B["Release change inventory<br/>what core changed<br/>derived from dev notes"]
     A --> C{"∩"}
     B --> C
-    C --> D["<b>Your test plan</b><br/><i>every item in both lists</i>"]
-    D --> E["× <b>your changelog</b><br/>= what to test <b>first</b>"]
+    C --> D["Your test plan<br/>every item in both lists"]
+    D --> E["× your changelog<br/>= what to test first"]
 
     style A fill:#e8f4f8,stroke:#21759B,color:#000
     style B fill:#fff4e6,stroke:#D54E21,color:#000
