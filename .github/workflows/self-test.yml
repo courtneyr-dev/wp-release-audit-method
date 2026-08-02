@@ -117,7 +117,11 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           . scripts/lib-env.sh
           env_init ddev /tmp/fixture
-          out="$(env_require T1-44 sqlite)"; rc=$?
+          # `rc=0; x="$(cmd)" || rc=$?` and NOT `x="$(cmd)"; rc=$?` — Actions runs each
+          # step under `bash -e`, so the plain assignment aborts the step on exactly the
+          # non-zero status this test exists to observe.
+          rc=0
+          out="$(env_require T1-44 sqlite)" || rc=$?
           echo "$out"
           [ "$rc" = "2" ] || { echo "::error::env_require returned $rc, expected 2"; exit 1; }
           echo "$out" | grep -q 'BLOCKED  T1-44' || { echo "::error::no BLOCKED verdict"; exit 1; }

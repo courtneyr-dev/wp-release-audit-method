@@ -258,17 +258,35 @@ def check_mermaid():
             '{"securityLevel":"strict","htmlLabels":false,'
             '"flowchart":{"htmlLabels":false}}', encoding="utf-8"
         )
+        # mermaid-cli drives headless Chrome through Puppeteer, and Chrome's sandbox
+        # cannot start as root inside a CI container. Without this every diagram
+        # "fails" identically with a ChildProcess error that has nothing to do with
+        # the diagram.
+        pcfg = Path(td) / "puppeteer.json"
+        pcfg.write_text('{"args":["--no-sandbox","--disable-setuid-sandbox"]}',
+                        encoding="utf-8")
+
+        launch_failed = 0
         for path, idx, body in blocks:
             src = Path(td) / f"d{len(bad)}_{idx}.mmd"
             src.write_text(body, encoding="utf-8")
             out = src.with_suffix(".svg")
             r = subprocess.run(
                 ["npx", "-y", "-p", "@mermaid-js/mermaid-cli@11", "mmdc",
-                 "--configFile", str(cfg), "-i", str(src), "-o", str(out)],
+                 "--configFile", str(cfg), "--puppeteerConfigFile", str(pcfg),
+                 "-i", str(src), "-o", str(out)],
                 capture_output=True, text=True,
             )
             if not out.exists():
-                bad.append(f"{path} diagram {idx}: {r.stderr.strip().splitlines()[-1] if r.stderr else 'render failed'}")
+                err = r.stderr.strip()
+                # Tell "the renderer would not start" apart from "this diagram is
+                # broken". Reporting the first as the second is how this check spent
+                # its life red on main while saying nothing true about the diagrams.
+                if re.search(r"Failed to launch|Could not find (Chrome|browser)|"
+                             r"ChildProcess|ENOENT|spawn", err):
+                    launch_failed += 1
+                    continue
+                bad.append(f"{path} diagram {idx}: {err.splitlines()[-1] if err else 'render failed'}")
                 continue
             # Rendering is necessary but not sufficient. With htmlLabels off, an <b> in
             # a label does not error — it renders as the literal text "&lt;b&gt;", so
@@ -279,6 +297,12 @@ def check_mermaid():
                     f"{path} diagram {idx}: HTML tags in labels render as literal text "
                     f"on GitHub — remove <b>/<i> (<br/> is fine)"
                 )
+
+    if launch_failed and not bad:
+        # Nothing was actually checked. Say so instead of claiming a pass.
+        SKIPPED.append(f"mermaid render — headless Chrome would not start ({launch_failed} diagrams unchecked)")
+        print(f"ok    mermaid diagrams found ({len(blocks)}) — renderer unavailable, not checked")
+        return
     report(f"mermaid renders as GitHub renders it ({len(blocks)} diagrams)", bad)
 
 
