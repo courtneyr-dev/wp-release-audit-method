@@ -8,7 +8,12 @@
 
 PROJ="$1"; URL="$2"
 TARGET="${3:-https://wordpress.org/wordpress-7.1-beta4.zip}"
-VERSIONS="4.9.29 5.0.25 5.2.24 5.5.18 5.9.13 6.0.12 6.2.9 6.5.8 6.8.6 6.9.5 7.0.2"
+# What `wp core version` must report after the jump — derived from the target
+# zip name so pointing at a new build can't silently fail every row.
+EXPECT=$(basename "$TARGET" .zip | sed 's/^wordpress-//')
+# Latest of every branch (api.wordpress.org/core/stable-check). Override with
+# VERSIONS="..." in the environment to run a subset.
+VERSIONS="${VERSIONS:-4.9.29 5.0.25 5.1.22 5.2.24 5.3.21 5.4.19 5.5.18 5.6.17 5.7.15 5.8.13 5.9.13 6.0.12 6.1.10 6.2.9 6.3.8 6.4.8 6.5.8 6.6.5 6.7.5 6.8.6 6.9.5 7.0.2}"
 cd "$PROJ" || exit 1
 
 t() { npx --yes @wordpress/env@latest run tests-cli -- "$@" 2>/dev/null \
@@ -62,7 +67,7 @@ for V in $VERSIONS; do
 
   # a hop only passes if it actually STARTED from the version we asked for
   if [ "$BV" != "$V" ]; then                       R="FAIL: never installed $V (got $BV)"
-  elif [ "$AV" != "7.1-beta4" ]; then              R="FAIL: ended on $AV"
+  elif [ "$AV" != "$EXPECT" ]; then                R="FAIL: ended on $AV"
   elif [ "$FRONT" != "200" ] || [ "$LOGIN" != "200" ]; then R="FAIL: http $FRONT/$LOGIN"
   elif [ "$FATAL" != "0" ]; then                   R="FAIL: fatal on frontend"
   elif [ "$CANARY" != "1" ]; then                  R="FAIL: canary lost"

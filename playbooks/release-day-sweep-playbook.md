@@ -3,7 +3,7 @@ title: "Release-day sweep playbook — Phase 1 breadth before Phase 2 depth"
 type: playbook
 status: active
 created: '2026-07-31'
-updated: '2026-07-31'
+updated: '2026-08-05'
 source_run: "$WP_AUDIT_ROOT/ (matrices, scripts, evidence remain there)"
 tags:
   - wordpress
@@ -72,11 +72,31 @@ PHP floors crossed by the ladder, from the feature ledger: **6.3** drops PHP 5.x
 
 **Keep the two updater lanes separate and never let one stand in for the other.** The beta4 finding depends on it: Core's updater left 243 removed files behind while WP-CLI's cleaned them. A ladder run only through WP-CLI would have reported a clean tree.
 
+### The direct-jump matrix — every branch, one hop each, cheap
+
+The seeded ladder is expensive per cell (fixtures with real content, asserted before-states). The **direct-jump matrix** (`scripts/direct-jump-matrix.sh`) buys the complementary breadth: a fresh install of the **latest patch of every release series**, one `wp core update` straight to the target, then five assertions — started from the version asked for, ended on the target, front and login answer 200, no fatal on the front end, a canary post survives. Roughly two minutes per rung, so all ~21 branches fit in an under-an-hour background run on 7.1-RC1 day, and it proved the one-hop path from every series including 4.9 (db 38590 → 61833 in one migration).
+
+Three operational notes from that run:
+
+- The script derives the expected post-upgrade version from the target zip's filename. The earlier version hard-coded it, which silently fails **every** rung the first time the target changes.
+- Branch list comes from `api.wordpress.org/core/stable-check/1.0/` (max patch per series). Re-derive per release; override with `VERSIONS="..."` to rerun a subset.
+- A rung that fails **before** the upgrade runs is a harness result, not a product one. The tell is a blank pre-upgrade `db_version` alongside a front-end 500: the install itself never came up. See the container-extraction trap below.
+
+### Fixture traps proven on 7.1-RC1 day
+
+**Parked fixtures self-upgrade.** Fresh installs since WordPress 5.6 default `auto_update_core_major` to enabled, so an old-version fixture left running quietly updates itself to current stable — two ladder cells were found sitting on 7.0.2 with their old `db_version` gone, which destroys the cell (the schema already migrated, so the old→target migration can no longer be proven). Pin `WP_AUTO_UPDATE_CORE=false` in the fixture config at build time, and **re-assert the before-state at run start, not fixture-build time** — the assertion that matters is the one taken the moment before the upgrade.
+
+**Container tar truncates long paths.** `wp core download` inside a container can truncate tar entries whose path exceeds 100 characters (the classic tar name-field limit). Concrete case: Twenty Twenty-Two 1.x pattern filenames — `inc/patterns/header-text-only-with-tagline-black-background.php` lands with the name cut mid-word, `block-patterns.php` fatals, and the install 500s before any upgrade runs. It hits exactly the 5.9/6.0 rungs (TT2 1.x ships the long names; 6.1+ shortened them; pre-5.9 has no TT2), which reads like a version-specific upgrade bug and is not one. Fix: extract the release zip **on the host** into the mounted docroot, then `wp core install` in the container.
+
+### When the target ships no schema change
+
+If the target's `$wp_db_version` equals current stable's (7.1-RC1 shipped 61833, identical to 7.0.2), every "db_version advanced" assertion is wrong as written. Flip them deliberately rather than skipping them: same-branch cells assert **unchanged, as shipped**; older-source cells still assert the migration to the shipped value. On multisite, "eligible sites advanced" becomes vacuous — assert instead that the network updater **processed exactly the eligible count** and that held-back flags did not move. The updater's success line ("upgraded on 2/2 sites" on a 5-site network) is easiest to misread in precisely this case, so state the denominator in the report.
+
 ## Execution discipline (both phases)
 
 Unchanged from the standing method, and non-negotiable:
 
-1. **Build-identity gate first.** `scripts/rc_build_identity.sh $VERSION $LABEL`. WAITING means stop; never substitute a beta, trunk, nightly, or prior RC.
+1. **Build-identity gate first.** `scripts/rc_build_identity.sh $VERSION $LABEL`. WAITING means stop; never substitute a beta, trunk, nightly, or prior RC. Package URL lanes differ by release type — stable publishes at `downloads.wordpress.org/release/`, betas and RCs at the `wordpress.org` root — and a gate that checks only one lane reports WAITING while the build is live (this cost real time on 7.1-RC1 day; the script now checks both). When testing a locally supplied zip, its sha256 must match the canonical package before any cell counts.
 2. **Assert fixture state and denominators before reading results** — version, `db_version`, site inventory with status flags, active plugins, theme, content counts, fixture hash. `scripts/assert_multisite_denominator.sh` for every multisite cell.
 3. **Positive and negative control per batch.** Either miscalibrates → the batch is `INVALID`, excluded from counts, diagnosis preserved.
 4. **Serialize mutations** against one fixture; verify cleanup; rerun valid batches from the restored baseline and require matching observations.

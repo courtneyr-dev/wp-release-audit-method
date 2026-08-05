@@ -5,6 +5,26 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — from the 7.1-RC1 release-day run (2026-08-05)
+- **`scripts/rc_build_identity.sh`** — the build-identity gate the playbook already required but the
+  repo never shipped. Checks both package lanes (stable at `downloads.wordpress.org/release/`,
+  betas/RCs at the `wordpress.org` root — checking only one lane reports WAITING while the build is
+  live), pins sha256 plus `$wp_version`/`$wp_db_version`, and exits 0/3/2 for RELEASED/WAITING/error.
+  Calibrated both directions against 7.1-RC1.
+- **Direct-jump matrix as a standing lane** — `scripts/direct-jump-matrix.sh` now derives the
+  expected post-upgrade version from the target zip name (previously hard-coded, which silently
+  failed every rung on a new target) and defaults to the latest patch of **every** release series
+  (from `api.wordpress.org/core/stable-check`), overridable via `VERSIONS`. All 21 branches
+  4.9 → 7.0.2 proved one-hop clean to 7.1-RC1 in under an hour.
+- **Playbook: fixture traps proven on RC1 day** — parked old-version fixtures self-upgrade
+  (`auto_update_core_major` defaults on since 5.6; pin `WP_AUTO_UPDATE_CORE=false` and re-assert
+  before-state at run start), and container tar truncates >100-char paths (TT2 1.x pattern
+  filenames fatal the 5.9/6.0 installs before any upgrade runs; host-extract the zip instead).
+- **Playbook: the no-schema-change release** — when the target ships `$wp_db_version` equal to
+  current stable, "db advanced" assertions flip to "unchanged, as shipped", and the multisite
+  check becomes "processed exactly the eligible count, flags unmoved" — the case where the
+  updater's "upgraded on 2/2 sites" line misleads hardest.
+
 ### Added
 - **Self-test** — `scripts/check-repo.py` and a CI workflow running nine checks, plus an external
   link sweep and a smoke test that proves the inventory tool produces the sections it documents.
