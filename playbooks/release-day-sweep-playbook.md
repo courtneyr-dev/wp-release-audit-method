@@ -103,17 +103,50 @@ Unchanged from the standing method, and non-negotiable:
 5. **Verdicts:** `CONFIRMED` `REFUTED` `INCONCLUSIVE` `BLOCKED` `INVALID`. Nothing else.
 6. **Harness-health precheck** before each batch. A harness fault is never a product result.
 
-## Release-day running order
+## The checklist-first fast path
+
+**The deliverable with a clock on it is the posted per-check block** (the
+[fast block](slack-test-report-template.md#the-fast-block--post-this-first) in the report
+template) — the community reads it, replies to it, and builds on it the same afternoon.
+Everything else is valuable and none of it is urgent. So the running order optimizes
+**time-to-posted-checklist**, not coverage order: run exactly the cells that prove the block's
+lines, post, then let breadth and depth land in the thread as they finish.
+
+Measured on the 7.1-RC1 run, on already-built fixtures:
+
+| Minute | Work | What it buys |
+|---|---|---|
+| 0–3 | Build-identity gate; if handed a local zip, sha256 it against the canonical package | the header line — the build actually tested |
+| 3–6 | Static triage from the two zips: `$_old_files` completeness, polyfill grep, changed-surface list | one or two headline lines, offline, before anything boots |
+| 6–12 | Upgrade the primary single-site fixture; assert version, `db_version`, counts, admin + front 200, debug.log | the Core-upgrade line |
+| 12–22 | The ~25 CLI cells that light the block's lines — posts, pages, taxonomy, trash/restore, comments + reply, media import, theme switch, plugin install/update, users | most of the block |
+| 22–28 | Multisite network upgrade + denominator assertion | the multisite line, with the honest count |
+| ~30 | **Post the block.** | — |
+
+After posting, in whatever order the machine allows: upgrade ladder, direct-jump matrix
+(background — it self-reports), browser cells on this release's changed surfaces, extensions
+pass. Each result becomes a thread reply; a late `FAIL` is a thread correction, which is a far
+better outcome than a checklist nobody saw until evening.
+
+Two disciplines the speed must not eat:
+
+- **Controls still run before cells** (one expected-fail per fixture). A miscalibrated batch
+  posted fast is worse than a slow one — it is confidently wrong in public.
+- **Every posted line traces to a cell that individually executed it.** Speed comes from
+  running fewer, better-chosen cells first — never from marking by association.
+
+## Release-day running order (full session)
 
 | Slot | Work | Gate to proceed |
 |---|---|---|
 | 1 | Build-identity gate | RELEASED, package hash pinned |
 | 2 | Fixture build + state assertions, all environments | every fixture prints a passed assertion |
-| 3 | CLI sweep, T1 → T2 (scripted, parallel across environments) | controls calibrated |
-| 4 | Upgrade ladder T1 (~10 cells, serialized) | each cell asserts pre and post |
-| 5 | Browser sweep, T1 only (ledger-selected) | native-control calibration if any keyboard cell |
-| 6 | Triage: verdict counts, invalid batches excluded, blockers with exact closing conditions | — |
-| 7 | Share findings → they select Phase 2 targets | — |
+| 3 | **Fast path above → post the block** | controls calibrated |
+| 4 | CLI sweep, remaining T1 → T2 (scripted, parallel across environments) | — |
+| 5 | Upgrade ladder T1 (~10 cells, serialized) + direct-jump matrix in the background | each cell asserts pre and post |
+| 6 | Browser sweep, T1 only (ledger-selected) | native-control calibration if any keyboard cell |
+| 7 | Triage: verdict counts, invalid batches excluded, blockers with exact closing conditions; thread the detail | — |
+| 8 | Share findings → they select Phase 2 targets | — |
 
 T2/T3 cells run asynchronously after the release-day window; they are not gates on reporting.
 

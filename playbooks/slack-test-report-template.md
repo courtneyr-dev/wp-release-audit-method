@@ -3,7 +3,7 @@ title: "Slack test-report template — release-day checklist"
 type: template
 status: active
 created: '2026-07-31'
-updated: '2026-07-31'
+updated: '2026-08-05'
 source_run: "$WP_AUDIT_ROOT/scripts/render_slack_checklist.py (generator)"
 tags:
   - wordpress
@@ -17,6 +17,47 @@ related:
 ---
 
 # Slack test-report template
+
+## The fast block — post this first
+
+**The release-day deliverable is a posted checklist, not a finished audit.** The block below is
+what goes to Slack the moment its lines are proven — on the 7.1-RC1 run that was ~30 minutes in,
+while the upgrade ladder and browser cells were still running. Everything else lands in the
+thread as it completes. The [release-day sweep playbook](release-day-sweep-playbook.md#the-checklist-first-fast-path)
+carries the running order that gets here fastest.
+
+```
+Tested WordPress <TARGET> (sha256-verified official package) — upgraded <SOURCE> → <TARGET> via <lane>, <env>, PHP <PHP> / theme <theme>
+
+Core upgrade <SOURCE> → <TARGET> :white_check_mark:
+Create/Update/Delete Post :white_check_mark:
+Categories and Tags: Create, Assign, Edit, Delete :white_check_mark:
+Create/Update/Delete Page :white_check_mark:
+Move Post/Page to trash and restore :white_check_mark:
+Media upload :white_check_mark:
+Switch Theme :white_check_mark:
+Add/Edit/Delete Comment :white_check_mark:
+Reply Comment :white_check_mark:
+Plugin Install :white_check_mark:
+Plugin Update :white_check_mark:
+Users: Create/Change role/Delete :white_check_mark:
+Multisite: network upgrade — <eligible> of <total> sites processed, <held> held back by flags as designed :white_check_mark:
+
+Not covered this pass: <the honest list>
+```
+
+Two rules the fast block lives or dies by:
+
+- **A line gets its emoji only from a cell that individually executed that operation.** Never
+  mark a line green because a *related* cell passed — the first auto-renderer did exactly that
+  (one blocked media cell painted every media line blocked, and untested WooCommerce lines
+  inherited green from the "plugin" entity), which is how a checklist starts lying in both
+  directions. Until the renderer maps line → cell IDs, fill this block by hand from the
+  per-cell evidence.
+- **A line that didn't run is dropped or marked** `:heavy_minus_sign:` **— never left green from
+  last release.** The "Not covered" line is part of the format, not an apology.
+
+## The full form — 64 checks, for the thread or the follow-up pass
 
 > **This is the blank form — 64 checks, all unmarked.** For a *filled-in* version with
 > realistic mixed verdicts, a threaded finding, and the rules for what to say in the thread,

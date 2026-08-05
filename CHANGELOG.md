@@ -6,6 +6,13 @@ cadence rather than its own, so entries are grouped by what changed.
 ## Unreleased
 
 ### Added — from the 7.1-RC1 release-day run (2026-08-05)
+- **The fast block, and checklist-first ordering** — the report template now opens with the
+  short per-check block the community actually reads, and the playbook gains a measured
+  fast path (~30 minutes on prebuilt fixtures) that runs exactly the cells proving those
+  lines, posts, and lets the ladder, matrix, and browser cells land in the thread. Two
+  rules ride along: every posted line traces to a cell that individually executed it (no
+  marking by association — the renderer bug that motivated this), and controls still run
+  before cells.
 - **`scripts/rc_build_identity.sh`** — the build-identity gate the playbook already required but the
   repo never shipped. Checks both package lanes (stable at `downloads.wordpress.org/release/`,
   betas/RCs at the `wordpress.org` root — checking only one lane reports WAITING while the build is
