@@ -1,0 +1,135 @@
+# Run the suite against the newest WordPress Beta/RC — the upgrade a real site takes.
+#
+# self-test.yml proves the TOOLING (against pinned versions, so a red run means the
+# tools broke). This proves the RELEASE: stable installed first, then upgraded in
+# place to the current prerelease, then the CRUD suite against the result. Weekly
+# while a cycle is active, and dispatched by release-watch the day a build drops.
+# Outside a cycle it detects that and stops green — absence of a Beta is not a
+# failure of anything.
+#
+# Adapted from the weekly Behat run in Chris Reynolds's wpnext-test, translated to
+# this repo's drivers: DDEV instead of a Pantheon multidev, crud-suite instead of
+# the Pantheon upstream suite.
+
+name: Prerelease suite
+
+on:
+  schedule:
+    # Mondays, offset an hour from self-test so a shared failure is attributable.
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Prerelease version (e.g. 7.2-RC1). Blank = auto-detect.'
+        required: false
+        type: string
+      package_url:
+        description: 'Package zip URL. Blank = derived from the version.'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  suite:
+    name: CRUD suite against the newest Beta/RC
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve the target build
+        id: target
+        env:
+          IN_VERSION: ${{ inputs.version }}
+          IN_URL: ${{ inputs.package_url }}
+        run: |
+          if [ -n "$IN_VERSION" ]; then
+            # Dispatch inputs are free text — validate the shape before anything
+            # interpolates them into a command or URL.
+            echo "$IN_VERSION" | grep -qE '^[0-9]+\.[0-9]+(\.[0-9]+)?-(beta|RC)[0-9]+$' \
+              || { echo "::error::version '$IN_VERSION' does not look like a prerelease"; exit 1; }
+            url="${IN_URL:-https://wordpress.org/wordpress-$IN_VERSION.zip}"
+            echo "$url" | grep -qE '^https://wordpress\.org/wordpress-[0-9A-Za-z.-]+\.zip$' \
+              || { echo "::error::package_url '$url' is not a wordpress.org package"; exit 1; }
+            echo "version=$IN_VERSION" >> "$GITHUB_OUTPUT"
+            echo "url=$url" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          rc=0
+          version="$(bash scripts/check-latest-release.sh)" || rc=$?
+          case "$rc" in
+            0)
+              echo "version=$version" >> "$GITHUB_OUTPUT"
+              echo "url=$(bash scripts/check-latest-release.sh --url)" >> "$GITHUB_OUTPUT"
+              ;;
+            2) echo "No active prerelease cycle — nothing to test this week." >> "$GITHUB_STEP_SUMMARY" ;;
+            3) echo "Build announced but not packaged yet — release-watch will dispatch when it lands." >> "$GITHUB_STEP_SUMMARY" ;;
+            *) echo "::error::detector failed with exit $rc"; exit 1 ;;
+          esac
+
+      - uses: ddev/github-action-setup-ddev@v1
+        if: steps.target.outputs.version != ''
+        with:
+          autostart: false
+
+      - name: Install current stable — the version real sites are upgrading FROM
+        if: steps.target.outputs.version != ''
+        run: |
+          mkdir -p /tmp/fixture/.ddev
+          cp fixtures/ddev/config.yaml /tmp/fixture/.ddev/config.yaml
+          cd /tmp/fixture
+          ddev start -y
+          # No --version: latest stable, whatever it is today. Pinning it here
+          # would quietly turn this into a test of an upgrade nobody performs.
+          ddev wp core download
+          ddev wp core install --url="$(ddev exec -- sh -c 'echo $DDEV_PRIMARY_URL')" \
+            --title='prerelease fixture' --admin_user=admin \
+            --admin_password=password --admin_email=a@example.com
+          echo "Upgrading FROM: $(ddev wp core version)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upgrade in place to the prerelease
+        if: steps.target.outputs.version != ''
+        env:
+          VERSION: ${{ steps.target.outputs.version }}
+          PKG: ${{ steps.target.outputs.url }}
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          . scripts/lib-env.sh
+          env_init ddev /tmp/fixture
+          env_core_install "$PKG"
+          env_wp core update-db
+          after="$(env_wp core version)"
+          echo "Upgraded TO: $after" >> "$GITHUB_STEP_SUMMARY"
+          # The URL lane of env_core_install can't check this itself: assert the
+          # site now runs the build we asked for, not whatever the zip contained.
+          case "$after" in
+            "$VERSION"*) ;;
+            *) echo "::error::asked for $VERSION, site reports $after"; exit 1 ;;
+          esac
+
+      - name: Run the CRUD suite against the upgraded site
+        if: steps.target.outputs.version != ''
+        run: bash scripts/crud-suite.sh --env=ddev /tmp/fixture | tee crud.txt
+
+      - name: Assert the suite exercised the prerelease
+        if: steps.target.outputs.version != ''
+        run: |
+          fail=0
+          grep -q 'driver=ddev'                    crud.txt || { echo "::error::driver not reported"; fail=1; }
+          grep -q 'final_fatal_scan=0'             crud.txt || { echo "::error::fatals on the front end"; fail=1; }
+          grep -q 'after_force_delete exists=gone' crud.txt || { echo "::error::post delete did not take"; fail=1; }
+          grep -q 'cpt registered=1'               crud.txt || { echo "::error::CPT cell did not run"; fail=1; }
+          exit $fail
+
+      - name: Keep the evidence
+        if: always() && steps.target.outputs.version != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: crud-suite-${{ steps.target.outputs.version }}
+          path: crud.txt
+          if-no-files-found: ignore
+
+      - name: Tear down
+        if: always() && steps.target.outputs.version != ''
+        run: cd /tmp/fixture && ddev delete -O -y || true

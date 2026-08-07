@@ -5,6 +5,37 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — adopted from jazzsequence/wpnext-test (2026-08-07)
+
+Chris Reynolds's [wpnext-test](https://github.com/jazzsequence/wpnext-test) is a standing
+Pantheon site that detects new Betas/RCs and upgrades itself unattended. Four of its
+capabilities translate to this repo; the standing-site pattern itself becomes a method document.
+
+- **`scripts/check-latest-release.sh`** — Beta/RC detector. Merges the News and Make/Core
+  release feeds (the API's version-check never surfaces prereleases), version-sorts the
+  mentions, then gates on api.wordpress.org's current stable so a remembered *last* cycle is
+  never reported as an active one — the check wpnext-test does by comparing against its live
+  site, done here without a site. Verifies the package is actually live (exit 3 = announced
+  but not built, mirroring `rc_build_identity.sh`). Calibrated live on 7.1-RC2.
+- **`.github/workflows/release-watch.yml`** — daily cron on the detector. On a newly packaged
+  build it opens one tracking issue (the issue is the dedup record and the human checklist:
+  sweep, build identity, security-backport gate, Slack post) and dispatches the prerelease
+  suite, so first results exist before anyone sits down.
+- **`.github/workflows/prerelease-suite.yml`** — weekly plus dispatch-on-drop. `self-test.yml`
+  proves the tooling against pinned versions; this proves the release: current stable
+  installed, upgraded in place to the newest Beta/RC, CRUD suite against the result, output
+  kept as an artifact. Green-but-idle outside a cycle, and says so.
+- **`scripts/seed-test-content.sh`** — parity between scripted environments and the beta-rc
+  Playground blueprint: installs the six-plugin debugging toolkit (including Test Reports)
+  and imports both content corpora — theme-test-data (the corpus wpnext-test ships in its
+  rig) and a11y-theme-unit-test. Import success is judged by post count, not exit code, and
+  a driver without `hostfs` reports BLOCKED for the content half rather than passing vacuously.
+- **`method/standing-environment.md`** — the pattern that would not port as code: one site you
+  never rebuild, upgraded in place every Beta/RC, state deliberately accumulating. Names the
+  bug class fresh fixtures structurally cannot catch (dirty-state upgrades), the rules
+  (snapshot before every jump, keep a ledger, never spring-clean), and the reporting loop —
+  a failure there is a lead to reduce onto a fresh fixture, not a filing.
+
 ### Added — from the 7.1-RC1 release-day run (2026-08-05)
 - **`scripts/security_fix_presence.sh` — the security-backport gate.** Diffs a stable security
   release against its predecessor to derive the fix set from source (no hand-maintained CVE

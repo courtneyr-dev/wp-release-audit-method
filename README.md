@@ -395,6 +395,13 @@ from quietly meaning "the suite couldn't have failed."
 Full details, and how to add a setup that isn't listed:
 [`scripts/env/README.md`](scripts/env/README.md).
 
+> [!TIP]
+> **However you build environments, keep one you never rebuild.** Every option above starts
+> clean, and clean state structurally cannot surface the dirty-state upgrade bugs real sites
+> hit — orphaned options, half-migrated tables, residue from plugins deleted years ago. One
+> designated site that only ever upgrades in place catches that whole class:
+> [`method/standing-environment.md`](method/standing-environment.md).
+
 ---
 
 ## The debugging toolkit (works with any option)
@@ -412,6 +419,14 @@ them; on a Beta Tester or local site, install them yourself.
 | [**User Switching**](https://wordpress.org/plugins/user-switching/) | Switch to any user in one click, and switch back | **Underrated for release testing.** A whole class of bug works fine for admins and breaks for Authors, Editors, or Contributors. Without this you're logging in and out all afternoon and will simply skip the check |
 | [**Test Reports**](https://wordpress.org/plugins/test-reports/) | A formatted report with WordPress version, PHP, server, theme, plugins, and browser filled in | Gets the environment section of your bug report right automatically — the part people most often omit, and the first thing anyone triaging will ask for |
 | [**Create Block Theme**](https://wordpress.org/plugins/create-block-theme/) | Build, modify, and export block themes | For testing theme-side and Site Editor changes, or producing a minimal theme that reproduces a problem |
+
+On a scripted environment, one command installs all six **and** imports the same two content
+corpora the blueprint ships ([theme-test-data](https://github.com/WordPress/theme-test-data)
+and [a11y-theme-unit-test](https://github.com/wpaccessibility/a11y-theme-unit-test)):
+
+```bash
+bash scripts/seed-test-content.sh --env=ddev ~/wp-test
+```
 
 > [!TIP]
 > **Turn on debugging too.** In `wp-config.php` on a test site:
@@ -453,6 +468,8 @@ bash scripts/crud-suite.sh ~/wp-test http://localhost:8888
 | `multisite-suite.sh` | Multisite networks | 15 min |
 | `multisite-11.sh` | 10 subsites, built old then upgraded | 20 min |
 | `seed-screenshot-rig.sh` | A site that makes presentable screenshots | 10 min |
+| `seed-test-content.sh` | The debugging toolkit + both content corpora, on any driver | 5 min |
+| `check-latest-release.sh` | Newest Beta/RC, and whether a cycle is active. **No site needed** | 5 sec |
 | `lib-fast.sh` | Not a test — makes long suites ~12× faster | — |
 | `wp-surface-inventory.sh` | **For plugin/theme authors** — derives which core surfaces your code touches | 10 sec |
 
@@ -473,6 +490,18 @@ sed -i '' 's|wordpress-7.1-beta4.zip|wordpress-7.2-beta1.zip|g' \
 `direct-jump-matrix.sh` as a third argument, `multisite-11.sh` via `TARGET_ZIP=`.
 
 Patches that fix the other five: genuinely welcome, genuinely easy, good first contribution.
+
+### The repository watches the calendar for you
+
+Two GitHub Actions run unattended (pattern adapted from
+[jazzsequence/wpnext-test](https://github.com/jazzsequence/wpnext-test), which upgrades a
+standing Pantheon site the same way): [release watch](.github/workflows/release-watch.yml)
+checks daily whether a new Beta/RC is packaged and live — `check-latest-release.sh` is the
+detector, and it knows the difference between "the feeds remember last cycle" and "a new
+build exists" — then opens one tracking issue per build and dispatches the
+[prerelease suite](.github/workflows/prerelease-suite.yml): current stable installed,
+upgraded in place to the new build, CRUD suite against the result, output kept as an
+artifact. Fork the repo and both come with it.
 
 ---
 

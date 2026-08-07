@@ -1,0 +1,82 @@
+# Watch for a new WordPress Beta/RC and fire the starting gun.
+#
+# Pattern adapted from Chris Reynolds's wpnext-test, where a cron detects the
+# newest prerelease and upgrades a standing Pantheon site unattended. This repo
+# has no site to upgrade, so the unattended equivalent is: detect the build,
+# open a tracking issue (once per build), and dispatch the prerelease suite so
+# results exist before anyone sits down.
+
+name: Release watch
+
+on:
+  schedule:
+    # Daily. Betas and RCs land on US time; a weekly check would sit on a
+    # release-day build for most of a week.
+    - cron: '0 13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  actions: write
+
+jobs:
+  watch:
+    name: Detect a new Beta/RC
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run the detector
+        id: detect
+        run: |
+          rc=0
+          version="$(bash scripts/check-latest-release.sh)" || rc=$?
+          case "$rc" in
+            0)
+              url="$(bash scripts/check-latest-release.sh --url)"
+              echo "version=$version" >> "$GITHUB_OUTPUT"
+              echo "url=$url" >> "$GITHUB_OUTPUT"
+              echo "Active prerelease: **$version** ($url)" >> "$GITHUB_STEP_SUMMARY"
+              ;;
+            2) echo "No active prerelease cycle." >> "$GITHUB_STEP_SUMMARY" ;;
+            3) echo "A build is announced but not packaged yet — tomorrow's run will catch it." >> "$GITHUB_STEP_SUMMARY" ;;
+            *) echo "::error::detector failed with exit $rc"; exit 1 ;;
+          esac
+
+      - name: Open the tracking issue and dispatch the suite (once per build)
+        if: steps.detect.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.detect.outputs.version }}
+          PKG: ${{ steps.detect.outputs.url }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          # The issue IS the dedup record: one per build, ever. No state file to
+          # commit, and closing the issue is how a human marks the sweep done.
+          if gh issue list --state all --search "in:title \"$VERSION\"" \
+               --json title --jq '.[].title' | grep -qF "$VERSION"; then
+            echo "Issue for $VERSION already exists — nothing to do." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          gh issue create \
+            --title "WordPress $VERSION is out — run the sweep" \
+            --body "$(printf '%s\n' \
+              "The release watch found **WordPress $VERSION** packaged and live:" \
+              "" \
+              "- Package: $PKG" \
+              "- The [prerelease suite]($REPO_URL/actions/workflows/prerelease-suite.yml) was dispatched against it automatically — check its run for first results." \
+              "" \
+              "The human half:" \
+              "" \
+              "- [ ] [Release-day sweep]($REPO_URL/blob/main/playbooks/release-day-sweep-playbook.md) — the fast block first" \
+              "- [ ] \`scripts/rc_build_identity.sh\` — pin what was actually shipped" \
+              "- [ ] \`scripts/security_fix_presence.sh\` — does this build carry the latest stable security fixes?" \
+              "- [ ] Post results to #core-test ([template]($REPO_URL/blob/main/playbooks/slack-test-report-template.md))" \
+              "" \
+              "Close this issue when the sweep is posted.")"
+
+          gh workflow run prerelease-suite.yml \
+            -f version="$VERSION" -f package_url="$PKG"
+          echo "Opened tracking issue and dispatched the prerelease suite for $VERSION." >> "$GITHUB_STEP_SUMMARY"
