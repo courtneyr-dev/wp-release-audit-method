@@ -6,6 +6,14 @@ cadence rather than its own, so entries are grouped by what changed.
 ## Unreleased
 
 ### Added — from the 7.1-RC1 release-day run (2026-08-05)
+- **`scripts/security_fix_presence.sh` — the security-backport gate.** Diffs a stable security
+  release against its predecessor to derive the fix set from source (no hand-maintained CVE
+  signatures), then classifies a target build PATCHED / VULNERABLE / DIVERGED per fix. Answers the
+  question nothing else in the sweep asks: does this RC contain the fixes from a stable security
+  release that shipped after it was cut? Controls calibrate exactly — run against the patched
+  release → all PATCHED / exit 0, against the predecessor → all VULNERABLE / exit 4. Playbook gains
+  a section on the gate, its two honest limits (line-level not semantic; strong signal not proof —
+  confirm high-severity fixes behaviorally), and where it runs (right after build identity).
 - **The fast block, and checklist-first ordering** — the report template now opens with the
   short per-check block the community actually reads, and the playbook gains a measured
   fast path (~30 minutes on prebuilt fixtures) that runs exactly the cells proving those

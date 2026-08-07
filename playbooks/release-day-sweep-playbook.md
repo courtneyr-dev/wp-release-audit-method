@@ -82,6 +82,37 @@ Three operational notes from that run:
 - Branch list comes from `api.wordpress.org/core/stable-check/1.0/` (max patch per series). Re-derive per release; override with `VERSIONS="..."` to rerun a subset.
 - A rung that fails **before** the upgrade runs is a harness result, not a product one. The tell is a blank pre-upgrade `db_version` alongside a front-end 500: the install itself never came up. See the container-extraction trap below.
 
+### The security-backport gate — an RC must contain the latest stable security fixes
+
+A release candidate is cut on a date. A stable security release can ship a day later. When it does,
+its fixes are **public and patched everywhere except, possibly, the in-flight RC** — which was
+packaged before them. For the window until the next RC, anyone testing that RC on a reachable host
+is running known-vulnerable code, and if the fixes are never merged forward, the vulnerability
+reaches GA. This is a routine, invisible gap, and nothing else in the sweep looks for it.
+
+`scripts/security_fix_presence.sh <target> <prev_version> <fixed_version>` closes it. It diffs the
+stable security release against its immediate predecessor — **the diff is the fix set, no
+hand-maintained CVE signatures** — then classifies each changed file in the target build:
+
+- **PATCHED** — the target carries the fix.
+- **VULNERABLE** — the target still carries the pre-fix code. If the security release is public,
+  this is a known hole live in your build.
+- **DIVERGED** — the target refactored around the fix site; neither clearly patched nor pre-fix.
+  Read these by hand.
+
+Calibrate it the way you calibrate any detector: run it against the patched release itself (expect
+all PATCHED, exit 0) and against the predecessor (expect all VULNERABLE, exit 4) before trusting a
+verdict on the RC. Two honest limits: it reads lines, not semantics, so a change confined to a
+docblock/example reads as VULNERABLE (the old text is still there) — and PATCHED/VULNERABLE are
+strong signals, not proof. For any high-severity fix, confirm behaviorally: the SSRF class, for
+instance, is one `wp eval 'var_export( wp_http_validate_url("http://169.254.169.254/") );'` — a
+patched build returns `false`, a vulnerable one echoes the URL back.
+
+Run it right after the build-identity gate, before the CRUD sweep. A VULNERABLE verdict on an RC is
+not automatically a GA blocker — trunk usually has the fix and the next RC picks it up — but it is
+always worth a line to the release squad, and it becomes a blocker the moment the *final* build
+still flags VULNERABLE. Route specifics privately to the security channel, never a public tracker.
+
 ### Fixture traps proven on 7.1-RC1 day
 
 **Parked fixtures self-upgrade.** Fresh installs since WordPress 5.6 default `auto_update_core_major` to enabled, so an old-version fixture left running quietly updates itself to current stable — two ladder cells were found sitting on 7.0.2 with their old `db_version` gone, which destroys the cell (the schema already migrated, so the old→target migration can no longer be proven). Pin `WP_AUTO_UPDATE_CORE=false` in the fixture config at build time, and **re-assert the before-state at run start, not fixture-build time** — the assertion that matters is the one taken the moment before the upgrade.
@@ -140,6 +171,7 @@ Two disciplines the speed must not eat:
 | Slot | Work | Gate to proceed |
 |---|---|---|
 | 1 | Build-identity gate | RELEASED, package hash pinned |
+| 1b | Security-backport gate vs latest stable security release | no VULNERABLE, or a line to the release squad if there is |
 | 2 | Fixture build + state assertions, all environments | every fixture prints a passed assertion |
 | 3 | **Fast path above → post the block** | controls calibrated |
 | 4 | CLI sweep, remaining T1 → T2 (scripted, parallel across environments) | — |
