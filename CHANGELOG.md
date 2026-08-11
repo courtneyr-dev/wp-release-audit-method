@@ -5,7 +5,7 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
-### Added — adopted from jazzsequence/wpnext-test (2026-08-07)
+### Added — adopted from jazzsequence/wpnext-test (2026-08-11)
 
 Chris Reynolds's [wpnext-test](https://github.com/jazzsequence/wpnext-test) is a standing
 Pantheon site that detects new Betas/RCs and upgrades itself unattended. Four of its
