@@ -112,6 +112,38 @@ if [ "${WP_AUDIT_SKIP_PACKAGE_CHECK:-0}" != "1" ]; then
     echo "check-latest-release: feeds announce $prerelease but $url is not live yet" >&2
     exit 3
   fi
+
+  # WALK FORWARD PAST THE FEEDS. A feed-only detector is structurally blind to a build
+  # that ships before it is announced, and that is not hypothetical: on 2026-08-13 both
+  # feeds' newest 7.1 mention was RC2 while 7.1-RC3 had been packaged and downloadable
+  # since 2026-08-12 — no RC3 announcement existed anywhere in either feed. A detector
+  # that reported RC2 that day would have sent a whole release-day sweep at the wrong
+  # build. The feeds establish the SERIES and that a cycle is live; the package lane is
+  # the authority on which build is newest, so probe upward until a gap.
+  # WP_AUDIT_PROBE_LIST names the builds that "exist", so the walk is calibratable
+  # offline — the forward walk is the half that cannot be exercised against the network
+  # in CI, and an uncalibrated detector is the thing this repo refuses to ship.
+  if [ -n "${WP_AUDIT_PROBE_LIST+x}" ]; then
+    _probe() { case " $WP_AUDIT_PROBE_LIST " in *" $1 "*) return 0 ;; *) return 1 ;; esac; }
+  else
+    _probe() { curl -sIfL --max-time 20 -o /dev/null "https://wordpress.org/wordpress-$1.zip"; }
+  fi
+  _n="$num"
+  while :; do
+    _n=$((_n + 1))
+    if [ "$pri" = "1" ]; then _next="$ver-RC$_n"; else _next="$ver-beta$_n"; fi
+    _probe "$_next" || break
+    prerelease="$_next"; url="https://wordpress.org/wordpress-$prerelease.zip"
+  done
+  # A beta series can also be overtaken by RC1 without the feeds saying so.
+  if [ "$pri" != "1" ]; then
+    _n=0
+    while :; do
+      _n=$((_n + 1))
+      _probe "$ver-RC$_n" || break
+      prerelease="$ver-RC$_n"; url="https://wordpress.org/wordpress-$prerelease.zip"
+    done
+  fi
 fi
 
 case "$MODE" in

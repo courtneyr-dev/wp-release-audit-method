@@ -335,12 +335,14 @@ def check_detector_calibration():
         report("detector calibration", [f"missing fixture {feed.relative_to(ROOT)}"])
         return
 
-    def run(feed_path, stable):
-        return subprocess.run(
-            ["bash", str(script)], capture_output=True, text=True,
-            env={**os.environ, "WP_AUDIT_FEED_FILE": str(feed_path),
-                 "WP_AUDIT_STABLE": stable, "WP_AUDIT_SKIP_PACKAGE_CHECK": "1"},
-        )
+    def run(feed_path, stable, probe=None):
+        env = {**os.environ, "WP_AUDIT_FEED_FILE": str(feed_path),
+               "WP_AUDIT_STABLE": stable}
+        if probe is None:
+            env["WP_AUDIT_SKIP_PACKAGE_CHECK"] = "1"
+        else:
+            env["WP_AUDIT_PROBE_LIST"] = probe
+        return subprocess.run(["bash", str(script)], capture_output=True, text=True, env=env)
 
     r = run(feed, "7.0.3")
     if r.returncode != 0 or r.stdout.strip() != "7.1-RC2":
@@ -358,7 +360,19 @@ def check_detector_calibration():
             bad.append(f"garbage feed: produced '{r.stdout.strip()}'/exit {r.returncode}, want no version")
     finally:
         os.unlink(garbage)
-    report("detector calibration (3 cells)", bad)
+
+    # The forward walk past the feeds. Cells 4-6 exist because on 2026-08-13 the feeds'
+    # newest 7.1 mention was RC2 while RC3 had been downloadable for a day — the walk is
+    # what closes that, so it needs its own controls rather than riding on the parser's.
+    for name, probe, want in (
+        ("walk finds a build the feeds never announced", "7.1-RC2 7.1-RC3", "7.1-RC3"),
+        ("walk stops when nothing newer exists", "7.1-RC2", "7.1-RC2"),
+        ("walk does not jump a gap", "7.1-RC2 7.1-RC3 7.1-RC5", "7.1-RC3"),
+    ):
+        r = run(feed, "7.0.3", probe=probe)
+        if r.stdout.strip() != want:
+            bad.append(f"{name}: want {want}, got '{r.stdout.strip()}'")
+    report("detector calibration (6 cells)", bad)
 
 
 # ── 11. Environment drivers honour the driver contract ───────────────────────

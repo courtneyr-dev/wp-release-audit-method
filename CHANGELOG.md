@@ -5,6 +5,18 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Fixed — the detector could not see a build that shipped before its announcement (2026-08-13)
+- **`check-latest-release.sh` now walks the package lane forward past the feeds.** Found by using
+  it: on 2026-08-13 it reported 7.1-RC2 as newest while 7.1-RC3 had been packaged and downloadable
+  since 2026-08-12 — and *neither* feed contained the string "RC3" anywhere, so this was never a
+  parsing bug but a structural one. A feed-only detector is blind to any build that ships before it
+  is announced, which is how an automated sweep runs a whole release day against the wrong build.
+  The feeds still establish the series and that a cycle is live; the package lane is now the
+  authority on which build within it is newest. Betas are also probed for an unannounced RC1.
+- **Three more calibration cells (six total).** The walk is the half that cannot be exercised
+  against the network in CI, so `WP_AUDIT_PROBE_LIST` names which builds "exist": the walk finds an
+  unannounced build, stops when nothing newer exists (negative control), and does not jump a gap.
+
 ### Fixed — the chain prompt's adjudication rule was unreachable (2026-08-13)
 - **`ADJUDICATE BEFORE YOU BUILD` now lives inside the pasted block.** The rule "none may become a
   test before source adjudication" existed only in the lens sections *below* the fenced prompt, so
