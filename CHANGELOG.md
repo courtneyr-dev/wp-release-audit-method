@@ -5,6 +5,19 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Fixed — the chain prompt's adjudication rule was unreachable (2026-08-13)
+- **`ADJUDICATE BEFORE YOU BUILD` now lives inside the pasted block.** The rule "none may become a
+  test before source adjudication" existed only in the lens sections *below* the fenced prompt, so
+  an agent handed the block to run never saw it — the fenced artifact contained no mention of
+  adjudication at all. It is now a `<method_rules>` entry carrying its own evidence (of the first
+  36 lens-generated proposals, zero survived adjudication unchanged: 16 refuted on verified-false
+  premises, 20 corrected), and the completeness contract now requires every built chain to trace to
+  a REVISE-status register row with the adjudicating source cited. A suite built from unadjudicated
+  proposals tests things that cannot happen and reports the resulting silence as evidence.
+  The amendment is flagged in the prompt header, since audit records cite this prompt as run.
+  Checked the release-audit prompt for the same defect: its safety rules were already inside its
+  fence, and its out-of-fence section is a pure rule-provenance table.
+
 ### Changed — interface and vocabulary pass (2026-08-13)
 - **One target idiom across all seven upgrade suites.** `verify.sh`, `users-pages-install.sh`,
   `multisite-suite.sh`, `stepped-chain.sh`, `direct-jump-matrix.sh` and `multisite-11.sh` now take
