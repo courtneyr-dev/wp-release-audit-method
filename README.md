@@ -1002,6 +1002,12 @@ New to Trac? Read [Reporting Bugs](https://make.wordpress.org/core/handbook/test
 > It gets item 3 of the list above right automatically, which is the item people most often
 > skip.
 
+> [!TIP]
+> **Using AI to help write the report?** Run the
+> [pre-filing checklist](method/ai-issue-writing/checklist.md) first. Maintainers welcome rigor but
+> close reports that bury it — the checklist covers leading with the harm, killing hallucinated
+> references, and disclosing the tool, with the community research behind each rule.
+
 ---
 
 ## Where official information lives
