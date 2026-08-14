@@ -1,14 +1,22 @@
 #!/bin/bash
 # Users, Pages lifecycle, Fresh install, Manual install (incl. missing wp-config.php).
+# Target build: --target=<zip-url> anywhere in the args, or WP_AUDIT_TARGET
+# (explicit flag wins). Default unchanged — a suite never picks its own target.
+_FLAG=""; _ARGS=()
+for _a in "$@"; do case "$_a" in --target=*) _FLAG="${_a#--target=}" ;; *) _ARGS+=("$_a") ;; esac; done
+# Restore the stripped args as positionals: array INDEXING differs between
+# bash (0-based) and zsh (1-based), positionals do not.
+set -- "${_ARGS[@]}"
 PROJ="$1"; URL="$2"
-BETA4="https://wordpress.org/wordpress-7.1-beta4.zip"
+TARGET="${_FLAG:-${WP_AUDIT_TARGET:-https://wordpress.org/wordpress-7.1-beta4.zip}}"
+TARGET_VER="$(basename "$TARGET" .zip | sed 's/^wordpress-//')"
 cd "$PROJ" || exit 1
 t() { npx --yes @wordpress/env@latest run tests-cli -- "$@" 2>/dev/null | grep -vE "^(ℹ|✔|npm warn)" | tr -d '\r' | sed '/^$/d'; }
 sec() { echo; echo "======== $1"; }
 
-sec "A. FRESH INSTALL (clean DB, beta4 files, wp core install)"
+sec "A. FRESH INSTALL (clean DB, $TARGET_VER files, wp core install)"
 t wp db reset --yes >/dev/null
-t php -d memory_limit=1024M /usr/local/bin/wp core download --version=7.1-beta4 --force --allow-root >/dev/null 2>&1
+t php -d memory_limit=1024M /usr/local/bin/wp core download --version="$TARGET_VER" --force --allow-root >/dev/null 2>&1
 echo "files_version=$(t wp core version)"
 echo "is_installed_before=$(t wp core is-installed >/dev/null 2>&1 && echo yes || echo no)"
 t wp core install --url="$URL" --title="Fresh Install" --admin_user=admin --admin_password=password \

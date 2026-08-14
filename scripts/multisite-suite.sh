@@ -1,8 +1,16 @@
 #!/bin/bash
 # Multisite (MU) suite: multi-subsite network, CRUD per subsite, network users,
 # network plugin/theme activation, and a network upgrade with several sites.
+# Target build: --target=<zip-url> anywhere in the args, or WP_AUDIT_TARGET
+# (explicit flag wins). Default unchanged — a suite never picks its own target.
+_FLAG=""; _ARGS=()
+for _a in "$@"; do case "$_a" in --target=*) _FLAG="${_a#--target=}" ;; *) _ARGS+=("$_a") ;; esac; done
+# Restore the stripped args as positionals: array INDEXING differs between
+# bash (0-based) and zsh (1-based), positionals do not.
+set -- "${_ARGS[@]}"
 PROJ="$1"; URL="$2"; MODE="${3:-subdir}"
-BETA4="https://wordpress.org/wordpress-7.1-beta4.zip"
+TARGET="${_FLAG:-${WP_AUDIT_TARGET:-https://wordpress.org/wordpress-7.1-beta4.zip}}"
+TARGET_VER="$(basename "$TARGET" .zip | sed 's/^wordpress-//')"
 cd "$PROJ" || exit 1
 t() { npx --yes @wordpress/env@latest run tests-cli -- "$@" 2>/dev/null | grep -vE "^(ℹ|✔|npm warn)" | tr -d '\r' | sed '/^$/d'; }
 sec() { echo; echo "======== $1"; }
@@ -63,9 +71,9 @@ echo "active_on_alpha=$(t wp plugin list --name=classic-editor --field=status --
 t wp theme enable twentytwentyfour --network >/dev/null 2>&1
 echo "theme_enabled_network=$(t wp theme list --field=name --status=active 2>/dev/null | head -1)"
 
-sec "MU NETWORK UPGRADE — 7.0.2 -> 7.1-beta4 across all sites"
+sec "MU NETWORK UPGRADE — 7.0.2 -> $TARGET_VER across all sites"
 echo "before_version=$(t wp core version)  sites=$(t wp site list --format=count)"
-t wp core update "$BETA4" --force 2>&1 | tail -1
+t wp core update "$TARGET" --force 2>&1 | tail -1
 t wp core update-db --network 2>&1 | tail -2
 echo "after_version=$(t wp core version)  db=$(t wp option get db_version)"
 echo "network_frontend=$(curl -s -o /dev/null -w '%{http_code}' -L "$URL/")"

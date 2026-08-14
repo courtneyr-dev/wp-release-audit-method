@@ -5,10 +5,17 @@
 # several historical multisite bugs only reproduce on a network that was UPGRADED
 # rather than freshly created.
 #
-# Usage: multisite-11.sh <project-dir> <network-url> [subdir|subdomain] [from-version]
+# Usage: multisite-11.sh [--target=zip-url] <project-dir> <network-url> [subdir|subdomain] [from-version]
 
+# --target= wins, then the legacy TARGET_ZIP env, then WP_AUDIT_TARGET.
+# Default unchanged.
+_FLAG=""; _ARGS=()
+for _a in "$@"; do case "$_a" in --target=*) _FLAG="${_a#--target=}" ;; *) _ARGS+=("$_a") ;; esac; done
+# Restore the stripped args as positionals: array INDEXING differs between
+# bash (0-based) and zsh (1-based), positionals do not.
+set -- "${_ARGS[@]}"
 PROJ="$1"; URL="$2"; MODE="${3:-subdir}"; FROM="${4:-7.0.2}"
-TARGET="${TARGET_ZIP:-https://wordpress.org/wordpress-7.1-beta4.zip}"
+TARGET="${_FLAG:-${TARGET_ZIP:-${WP_AUDIT_TARGET:-https://wordpress.org/wordpress-7.1-beta4.zip}}}"
 SUBS="alpha beta gamma delta epsilon zeta eta theta iota kappa"   # 10 subsites
 cd "$PROJ" || exit 1
 

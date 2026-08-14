@@ -35,11 +35,26 @@ done
 
 fetch() { curl -sSfL --max-time 30 "$1" 2>/dev/null; }
 
-news="$(fetch "https://wordpress.org/news/category/releases/feed/")" || news=""
-make="$(fetch "https://make.wordpress.org/core/tag/releases/feed/")" || make=""
-if [ -z "$news" ] && [ -z "$make" ]; then
-  echo "check-latest-release: could not fetch either release feed" >&2
-  exit 1
+# Test seams — controls before readings applies to this instrument too:
+#   WP_AUDIT_FEED_FILE          read this file instead of fetching either feed
+#   WP_AUDIT_STABLE             pin the current-stable answer, skip the API call
+#   WP_AUDIT_SKIP_PACKAGE_CHECK=1  skip the package-liveness probe
+# check-repo.py's calibration cells drive all three against a captured feed
+# snapshot in fixtures/feeds/, so a parser regression fails CI, not release day.
+if [ -n "${WP_AUDIT_FEED_FILE:-}" ]; then
+  news="$(cat "$WP_AUDIT_FEED_FILE" 2>/dev/null)" || news=""
+  make=""
+  if [ -z "$news" ]; then
+    echo "check-latest-release: could not read WP_AUDIT_FEED_FILE=$WP_AUDIT_FEED_FILE" >&2
+    exit 1
+  fi
+else
+  news="$(fetch "https://wordpress.org/news/category/releases/feed/")" || news=""
+  make="$(fetch "https://make.wordpress.org/core/tag/releases/feed/")" || make=""
+  if [ -z "$news" ] && [ -z "$make" ]; then
+    echo "check-latest-release: could not fetch either release feed" >&2
+    exit 1
+  fi
 fi
 
 # Every "WordPress X.Y[.Z] Beta N" / "RC N" / "Release Candidate N" mention, both feeds.
@@ -75,8 +90,11 @@ prerelease="$ver-$label"
 # The cycle gate. Outside a release cycle the feeds still carry the LAST cycle's
 # announcements, and returning those forever is how an automation ends up re-testing a
 # release that already shipped. Active means: strictly ahead of current stable.
-stable="$(fetch "https://api.wordpress.org/core/version-check/1.7/" \
-  | grep -oE '"current":"[0-9][^"]*"' | head -1 | sed 's/.*:"//; s/"//')" || stable=""
+stable="${WP_AUDIT_STABLE:-}"
+if [ -z "$stable" ]; then
+  stable="$(fetch "https://api.wordpress.org/core/version-check/1.7/" \
+    | grep -oE '"current":"[0-9][^"]*"' | head -1 | sed 's/.*:"//; s/"//')" || stable=""
+fi
 if [ -n "$stable" ]; then
   highest="$(printf '%s\n%s\n' "$stable" "$ver" | sort -V | tail -1)"
   if [ "$ver" = "$stable" ] || [ "$highest" = "$stable" ]; then
@@ -89,9 +107,11 @@ fi
 # downloads.wordpress.org/release/ — the two-lane split rc_build_identity.sh checks).
 # Announced-but-not-built happens on release day; that is WAITING, not absence.
 url="https://wordpress.org/wordpress-$prerelease.zip"
-if ! curl -sIfL --max-time 30 -o /dev/null "$url"; then
-  echo "check-latest-release: feeds announce $prerelease but $url is not live yet" >&2
-  exit 3
+if [ "${WP_AUDIT_SKIP_PACKAGE_CHECK:-0}" != "1" ]; then
+  if ! curl -sIfL --max-time 30 -o /dev/null "$url"; then
+    echo "check-latest-release: feeds announce $prerelease but $url is not live yet" >&2
+    exit 3
+  fi
 fi
 
 case "$MODE" in

@@ -319,7 +319,49 @@ def check_scripts_meta():
     report("scripts have shebang and description", bad)
 
 
-# ── 10. Environment drivers honour the driver contract ───────────────────────
+# ── 10. Release detector calibration ─────────────────────────────────────────
+def check_detector_calibration():
+    """Controls before readings, applied to the repo's own newest instrument.
+
+    A detector whose only test is "it worked live once" is the confident shrug
+    the README warns about. Three cells against a captured feed snapshot, no
+    network: the known answer, the no-cycle negative control (same feed, stable
+    pinned past the prerelease), and garbage in / no version out.
+    """
+    script = ROOT / "scripts" / "check-latest-release.sh"
+    feed = ROOT / "fixtures" / "feeds" / "releases-2026-08-13.xml"
+    bad = []
+    if not feed.exists():
+        report("detector calibration", [f"missing fixture {feed.relative_to(ROOT)}"])
+        return
+
+    def run(feed_path, stable):
+        return subprocess.run(
+            ["bash", str(script)], capture_output=True, text=True,
+            env={**os.environ, "WP_AUDIT_FEED_FILE": str(feed_path),
+                 "WP_AUDIT_STABLE": stable, "WP_AUDIT_SKIP_PACKAGE_CHECK": "1"},
+        )
+
+    r = run(feed, "7.0.3")
+    if r.returncode != 0 or r.stdout.strip() != "7.1-RC2":
+        bad.append(f"known answer: want 7.1-RC2/exit 0, got '{r.stdout.strip()}'/exit {r.returncode}")
+    r = run(feed, "7.1")
+    if r.returncode != 2:
+        bad.append(f"negative control: want exit 2 (no cycle), got exit {r.returncode}")
+    import tempfile
+    with tempfile.NamedTemporaryFile("w", suffix=".xml", delete=False) as f:
+        f.write("<rss>this feed mentions no builds at all</rss>")
+        garbage = f.name
+    try:
+        r = run(garbage, "7.0.3")
+        if r.returncode == 0 or r.stdout.strip():
+            bad.append(f"garbage feed: produced '{r.stdout.strip()}'/exit {r.returncode}, want no version")
+    finally:
+        os.unlink(garbage)
+    report("detector calibration (3 cells)", bad)
+
+
+# ── 11. Environment drivers honour the driver contract ───────────────────────
 def check_driver_conformance():
     """Every driver, against the contract in scripts/env/README.md.
 
@@ -348,6 +390,7 @@ def main():
     check_data()
     check_mermaid()
     check_scripts_meta()
+    check_detector_calibration()
     check_driver_conformance()
 
     print()

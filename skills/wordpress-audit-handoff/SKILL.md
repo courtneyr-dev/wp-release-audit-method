@@ -1,6 +1,6 @@
 ---
 name: wordpress-audit-handoff
-description: Produce a coworker-ready or SRE-ready handoff document from WordPress audit/testing work. Use when asked to "hand off" a WordPress audit, make a handoff/shareable doc from testing findings, package audit results for a coworker/SRE/stakeholder, or write a fleet release-readiness brief. Returns ONE self-contained markdown file — findings (mechanism→evidence→fix, each linked to its authoritative WordPress source), the methods + verbatim prompts + linked agent skills used, and a consolidated source list — with any privately-disclosed finding scrubbed to a bare acknowledgment. In SRE mode it adds rollout posture, a fleet-variance matrix, pre-GA gates, monitoring re-baselining, and where to continue performance and security testing per hosting tier.
+description: Hand off WordPress audit or testing work as ONE coworker-ready or SRE-ready markdown document, with privately-disclosed findings scrubbed to a bare acknowledgment. Use when asked to "hand off" a WordPress audit, make a handoff/shareable doc from testing findings, package audit results for a coworker/SRE/stakeholder, or write a fleet release-readiness brief.
 ---
 
 # WordPress audit handoff

@@ -5,6 +5,30 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Changed — interface and vocabulary pass (2026-08-13)
+- **One target idiom across all seven upgrade suites.** `verify.sh`, `users-pages-install.sh`,
+  `multisite-suite.sh`, `stepped-chain.sh`, `direct-jump-matrix.sh` and `multisite-11.sh` now take
+  `--target=<zip-url>`, falling back to `WP_AUDIT_TARGET`, then to each script's existing default —
+  so every prior invocation behaves identically. Four of them previously required editing the
+  source to point at a new build, which made the file's insides part of its interface; the README
+  section teaching that `sed` is gone. Legacy forms (`direct-jump-matrix.sh`'s third positional,
+  `multisite-11.sh`'s `TARGET_ZIP=`) still work. Suites still never auto-detect: the caller passes
+  a target it can name in a report.
+- **The detector has controls.** `check-latest-release.sh` gained three test seams
+  (`WP_AUDIT_FEED_FILE`, `WP_AUDIT_STABLE`, `WP_AUDIT_SKIP_PACKAGE_CHECK`) and `check-repo.py`
+  gained three calibration cells against a captured feed snapshot in `fixtures/feeds/`: the known
+  answer, the no-cycle negative control (same feed, stable pinned past the prerelease), and garbage
+  in / no version out. Its only prior test was one live run, which is the confident shrug this repo
+  argues against.
+- **`CONTEXT.md`** — the glossary for language the repo already spoke but defined in thirty places:
+  cell, lane, chain, act, driver, capability, gate, control, fixture, standing environment, target,
+  corpus, ledger, BLOCKED, INVALID, harness fault, evidence ceiling, finding. One conflict resolved:
+  "standing" now means the never-rebuilt environment and never a lane that runs every cycle (that is
+  a *recurring* lane).
+- **Skill descriptions pruned** — the five shipped skills' frontmatter descriptions are always-loaded
+  context, and carried feature enumeration the bodies already document. Cut 33% (2302 → 1544
+  characters) with every trigger phrase preserved verbatim.
+
 ### Added — adopted from jazzsequence/wpnext-test (2026-08-11)
 
 Chris Reynolds's [wpnext-test](https://github.com/jazzsequence/wpnext-test) is a standing

@@ -3,11 +3,18 @@
 # install per hop (no chaining). Complements stepped-chain.sh, which carries a
 # single database through every intermediate version.
 #
-# Usage: direct-jump-matrix.sh <project-dir> <tests-site-url> [target-zip-url]
+# Usage: direct-jump-matrix.sh [--target=zip-url] <project-dir> <tests-site-url> [target-zip-url]
 # Old WordPress needs old PHP — run this against the PHP 7.4 cell.
 
+# --target= wins, then the legacy third positional, then WP_AUDIT_TARGET —
+# explicit beats ambient. Default unchanged.
+_FLAG=""; _ARGS=()
+for _a in "$@"; do case "$_a" in --target=*) _FLAG="${_a#--target=}" ;; *) _ARGS+=("$_a") ;; esac; done
+# Restore the stripped args as positionals: array INDEXING differs between
+# bash (0-based) and zsh (1-based), positionals do not.
+set -- "${_ARGS[@]}"
 PROJ="$1"; URL="$2"
-TARGET="${3:-https://wordpress.org/wordpress-7.1-beta4.zip}"
+TARGET="${_FLAG:-${3:-${WP_AUDIT_TARGET:-https://wordpress.org/wordpress-7.1-beta4.zip}}}"
 # What `wp core version` must report after the jump — derived from the target
 # zip name so pointing at a new build can't silently fail every row.
 EXPECT=$(basename "$TARGET" .zip | sed 's/^wordpress-//')

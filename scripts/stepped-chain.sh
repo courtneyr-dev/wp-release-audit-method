@@ -1,15 +1,23 @@
 #!/bin/bash
-# Stepped legacy upgrade chain: 4.9.29 through every major series up to 7.1-beta4.
+# Stepped legacy upgrade chain: 4.9.29 through every major series up to the target.
 # Each hop is a real wp core update + update-db, carrying the SAME database forward.
+# Target build: --target=<zip-url> anywhere in the args, or WP_AUDIT_TARGET
+# (explicit flag wins). Default unchanged — a suite never picks its own target.
+_FLAG=""; _ARGS=()
+for _a in "$@"; do case "$_a" in --target=*) _FLAG="${_a#--target=}" ;; *) _ARGS+=("$_a") ;; esac; done
+# Restore the stripped args as positionals: array INDEXING differs between
+# bash (0-based) and zsh (1-based), positionals do not.
+set -- "${_ARGS[@]}"
 PROJ="$1"; URL="$2"
-BETA4="https://wordpress.org/wordpress-7.1-beta4.zip"
+TARGET="${_FLAG:-${WP_AUDIT_TARGET:-https://wordpress.org/wordpress-7.1-beta4.zip}}"
+TARGET_VER="$(basename "$TARGET" .zip | sed 's/^wordpress-//')"
 CHAIN="5.0.25 5.2.24 5.5.18 5.9.13 6.0.12 6.2.9 6.5.8 6.8.6 6.9.5 7.0.2"
 cd "$PROJ" || exit 1
 
 q() { npx --yes @wordpress/env@latest run tests-cli -- "$@" 2>/dev/null \
       | grep -vE "^(ℹ|✔|npm warn)" | tr -d '\r' | sed '/^$/d'; }
 
-echo "### STEPPED CHAIN 4.9.29 -> ... -> 7.1-beta4 (PHP 7.4, same DB carried through)"
+echo "### STEPPED CHAIN 4.9.29 -> ... -> $TARGET_VER (PHP 7.4, same DB carried through)"
 q wp db reset --yes >/dev/null
 q wp core download --version=4.9.29 --force >/dev/null
 q wp core install --url="$URL" --title="Stepped chain" --admin_user=admin \
@@ -35,8 +43,8 @@ for V in $CHAIN; do
 done
 
 echo
-echo "--- final hop to 7.1-beta4"
-q wp core update "$BETA4" --force | tail -1
+echo "--- final hop to $TARGET_VER"
+q wp core update "$TARGET" --force | tail -1
 q wp core update-db | tail -1
 echo "final_version=$(q wp core version)"
 echo "final_db=$(q wp option get db_version)"

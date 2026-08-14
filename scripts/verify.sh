@@ -1,14 +1,22 @@
 #!/bin/bash
 # Clean-capture upgrade verification. Values only, no wp-env chrome.
+# Target build: --target=<zip-url> anywhere in the args, or WP_AUDIT_TARGET
+# (explicit flag wins). Default unchanged — a suite never picks its own target.
+_FLAG=""; _ARGS=()
+for _a in "$@"; do case "$_a" in --target=*) _FLAG="${_a#--target=}" ;; *) _ARGS+=("$_a") ;; esac; done
+# Restore the stripped args as positionals: array INDEXING differs between
+# bash (0-based) and zsh (1-based), positionals do not.
+set -- "${_ARGS[@]}"
 PROJ="$1"; URL="$2"; FROM="$3"; MODE="${4:-single}"
-BETA4="https://wordpress.org/wordpress-7.1-beta4.zip"
+TARGET="${_FLAG:-${WP_AUDIT_TARGET:-https://wordpress.org/wordpress-7.1-beta4.zip}}"
+TARGET_VER="$(basename "$TARGET" .zip | sed 's/^wordpress-//')"
 cd "$PROJ" || exit 1
 
 # quiet wrapper: strips wp-env's status lines, keeps command stdout
 q() { npx --yes @wordpress/env@latest run tests-cli -- "$@" 2>/dev/null \
       | grep -vE "^(ℹ|✔|npm warn)" | tr -d '\r' | sed '/^$/d'; }
 
-echo "### $FROM -> 7.1-beta4 [$MODE]"
+echo "### $FROM -> $TARGET_VER [$MODE]"
 q wp db reset --yes >/dev/null
 q php -d memory_limit=1024M /usr/local/bin/wp core download --version="$FROM" --force --allow-root >/dev/null 2>&1 || echo "DOWNLOAD_FAILED"
 
@@ -24,7 +32,7 @@ fi
 echo "before_version=$(q wp core version)"
 echo "before_db=$(q wp option get db_version)"
 
-UPD=$(q wp core update "$BETA4" --force | tail -1)
+UPD=$(q wp core update "$TARGET" --force | tail -1)
 echo "update_says=$UPD"
 
 if [ "$MODE" = "single" ]; then

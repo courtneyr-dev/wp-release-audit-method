@@ -1,6 +1,6 @@
 ---
 name: wp-release-prep
-description: Prepare WordPress Studio test environments before a release party — build-identity gate, fixture creation for single/multisite/PHP variants, theme-test-data import, state assertions, and control calibration. Trigger on "prep for the release party", "get environments ready", "wp release prep", "set up test sites for the beta/RC", or the day before a scheduled WordPress release.
+description: Prepare WordPress Studio test environments before a release party, through control calibration. Trigger on "prep for the release party", "get environments ready", "wp release prep", "set up test sites for the beta/RC", or the day before a scheduled WordPress release.
 ---
 
 # wp-release-prep

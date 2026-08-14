@@ -477,19 +477,27 @@ Save the output. You'll want it when reporting.
 
 ### Point them at your release
 
-`fast-triage.sh` takes the zip as an argument, so it already works anywhere. Five others
-have the 7.1 beta URL baked in near the top:
+Every upgrade suite takes `--target=`, so nothing needs editing to test a new build:
 
 ```bash
-cd scripts
-sed -i '' 's|wordpress-7.1-beta4.zip|wordpress-7.2-beta1.zip|g' \
-  verify.sh crud-suite.sh users-pages-install.sh multisite-suite.sh stepped-chain.sh
+bash scripts/verify.sh --target=https://wordpress.org/wordpress-7.2-beta1.zip ~/wp-test http://localhost:8888 7.1
 ```
 
-*(Linux: drop the `''` after `-i`.)* Two others take the target directly:
-`direct-jump-matrix.sh` as a third argument, `multisite-11.sh` via `TARGET_ZIP=`.
+Set it once for a whole session with `WP_AUDIT_TARGET`, which every one of them also reads
+(an explicit `--target=` wins):
 
-Patches that fix the other five: genuinely welcome, genuinely easy, good first contribution.
+```bash
+export WP_AUDIT_TARGET="$(bash scripts/check-latest-release.sh --url)"
+```
+
+That composes the detector with the suites — but note it is *you* running the detector, not the
+suite. **A suite never picks its own target.** Whatever build you test has to be one you can
+name in a report, which is the same reason build identity is a gate.
+
+`fast-triage.sh` takes the zip as a positional argument. `direct-jump-matrix.sh` still accepts
+its third positional and `multisite-11.sh` still reads `TARGET_ZIP=`; both now prefer
+`--target=`. With no target given, every suite falls back to the same baked default it always
+had, so an old invocation behaves exactly as before.
 
 ### The repository watches the calendar for you
 
@@ -1191,6 +1199,7 @@ lands.
 ## What's in this repository
 
 ```
+├── CONTEXT.md        the glossary — what every term here means, exactly
 ├── scripts/          the test scripts from Step 3
 ├── sources/          where official WordPress information lives
 ├── accessibility/    a11y testing — layered method, tools, and where it's wired in

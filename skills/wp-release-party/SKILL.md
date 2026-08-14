@@ -1,6 +1,6 @@
 ---
 name: wp-release-party
-description: Run the release-day smoke sweep and produce the Slack-formatted test report — T1 CRUD matrix across wp-cli and browser, single and multisite, plus the T1 upgrade ladder, then render the checklist for posting. Trigger on "release party", "run the release day sweep", "wp release party", "test the RC and post results", or during a live WordPress release party.
+description: Run the release-day smoke sweep and produce the Slack-formatted test report. Trigger on "release party", "run the release day sweep", "wp release party", "test the RC and post results", or during a live WordPress release party.
 ---
 
 # wp-release-party

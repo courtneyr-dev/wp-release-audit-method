@@ -1,6 +1,6 @@
 ---
 name: wp-release-followup
-description: After a WordPress release party — check whether previously filed issues and tickets were resolved, retest everything newly resolved since the last release, run the full Phase 2 chain audit, and draft (never submit) new issues, Trac tickets, or security reports. Trigger on "after the release party", "check my filed tickets", "what got fixed since last release", "run the full audit", "wp release followup", or "log the new issues".
+description: Follow up after a WordPress release party — recheck filed tickets, retest what was resolved, run the full Phase 2 chain audit, and draft (never submit) new issues, Trac tickets, or security reports. Trigger on "after the release party", "check my filed tickets", "what got fixed since last release", "run the full audit", "wp release followup", or "log the new issues".
 ---
 
 # wp-release-followup

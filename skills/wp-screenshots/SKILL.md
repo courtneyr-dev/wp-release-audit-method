@@ -1,6 +1,6 @@
 ---
 name: wp-screenshots
-description: Capture clean, Mac-faithful WordPress admin + front-end screenshots from a JSON brief. Headless Chromium, login-aware, hides update bubbles and admin notices, defaults to 2× DPR, and writes a standalone HTML gallery alongside the PNGs. Works against any WordPress site you have credentials for.
+description: Capture clean, Mac-faithful WordPress admin and front-end screenshots from a JSON brief, against any site you have credentials for. Trigger on "take screenshots", "capture the admin", "screenshot the site", or when a report or doc needs WordPress UI images.
 ---
 
 # wp-screenshots
