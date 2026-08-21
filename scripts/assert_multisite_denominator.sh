@@ -28,11 +28,11 @@
 #   5  --expect-uniform and an eligible site is not at the network db_version
 #
 # Calibration status: counting, flag handling, uniformity, and the not-multisite
-# path are proven against a stubbed five-site inventory (2 eligible, 3 held back,
-# held sites one db_version behind — the FM-03 shape). The wp-cli invocations
-# themselves have not yet run against a live multisite; until someone does that,
-# treat them as read-off-docs, per the same standard scripts/env/lando.sh holds
-# itself to.
+# path are proven against a stubbed five-site inventory (the FM-03 shape), AND
+# against a live DDEV five-site network on WordPress 7.1 (2026-08-21): 5 total,
+# 3 eligible, 2 held back, per-site db_version read correctly. The live run is
+# the one that mattered — it caught a stdin-swallowing bug the stub structurally
+# could not (see the </dev/null comment below).
 set -uo pipefail
 
 EXPECT_UNIFORM=0
@@ -72,7 +72,11 @@ while IFS=, read -r blog_id url archived spam deleted; do
   [ "$blog_id" = "blog_id" ] && continue
   [ -z "$blog_id" ] && continue
   total=$((total+1))
-  dbv=$(run_wp option get db_version --url="$url" 2>/dev/null || echo "unreadable")
+  # </dev/null matters: wp reads stdin, and without it the first per-site call
+  # swallows the rest of the site list — the live five-site control counted 1
+  # of 5 until this line. The stubbed control never caught it because the stub
+  # didn't read stdin. Runtime proof beats a passing stub.
+  dbv=$(run_wp option get db_version --url="$url" </dev/null 2>/dev/null || echo "unreadable")
   if [ "$archived" = "1" ] || [ "$spam" = "1" ] || [ "$deleted" = "1" ]; then
     held=$((held+1)); flag="held-back"
   else
