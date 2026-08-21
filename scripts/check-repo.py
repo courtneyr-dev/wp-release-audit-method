@@ -375,7 +375,51 @@ def check_detector_calibration():
     report("detector calibration (6 cells)", bad)
 
 
-# ── 11. Environment drivers honour the driver contract ───────────────────────
+# ── 11. Referenced run-root paths resolve in the repo ────────────────────────
+def check_runroot_paths():
+    """Every $WP_AUDIT_ROOT/<path> and bare pilots/learning/methods/deliverables
+    reference in the Markdown resolves relative to the repo root.
+
+    For a year of commits these references pointed at files that existed only on
+    one machine — a fresh clone broke at step 2 of wp-release-party, and nothing
+    here could see it, because the machine the checks ran on had the files. The
+    schemas now ship in-repo; this is the check that keeps them shipped.
+
+    The allowlist is for references that are ABOUT the private run root rather
+    than into the repo. Every entry carries its reason; an entry without one is
+    a dangling path with a hall pass.
+    """
+    allow = {
+        # Per-release run data: evidence, verdicts, build manifests. Private by
+        # design — .gitignore draws the same boundary.
+        "pilots/wp71-rc1/",
+        # Preserved prompt bodies cite the run root's old deliverables/ layout;
+        # their headers carry a path note pointing at prompts/. The bodies stay
+        # byte-for-byte because audit records cite them as run.
+        "deliverables/codex-feature-chain-test-generation-prompt.md",
+    }
+    pat = re.compile(
+        r"(?:\$WP_AUDIT_ROOT/|(?<![\w/.$-]))"
+        r"((?:pilots|learning|methods|deliverables)/[A-Za-z0-9_<>./-]*[A-Za-z0-9_>/-])"
+    )
+    bad, count = [], 0
+    for p in md_files():
+        text = p.read_text(encoding="utf-8")
+        rel = p.relative_to(ROOT)
+        for m in pat.finditer(text):
+            path = m.group(1).split("#")[0].rstrip(".,")
+            count += 1
+            if path in allow or "<" in path:  # templated segments are per-release
+                continue
+            target = ROOT / path
+            ok = target.is_dir() if path.endswith("/") else target.exists()
+            if not ok:
+                line = text[: m.start()].count("\n") + 1
+                bad.append(f"{rel}:{line} {path}")
+    report(f"run-root paths resolve in the repo ({count} checked)", sorted(set(bad)))
+
+
+# ── 12. Environment drivers honour the driver contract ───────────────────────
 def check_driver_conformance():
     """Every driver, against the contract in scripts/env/README.md.
 
@@ -405,6 +449,7 @@ def main():
     check_mermaid()
     check_scripts_meta()
     check_detector_calibration()
+    check_runroot_paths()
     check_driver_conformance()
 
     print()
