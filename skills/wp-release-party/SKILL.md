@@ -28,9 +28,9 @@ scripts/rc_build_identity.sh <VERSION> <LABEL>
 
 Even if prep passed it. Packages get republished and labels move. `WAITING` means stop the runtime cells — write the plan and report the block.
 
-## 2. Run the T1 sweep (~61 cells)
+## 2. Run the T1 sweep (~72 cells)
 
-`pilots/release-day/sweep-matrix.csv`, `tier == T1`: 51 wp-cli + 10 browser, across single-site, multisite-subsite, and multisite-network.
+`pilots/release-day/sweep-matrix.csv`, `tier == T1`: 51 wp-cli + 10 browser + 3 ecosystem + 4 accessibility + 4 i18n, across single-site, multisite-subsite, and multisite-network. The ecosystem block is [its own lane](../../method/ecosystem-compatibility-lane.md); the i18n cells are gated by `scripts/preflight-sensitivity.sh --gate=i18n` — on an en_US-only environment they are `BLOCKED(locale-en_US)`, never SKIP and never PASS.
 
 Order: CLI first (scriptable, parallel across fixtures), browser second (slow, and only the entities whose UI this release changes).
 
@@ -112,7 +112,7 @@ python3 scripts/render_slack_checklist.py --from-results --tier T1 \
   --site-mode <single|multisite|both>
 ```
 
-64 checks across 9 sections (58 with `--site-mode single`). Emoji fill from recorded verdicts.
+75 checks across 12 sections (69 with `--site-mode single`). Emoji fill from recorded verdicts.
 
 Before posting, verify: the header names the build **actually tested** (beta ≠ RC), the method line names the upgrade lane, invalid batches are counted and excluded, no local filesystem paths, no credentials, and any confidential finding is reduced to a bare acknowledgment.
 
@@ -120,7 +120,7 @@ Before posting, verify: the header names the build **actually tested** (beta ≠
 
 ### Example output
 
-The **blank form** — all 64 checks across 9 sections, unmarked — lives in
+The **blank form** — all 75 checks across 12 sections, unmarked — lives in
 [`playbooks/slack-test-report-template.md`](../../playbooks/slack-test-report-template.md).
 Copy from there; the version below is the same form *filled in*, to show what a finished
 report looks like.

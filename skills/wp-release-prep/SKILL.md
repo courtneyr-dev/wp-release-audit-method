@@ -75,14 +75,25 @@ scripts/assert_multisite_denominator.sh <site-path>   # every multisite fixture
 
 Harness-health precheck first — daemon, socket, container, ownership. A harness fault is an `INVALID` batch, never a product result.
 
-## 5. Calibrate controls
+## 5. Read the release's own declared regressions
+
+Release announcements now document known-bad shipped defaults with their opt-outs — 7.1
+shipped media-library infinite scroll while calling it a known inaccessible pattern, with a
+Profile toggle, the `media_library_infinite_scrolling` filter, and a third-party plugin as
+the outs ([the worked example](../../accessibility/README.md#read-the-release-notes-for-the-releases-own-declared-regressions)).
+Before the drop: read the announcement and Field Guide for anything the release itself
+declares as a regression or known-bad default, and give each one a fleet-wide policy
+decision — accept, filter off, or hold. Record the decision; the matching checklist line
+exists so it leaves a trace.
+
+## 6. Calibrate controls
 
 Before the party, prove the instruments work:
 - `scripts/stale_file_check.py <prior_tree> <target_tree>` — offline, predicts the upgrade answer
 - a native-control keyboard check if any accessibility cell is planned (it must PASS before product results count)
 - one positive and one negative control per planned batch
 
-## 6. Regenerate the matrices
+## 7. Regenerate the matrices
 
 ```bash
 python3 scripts/build_release_day_matrices.py --browser-t1 <this release's ledger entities>

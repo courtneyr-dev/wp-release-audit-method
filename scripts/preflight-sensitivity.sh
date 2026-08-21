@@ -19,11 +19,13 @@
 # where you ran it. A capability the driver lacks makes its cells BLOCKED, not PASS.
 
 DRIVER="${WP_AUDIT_ENV:-}"
+GATE=""
 ARGS=()
 for a in "$@"; do
   case "$a" in
-    --env=*) DRIVER="${a#--env=}" ;;
-    *)       ARGS+=("$a") ;;
+    --env=*)  DRIVER="${a#--env=}" ;;
+    --gate=*) GATE="${a#--gate=}" ;;
+    *)        ARGS+=("$a") ;;
   esac
 done
 PROJ="${ARGS[0]:-$HOME/projects/wp71-test-suite}"
@@ -32,6 +34,23 @@ DRIVER="${DRIVER:-wp-env}"
 # shellcheck source=/dev/null
 . "$(cd "$(dirname "$0")" && pwd)/lib-env.sh" || exit 1
 env_init "$DRIVER" "$PROJ" || exit 1
+
+# --gate=i18n: the report below WARNS that en_US cannot detect i18n bugs; this
+# turns the warning into an exit code so the i18n cells can be gated instead of
+# skipped. The rule: an en_US-only environment makes every i18n cell
+# BLOCKED(locale-en_US) — never SKIP, and never PASS. Exit 0 = a real locale is
+# active, run the cells; exit 3 = record them BLOCKED.
+if [ "$GATE" = "i18n" ]; then
+  LOC="$(env_wp eval 'echo get_locale();' 2>/dev/null)"
+  if [ "$LOC" = "en_US" ] || [ -z "$LOC" ]; then
+    echo "GATE i18n: locale=${LOC:-unreadable} — BLOCKED(locale-en_US)."
+    echo "Record every i18n cell BLOCKED, never SKIP, never PASS. Install a real"
+    echo "locale (wp language core install de_DE --activate) to unblock."
+    exit 3
+  fi
+  echo "GATE i18n: locale=$LOC — i18n cells may run."
+  exit 0
+fi
 
 echo "=== Environment sensitivity report — $(basename "$PROJ")"
 echo

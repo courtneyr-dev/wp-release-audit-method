@@ -120,6 +120,43 @@ ECOSYSTEM_CELLS = [
      "version. An open issue with a proposed fix is an imported finding"),
 ]
 
+# Accessibility cells — the release-day accessibility deliverable, one cell per
+# posted checklist line (accessibility/README.md claimed these existed for a
+# year before they did). The native-control cell GATES the others: if it fails,
+# their verdicts are INVALID, never product results (MC-10).
+A11Y_CELLS = [
+    ("native-control-calibration",
+     "a plain <button> and <a href> on a changed screen pass the same input you "
+     "test with. FAIL here makes the other accessibility cells INVALID"),
+    ("keyboard-changed-screens",
+     "tab through the screens this release's ledger changed: reachable, "
+     "activatable, no traps, focus returns from modals"),
+    ("focus-indicator-2px",
+     "focus indicators on changed screens visible and at least 2 CSS px — the "
+     "explicit 7.1 standard makes this a measurable threshold"),
+    ("screen-reader-name-role-state",
+     "one changed control announces a true name, role, and state"),
+]
+
+# i18n cells — the blind spot the preflight names and the form never carried.
+# On an en_US-only environment these cells are BLOCKED(locale-en_US), never
+# SKIP and never PASS: preflight-sensitivity.sh --gate=i18n is the gate.
+I18N_CELLS = [
+    ("locale-smoke-de_DE",
+     "gate: scripts/preflight-sensitivity.sh --gate=i18n. wp language core "
+     "install de_DE --activate; re-run the admin smoke; long strings must not "
+     "overflow controls"),
+    ("rtl-admin-render",
+     "gate as above. install ar or he_IL; the screens this release added or "
+     "changed render flipped, no layout that forgot to mirror"),
+    ("early-translation-notices",
+     "gate as above. under the real locale, debug.log carries no "
+     "_doing_it_wrong early-translation notices"),
+    ("i18n-formatting-functions",
+     "gate as above. wp eval date_i18n()/number_format_i18n() output is "
+     "locale-correct"),
+]
+
 # Browser cells: two per ledger-selected entity. The checks name what only a
 # browser can see — the beta4 plugin-dependency defect was invisible to WP-CLI.
 BROWSER_CHECKS = {
@@ -190,6 +227,19 @@ def build(browser_t1, target):
             "evidence_path": "", "fixture_hash": "", "cleanup_verified": "",
             "notes": "ecosystem lane — method/ecosystem-compatibility-lane.md",
         })
+    for block, iface, prefix in ((A11Y_CELLS, "accessibility", "accessibility"),
+                                 (I18N_CELLS, "i18n", "i18n")):
+        for op, hint in block:
+            n += 1
+            sweep.append({
+                "cell_id": f"T1-{n:02d}",
+                "entity": prefix, "operation": op, "interface": iface,
+                "environment": "single", "tier": "T1",
+                "expected": "see command", "observed": "", "verdict": "",
+                "command": hint,
+                "evidence_path": "", "fixture_hash": "", "cleanup_verified": "",
+                "notes": "",
+            })
     for entity, checks in BROWSER_CHECKS.items():
         tier = "T1" if entity in browser_t1 else "T2"
         for check in checks:
@@ -209,11 +259,15 @@ def build(browser_t1, target):
     cli_t1 = sum(1 for c in sweep if c["interface"] == "wp-cli" and c["tier"] == "T1")
     br_t1 = sum(1 for c in sweep if c["interface"] == "browser" and c["tier"] == "T1")
     eco_t1 = sum(1 for c in sweep if c["interface"] == "ecosystem")
+    a11y_t1 = sum(1 for c in sweep if c["interface"] == "accessibility")
+    i18n_t1 = sum(1 for c in sweep if c["interface"] == "i18n")
     # The documented shape. If you change the model, change the docs that promise
     # these numbers (README, wp-release-party, the sweep playbook) in the same commit.
     assert cli_t1 == 51, f"CLI T1 cells: {cli_t1}, docs promise 51"
     assert br_t1 == 2 * len(browser_t1), f"browser T1 cells: {br_t1}"
     assert eco_t1 == 3, f"ecosystem T1 cells: {eco_t1}, docs promise 3"
+    assert a11y_t1 == 4, f"accessibility T1 cells: {a11y_t1}, docs promise 4"
+    assert i18n_t1 == 4, f"i18n T1 cells: {i18n_t1}, docs promise 4"
 
     ladder = []
     n = 0
@@ -277,9 +331,10 @@ def main():
 
     cli_t1 = sum(1 for c in sweep if c["interface"] == "wp-cli" and c["tier"] == "T1")
     br_t1 = sum(1 for c in sweep if c["interface"] == "browser" and c["tier"] == "T1")
-    eco = sum(1 for c in sweep if c['interface'] == 'ecosystem')
-    print(f"sweep T1: {cli_t1} wp-cli + {br_t1} browser + {eco} ecosystem · ladder T1: "
-          f"{sum(1 for c in ladder if c['tier'] == 'T1')} of {len(ladder)}")
+    counts = {k: sum(1 for c in sweep if c['interface'] == k and c['tier'] == 'T1')
+              for k in ('wp-cli', 'browser', 'ecosystem', 'accessibility', 'i18n')}
+    print("sweep T1: " + " + ".join(f"{v} {k}" for k, v in counts.items())
+          + f" · ladder T1: {sum(1 for c in ladder if c['tier'] == 'T1')} of {len(ladder)}")
 
 
 if __name__ == "__main__":

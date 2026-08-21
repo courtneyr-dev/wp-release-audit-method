@@ -25,7 +25,7 @@ If you have no run root yet: copy this directory's CSVs somewhere disposable, po
 
 | File | What it is |
 |---|---|
-| [`release-day/sweep-matrix.csv`](release-day/sweep-matrix.csv) | The T1 sweep — one row per cell, 51 wp-cli + 10 browser. Generated; regenerate rather than hand-editing |
+| [`release-day/sweep-matrix.csv`](release-day/sweep-matrix.csv) | The T1 sweep — one row per cell: 51 wp-cli + 10 browser + 3 ecosystem + 4 accessibility + 4 i18n. Generated; regenerate rather than hand-editing |
 | [`release-day/upgrade-ladder.csv`](release-day/upgrade-ladder.csv) | The upgrade ladder — 9 T1 cells of the 88-cell full ladder. Generated |
 | [`release-day/php-axis.csv`](release-day/php-axis.csv) | Which chains PHP genuinely multiplies, and why. Hand-maintained; the reasoning is in the [sweep playbook](../playbooks/release-day-sweep-playbook.md#where-php-versions-belong-in-phase-2) |
 | [`filed-issues-register.csv`](filed-issues-register.csv) | Everything filed upstream, with its retest status. Schema only here — populated rows live in the run root, because rows carry pre-publication verdicts |

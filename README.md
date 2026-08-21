@@ -555,7 +555,7 @@ flowchart LR
         direction TB
         B1["Build-identity gate"] --> B2["Fresh install<br/>does it install clean?"]
         B2 --> B3["Upgrade ladder<br/>9 cells, PHP 7.4"]
-        B3 --> B4["T1 sweep<br/>~61 cells"]
+        B3 --> B4["T1 sweep<br/>~72 cells"]
         B4 --> B5["Post the checklist"]
     end
 
@@ -734,7 +734,7 @@ present, and install with it absent so WordPress has to write it.
 **Run the upgrade ladder** — 9 cells covering 4.9, 5.0, 6.2, 6.3, 6.6, 6.9, and 7.0.2 on
 single site, plus 4.9 and 7.0.2 on multisite.
 
-**Run the T1 sweep** — around 61 cells across single site, multisite subsite, and multisite
+**Run the T1 sweep** — around 72 cells across single site, multisite subsite, and multisite
 network.
 
 #### Cover as many surfaces as you can
@@ -778,7 +778,7 @@ flowchart LR
 
 Order of operations: **command line first** (fast, scriptable, parallel across fixtures),
 **browser second** (slow — reserve it for the parts of the UI this release actually changed).
-Don't browser-test all 61 cells; you'll run out of party.
+Don't browser-test all 72 cells; you'll run out of party.
 
 > [!TIP]
 > When CLI and browser disagree, **don't pick a winner.** Record both, and report the
@@ -1256,7 +1256,10 @@ acknowledgment only, with no reproduction steps until a fix ships.
 Stated plainly so you don't mistake them for tested ground:
 
 - The **performance playbook has never been run.** It describes what a good benchmark would
-  look like. Treat it as a plan, not a procedure.
+  look like. Treat it as a plan, not a procedure. Consequently **release-day reporting carries
+  no performance signal at all** — there is no performance line in the 75-check form, on
+  purpose: a line with no exercised cell behind it would be the exact defect this section
+  exists to prevent.
 - Two checks (Core updater vs. WP-CLI, real-input accessibility) are written but haven't been
   exercised against a release candidate.
 - A complete list of open Trac tickets still needs a human with a browser.

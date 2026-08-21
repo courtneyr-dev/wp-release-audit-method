@@ -41,7 +41,7 @@ each piece is here for a reason you can trace to a specific way of being wrong.
 | [source and content audit](../../playbooks/source-and-content-audit-playbook.md) | Does the documentation match what shipped? | Exercised |
 | [performance release audit](../../playbooks/performance-release-audit-playbook.md) | Benchmark design and acceptance criteria | **UNEXERCISED** — a design, not a proven procedure |
 | [future release template](../../playbooks/future-release-audit-template.md) | Starting the next release cold | Template |
-| [Slack test-report template](../../playbooks/slack-test-report-template.md) | The 64-check report form | Generated |
+| [Slack test-report template](../../playbooks/slack-test-report-template.md) | The 75-check report form | Generated |
 
 ### The method — why the rules exist
 

@@ -145,6 +145,11 @@ SECTIONS = [
         ("WooCommerce: create, update, delete Products", []),
         ("WooCommerce: cart and checkout smoke", []),
     ]),
+    ("Ecosystem", [
+        ("Co-installed pairs upgrade clean (no new fatals)", ["eco:co-installed-pairs-upgrade"]),
+        ("Closure-trigger probe run, controls passing", ["eco:closure-trigger-probe"]),
+        ("Fleet tracker triage done for this target", ["eco:fleet-tracker-triage"]),
+    ]),
     ("Users and roles", [
         ("Create, update, and delete Users",
          [sel("user", "create", "single"), sel("user", "update", "single"), sel("user", "delete", "single")]),
@@ -160,6 +165,18 @@ SECTIONS = [
         ("Site Health reports no new critical issues", []),
         ("Widgets screen",
          ["browser:block-widget/widgets screen edit", "browser:block-widget/front-end render"]),
+    ]),
+    ("Accessibility", [
+        ("Native-control calibration passes (gates the rows below)", ["a11y:native-control-calibration"]),
+        ("Keyboard pass of the screens this release changed", ["a11y:keyboard-changed-screens"]),
+        ("Focus indicators visible and at least 2 CSS px", ["a11y:focus-indicator-2px"]),
+        ("A changed control announces name, role, and state", ["a11y:screen-reader-name-role-state"]),
+    ]),
+    ("i18n and RTL", [
+        ("Admin smoke under a long-string locale (de_DE)", ["i18n:locale-smoke-de_DE"]),
+        ("Admin renders under an RTL locale (ar / he_IL)", ["i18n:rtl-admin-render"]),
+        ("No early-translation _doing_it_wrong notices under a real locale", ["i18n:early-translation-notices"]),
+        ("date_i18n() and number_format_i18n() correct under the locale", ["i18n:i18n-formatting-functions"]),
     ]),
     ("Multisite", [
         ("Network upgrade completes; report the full site count", [lad("7.0.2", "multisite")]),
@@ -223,6 +240,10 @@ def load_results(results_dir, tier):
                 key = f"sweep:{row['entity']}/{row['operation']}/{row['environment']}"
             elif row["interface"] == "ecosystem":
                 key = f"eco:{row['operation']}"
+            elif row["interface"] == "accessibility":
+                key = f"a11y:{row['operation']}"
+            elif row["interface"] == "i18n":
+                key = f"i18n:{row['operation']}"
             else:
                 key = f"browser:{row['entity']}/{row['operation']}"
             if key in out:
