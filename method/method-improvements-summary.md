@@ -20,7 +20,8 @@ related:
 Executive summary of the WP 7.1 learning loop at `$WP_AUDIT_ROOT/`.
 Every claim below traces to an id in `learning/failure-mode-register.csv` (FM-*),
 `learning/method-change-proposals.csv` (MC-*), `learning/shadow-run-results.csv` (SR-*), or
-`methods/detection-rules.csv` (D-*). No RC1 build exists yet (verified 2026-07-30) — nothing below
+`methods/detection-rules.csv` (D-*) — id schemes and the public/private split are defined in
+[registers.md](registers.md). No RC1 build exists yet (verified 2026-07-30) — nothing below
 claims an RC1 test result.
 
 ## Count verification

@@ -1,0 +1,78 @@
+cell_id,entity,operation,interface,environment,tier,expected,observed,verdict,command,evidence_path,fixture_hash,cleanup_verified,notes
+T1-01,post,create,wp-cli,single,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-02,post,read-list,wp-cli,single,T1,read-list succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-03,post,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-04,post,delete,wp-cli,single,T1,delete succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-05,post,trash-restore,wp-cli,single,T1,trash-restore succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-06,post,create,wp-cli,multisite-subsite,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-07,page,create,wp-cli,single,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-08,page,read-list,wp-cli,single,T1,read-list succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-09,page,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-10,page,delete,wp-cli,single,T1,delete succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-11,page,trash-restore,wp-cli,single,T1,trash-restore succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-12,custom-post-type,create,wp-cli,single,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-13,custom-post-type,read-list,wp-cli,single,T1,read-list succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-14,custom-post-type,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-15,custom-post-type,delete,wp-cli,single,T1,delete succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-16,comment,create,wp-cli,single,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-17,comment,read-list,wp-cli,single,T1,read-list succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-18,comment,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-19,comment,delete,wp-cli,single,T1,delete succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-20,category-tag,create,wp-cli,single,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-21,category-tag,read-list,wp-cli,single,T1,read-list succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-22,category-tag,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-23,category-tag,delete,wp-cli,single,T1,delete succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-24,custom-taxonomy-term,create,wp-cli,single,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-25,custom-taxonomy-term,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-26,custom-taxonomy-term,delete,wp-cli,single,T1,delete succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-27,media,create,wp-cli,single,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-28,media,read-list,wp-cli,single,T1,read-list succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-29,media,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-30,media,delete,wp-cli,single,T1,delete succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-31,media,create,wp-cli,multisite-subsite,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-32,user,create,wp-cli,single,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-33,user,read-list,wp-cli,single,T1,read-list succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-34,user,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-35,user,delete,wp-cli,single,T1,delete succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-36,user,create,wp-cli,multisite-network,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-37,role-capability,read-list,wp-cli,single,T1,read-list succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-38,role-capability,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-39,role-capability,read-list,wp-cli,multisite-network,T1,read-list succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-40,theme,create,wp-cli,single,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-41,theme,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-42,theme,delete,wp-cli,single,T1,delete succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-43,theme,create,wp-cli,multisite-network,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-44,plugin,create,wp-cli,single,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-45,plugin,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-46,plugin,delete,wp-cli,single,T1,delete succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-47,plugin,create,wp-cli,multisite-network,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-48,plugin,create,wp-cli,multisite-subsite,T1,create succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-49,option-setting,read-list,wp-cli,single,T1,read-list succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-50,option-setting,update,wp-cli,single,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-51,option-setting,update,wp-cli,multisite-network,T1,update succeeds and cleanup restores the fixture,,,scripts/crud-suite.sh (see per-entity cell in output),,,,
+T1-52,media,library upload and grid render,browser,single,T1,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,browser tier from this release's change ledger
+T1-53,media,"media editor modal: crop, rotate, flip",browser,single,T1,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,browser tier from this release's change ledger
+T1-54,plugins,plugin-card install and activate buttons,browser,single,T1,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,browser tier from this release's change ledger
+T1-55,plugins,dependencies affordance (Requires Plugins),browser,single,T1,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,browser tier from this release's change ledger
+T1-56,posts,editor loads and publishes,browser,single,T1,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,browser tier from this release's change ledger
+T1-57,posts,quick edit and bulk edit,browser,single,T1,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,browser tier from this release's change ledger
+T1-58,navigation-block-menu,create and edit in the editor,browser,single,T1,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,browser tier from this release's change ledger
+T1-59,navigation-block-menu,front-end render,browser,single,T1,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,browser tier from this release's change ledger
+T1-60,themes,switch theme from the admin,browser,single,T1,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,browser tier from this release's change ledger
+T1-61,themes,site editor opens a template,browser,single,T1,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,browser tier from this release's change ledger
+T2-62,page,editor loads and publishes,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-63,page,quick edit and bulk edit,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-64,comment,moderation screen actions,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-65,comment,reply from the admin,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-66,user,profile screen saves,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-67,user,role change from the users screen,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-68,classic-nav-menu,Appearance > Menus edit,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-69,classic-nav-menu,front-end render,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-70,block-widget,widgets screen edit,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-71,block-widget,front-end render,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-72,template-template-part,edit in the site editor,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-73,template-template-part,revert to theme default,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-74,option-setting,General settings save,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-75,option-setting,Reading settings save,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-76,site,network admin: add and archive a site,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger
+T2-77,site,per-site admin loads,browser,single,T2,behaves as on the prior stable; no console errors,,,manual (ledger-selected browser cell),,,,demoted: not on this release's ledger

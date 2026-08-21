@@ -22,6 +22,7 @@ related:
 > Hand it to an SRE as a design to execute, never as a result — see
 > [handing off performance work](../skills/wordpress-audit-handoff/SKILL.md#performance).
 > Until baselines exist the correct posture word is **unverified**, not *good*.
+> Bracketed row ids like [D-03; SR-05] are defined in [registers.md](../method/registers.md).
 
 ## How to exercise this playbook
 

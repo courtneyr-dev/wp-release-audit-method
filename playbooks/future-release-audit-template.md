@@ -19,6 +19,7 @@ related:
 
 > **Where this fits:** starting a cycle cold. Then [`wp-release-prep`](../skills/wp-release-prep/SKILL.md) →
 > [`wp-release-party`](../skills/wp-release-party/SKILL.md) → [`wp-release-followup`](../skills/wp-release-followup/SKILL.md).
+> Bracketed row ids like [D-03] and [FM-15] are defined in [registers.md](../method/registers.md).
 
 A release-parameterized checklist. Every placeholder below must be substituted before use; no version number, ticket number, date, fixture path, or db_version from a prior cycle should appear here unsubstituted.
 
