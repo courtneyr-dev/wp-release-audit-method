@@ -32,8 +32,8 @@ Minimum set for a release party:
 | single-site, current PHP | the T1 smoke lane |
 | multisite (5 sites: normal, archived, spam, deleted, plus main) | held-back-site denominator, network upgrade |
 | prior-stable → target upgrade source | Core-updater lane |
-| prior-beta → target upgrade source | prior-beta lane |
 | clean install of target | the comparison baseline for file-tree diffs |
+| *conditional:* prior-beta → target | prior-beta lane — **build it the day the second prerelease drops**, the only window it can exist. It went unbuilt for the whole 7.1 cycle and its C-02 cells sat BLOCKED; outside the window record `BLOCKED(no-prior-beta)`, not a prep gap |
 
 Add from `methods/test-and-fixture-registry.csv` when the release calls for it: PHP-matched pairs (FX-10..FX-14), the large network (FX-15), a classic-theme site, a block-theme site.
 

@@ -627,8 +627,14 @@ The minimum set for a useful party:
 | Single site, current PHP | The everyday smoke lane |
 | Multisite: main + normal + archived + spam + deleted | Catches held-back sites hiding behind a success count |
 | Previous stable → target | The Core-updater lane |
-| Previous beta → target | The prior-beta lane |
 | Clean install of target | The baseline you diff everything against |
+| *Conditional:* previous beta → target | The prior-beta lane — **only buildable mid-cycle**, see below |
+
+That last row used to be listed as required, which was a quiet lie: outside a cycle there
+*is* no prior beta, and during the whole 7.1 cycle the fixture was never built in its
+window — its cells sat `BLOCKED` from beta4 through GA. The honest rule: **build it the day
+the second prerelease drops** (the only moment "prior beta → newest build" exists), and
+outside that window it's `BLOCKED(no-prior-beta)`, not a gap in your prep.
 
 That multisite fixture looks fussy. It exists because a network upgrade once reported "2 of
 2 sites upgraded" when there were five — three were archived or spam, got skipped, and sat

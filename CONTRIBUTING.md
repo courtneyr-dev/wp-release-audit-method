@@ -119,5 +119,11 @@ source link so a reviewer can verify it without guessing.
 3. **A worked example for a plugin or theme author.** `examples/` is all core testing.
 4. **`wp menu` coverage in `crud-suite.sh`** — nav menus are on the browser checklist but no script
    asserts them.
-5. **Parameterize the five scripts** that still hardcode a release zip URL.
+5. **Exercise the core-rollback section of [`method/rollback.md`](method/rollback.md).** The
+   two plugin escape hatches are exercised; the core files-plus-database rollback mechanics
+   are written and have never been run. An afternoon on a disposable fixture with seeded
+   content settles what a downgraded tree actually does to the data.
 6. **The `cli` driver over SSH.** Local targets are tested; a remote `wp @alias` is not.
+
+(A seventh used to sit here — parameterizing the scripts that hardcoded a release zip URL —
+and shipped on 2026-08-13: all seven upgrade suites now take `--target=`.)

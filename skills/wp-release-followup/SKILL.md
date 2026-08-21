@@ -50,6 +50,9 @@ Start here if a constraint in this skill seems excessive:
 | Document | The question it settles |
 |---|---|
 | [release-audit learning loop](../../method/release-audit-learning-loop.md) | **Start here.** The five laws, the calibrated detectors, and which failed a control first |
+| [registers](../../method/registers.md) | What FM-, MC-, SR-, D-, and FX- ids point at, and which registers are public |
+| [ecosystem compatibility lane](../../method/ecosystem-compatibility-lane.md) | The release is fine and the site still dies — the WP Rocket class, its probe, and its cells |
+| [rollback](../../method/rollback.md) | The escape hatches when the fatal kills WP-CLI too, and what core rollback can't recover |
 | [validation and proof](../../method/validation-and-proof.md) | What counts as proof; the finding templates; controls |
 | [security invariants](../../method/security-invariants.md) | The invariant catalog — audit broken invariants, not dangerous sinks |
 | [WordPress attack surfaces](../../method/wordpress-attack-surfaces.md) | Where to look, by subsystem |
@@ -114,10 +117,14 @@ Feed Phase 1's non-PASS cells into chain selection — that mapping is in the re
 - clean upgrade leaving a divergent file tree, `db_version`, or content count → `MULTIHOP`, `ARTIFACT`, or the stale-file detector
 - anything touching credentials, secrets, or capability boundaries → the security lane with a threat model
 
-Then run `learning/cross-release-chain-register.csv`:
-- **20 `REVISE` rows** — adjudicated; build from `corrected_chain`, never `proposed_hypothesis`
-- **25 `UNADJUDICATED` rows** — hypotheses only. Source-adjudicate each leg first; catalog-derived proposals have a measured 36/36 error rate here
-- **16 `DROP` rows** — refuted; keep as negative controls, don't re-propose
+Then run `learning/cross-release-chain-register.csv`. **Take the row counts from the
+register itself, never from prose** — this paragraph once said "20 REVISE / 25
+UNADJUDICATED / 16 DROP" while the live register read differently, because hardcoded counts
+drift the moment a chain executes. What each status means:
+- **`REVISE`** — adjudicated; build from `corrected_chain`, never `proposed_hypothesis`
+- **`UNADJUDICATED`** — hypotheses only. Source-adjudicate each leg first; catalog-derived proposals have a measured 36/36 error rate here
+- **`DROP`** — refuted; keep as negative controls, don't re-propose
+- **`EXECUTED-*`** — already run; the verdict column is the record
 
 **Run `X-SERIAL-01` first.** If re-saving unchanged content mutates bytes, every byte-diff assertion elsewhere is measuring noise.
 
