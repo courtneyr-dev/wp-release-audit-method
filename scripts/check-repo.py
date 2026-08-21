@@ -429,7 +429,28 @@ def check_runroot_paths():
     report(f"run-root paths resolve in the repo ({count} checked)", sorted(set(bad)))
 
 
-# ── 12. Environment drivers honour the driver contract ───────────────────────
+# ── 12. Ecosystem-signals classifier stays calibrated ───────────────────────
+def check_ecosystem_signals():
+    """The signals triage script's own controls, run in CI.
+
+    Same standard as every other detector here: it ships with a positive and a
+    negative control (four signal classes must flag, one noise line must not),
+    and a detector whose controls never run is a detector nobody kept honest.
+    """
+    script = ROOT / "scripts" / "ecosystem-signals.sh"
+    if not script.exists():
+        SKIPPED.append("ecosystem-signals (no script)")
+        return
+    r = subprocess.run(["bash", str(script), "--self-test"],
+                       capture_output=True, text=True)
+    bad = []
+    if r.returncode != 0 or "CONTROL-PASS" not in r.stdout:
+        bad.append(r.stdout.strip().splitlines()[-1] if r.stdout.strip()
+                   else f"exit {r.returncode}")
+    report("ecosystem-signals controls", bad)
+
+
+# ── 13. Environment drivers honour the driver contract ───────────────────────
 def check_driver_conformance():
     """Every driver, against the contract in scripts/env/README.md.
 
@@ -460,6 +481,7 @@ def main():
     check_scripts_meta()
     check_detector_calibration()
     check_runroot_paths()
+    check_ecosystem_signals()
     check_driver_conformance()
 
     print()

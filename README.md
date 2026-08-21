@@ -1305,6 +1305,12 @@ the "unverified" banner is a merge on its own.
 Contributions welcome — **including tests that found nothing.** A test that checked something
 and cleared it is useful and gets merged. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+**Ran a skill and something could be better?** That's the point. Every act ends with a short
+[retro](method/retro.md), the [ecosystem-signals](method/ecosystem-signals.md) routine turns
+the news into method changes, and both feed the same loop. The on-ramp is a two-minute
+[field report](CONTRIBUTING.md#suggesting-improvements-from-real-use) — a sentence about what
+you noticed is a real contribution, refuted or inconclusive notes included.
+
 ## License
 
 GPLv2 or later — see [LICENSE](LICENSE). Same license as WordPress.

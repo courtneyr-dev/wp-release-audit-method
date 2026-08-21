@@ -51,6 +51,8 @@ Start here if a constraint in this skill seems excessive:
 |---|---|
 | [release-audit learning loop](../../method/release-audit-learning-loop.md) | **Start here.** The five laws, the calibrated detectors, and which failed a control first |
 | [registers](../../method/registers.md) | What FM-, MC-, SR-, D-, and FX- ids point at, and which registers are public |
+| [retro](../../method/retro.md) | The short post-run pass that turns a run into method improvements |
+| [ecosystem-signals](../../method/ecosystem-signals.md) | Turning dev notes, security releases, and incident write-ups into method changes |
 | [ecosystem compatibility lane](../../method/ecosystem-compatibility-lane.md) | The release is fine and the site still dies — the WP Rocket class, its probe, and its cells |
 | [rollback](../../method/rollback.md) | The escape hatches when the fatal kills WP-CLI too, and what core rollback can't recover |
 | [validation and proof](../../method/validation-and-proof.md) | What counts as proof; the finding templates; controls |
@@ -158,6 +160,8 @@ Update `filed-issues-register.csv` when the operator confirms a filing.
 ## 5. Feed the loop
 
 New failure modes, false-positive classes, blocked fixtures, and method changes → `learning/failure-mode-register.csv` and `learning/method-change-proposals.csv`. Any new detector needs a shadow run with both controls before it's `ACCEPTED`. Bank durable method decisions to the vault projects; leave evidence in the run root.
+
+This is the deep end of the same loop the lighter [retro](../../method/retro.md) feeds after every run, and that [ecosystem-signals](../../method/ecosystem-signals.md) feeds from reading the news. The routine ones stay in your run root; the ones worth the next stranger's time go to a [field report or PR](../../CONTRIBUTING.md#suggesting-improvements-from-real-use). Nothing is filed upstream without the operator's approval.
 
 ## Done when
 
