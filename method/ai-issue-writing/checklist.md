@@ -117,6 +117,17 @@ This is the pass that most separates a trusted human report from slop. Do it del
 
 ## Phase 5 — Disclosure block
 
+The [WordPress AI Guidelines §1.2 "Transparency"](https://make.wordpress.org/ai/handbook/ai-guidelines/)
+(James LePage, updated 2026-01-27) are the authority. Disclosure is **required when AI
+"meaningfully contributes… beyond trivial reformatting,"** optional for trivial help (a suggested
+variable name, reordered imports).
+
+- [ ] **Where the block goes** — the guideline names the locations verbatim: the **"Pull request
+      description, and/or Trac ticket comment."** In practice:
+      - **Trac ticket** → paste the block in your ticket comment (or the description if you open the ticket).
+      - **GitHub PR** (Gutenberg, Learn, docs repos) → the PR description.
+      - **GitHub issue** → the issue body. §1.2 names PRs and Trac; the same block in an issue body
+        is the honest application, and it's what this repo's own drafts do.
 - [ ] **WordPress** — the official policy is the three fields below; the bracketed heading and
       `Model(s):` line are an optional committer convention, fine to add, never required:
 ```

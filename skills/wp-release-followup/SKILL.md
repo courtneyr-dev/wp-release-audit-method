@@ -140,6 +140,17 @@ One draft per confirmed defect, routed by system:
 - **GitHub** (Gutenberg, Learn, docs) — same, in the owning repo
 - **Security** — never public. Draft into `private/security/` (mode 700) with attacker position, boundary, required capability, default-config reachability, and executed proof. Reduce to a bare acknowledgment in any general report. Never include credentials
 
+**Every AI-assisted Trac/GitHub draft carries a disclosure block**, per the [WordPress AI Guidelines §1.2](https://make.wordpress.org/ai/handbook/ai-guidelines/) — disclosure is required when AI meaningfully contributed, in the Trac ticket comment or the GitHub issue/PR body (the locations the guideline names). The three official fields, appended to the draft:
+
+```
+## Use of AI Tools
+AI assistance: Yes
+Tool(s): Claude Code
+Used for: <what the assistant did; what you, the human, reviewed, tested, and take responsibility for>
+```
+
+The `## Use of AI Tools` heading and a `Model(s):` line are an optional committer convention, not policy — fine to add, never cited as required. Run the [pre-filing checklist](../../method/ai-issue-writing/checklist.md) before the operator files.
+
 Every draft states its **evidence ceiling** — what was proven, what wasn't, and what would change the verdict. An internal API footgun is not a vulnerability; a result needing a custom capability mapping is configuration-dependent.
 
 Update `filed-issues-register.csv` when the operator confirms a filing.

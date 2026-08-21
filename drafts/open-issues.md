@@ -5,6 +5,20 @@ no issues for anyone to claim — someone wanting to run the Lando driver or the
 benchmark had no ticket to comment on. One body per gap below, ready to open with
 `gh issue create`. The operator files them; delete each from here once opened.
 
+**AI-disclosure — append this to every issue you file from here.** These bodies were
+AI-drafted (reviewed by you before filing), which meets the "meaningful contribution" bar in
+the [WordPress AI Guidelines §1.2](https://make.wordpress.org/ai/handbook/ai-guidelines/), so
+disclosure is required — in the issue body (or the PR description / Trac ticket comment, the
+locations the guideline names). Paste this at the end of each and edit `Used for:` to match:
+
+```
+## Use of AI Tools
+AI assistance: Yes
+Tool(s): Claude Code
+Used for: Drafting this issue from the repo's own CONTRIBUTING notes and known gaps;
+I reviewed it, verified the file paths and claims, and take responsibility for it.
+```
+
 ---
 
 ## 1
