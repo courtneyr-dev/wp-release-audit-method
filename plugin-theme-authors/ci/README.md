@@ -85,8 +85,48 @@ parse error on your declared floor. A parse error is a white screen, not a caugh
 you can do that. It catches drift, which is the common case. The
 [nine boxes](../README.md#bump-it-only-when-this-is-true) are still your job.
 
-**Permissions** — the canary needs `issues: write` to file the breakage issue. If you'd rather it
-didn't, remove that permission and the "Open an issue" step; you'll still get a failed run.
+**Permissions** — the workflow is read-only at the top; the canary job grants itself
+`issues: write` because it's the only job that files the breakage issue. That's least privilege:
+a compromised dependency in any other job can't touch your issues. If you'd rather the canary
+didn't file at all, remove the job-level `permissions:` block and the "Open an issue" step;
+you'll still get a failed run.
+
+## Workflow supply-chain hardening — the drop-ins already do this
+
+The drop-ins ship hardened, because a workflow you copy is a workflow you inherit the risks of.
+What's applied here, and why (all from Jonathan Desrosiers, "Software Supply Chain Security in the
+Age of AI," WCUS 2026):
+
+- **Every third-party action is pinned to a full-length commit hash**, not a mutable tag. `@v4`
+  can be repointed at new code by whoever controls the tag; a 40-character SHA can't. The trailing
+  `# v4.4.0` comment keeps it readable and Dependabot can still bump it.
+- **`permissions:` is zeroed to `contents: read` at the top**, and the one job that needs more
+  grants it to itself. The default `GITHUB_TOKEN` otherwise carries far more than any single job
+  needs.
+- **`persist-credentials: false` on every checkout**, so the token isn't left in the runner's
+  git config for a later step (or a compromised dependency) to reuse.
+- **Untrusted input never lands in a `run:` block.** The canary's issue-filing uses
+  `actions/github-script` with `context.*` values only — no `${{ github.event.* }}` interpolated
+  into a shell command, which is the classic Actions injection.
+
+The repo scans all of this with **[Zizmor](https://docs.zizmor.sh/)** in its own CI — the same
+scanner the WordPress.org GitHub org is piloting org-wide — and fixes what it finds rather than
+just installing it. Run it against your own copy:
+
+```bash
+pipx run zizmor .github/workflows/
+```
+
+For JavaScript tooling in your own pipeline, two more Desrosiers rules worth adopting:
+
+- **`npm ci`, never `npm install`** in CI — plain `install` silently regenerates the lockfile,
+  so CI stops testing the dependency tree you committed. Add `save-exact=true` to pin. (The
+  `npm install -g @wordpress/env` in `wp-compat.yml` is a *global tool bootstrap*, not a project
+  dependency — a different thing, and the one place `npm ci` doesn't apply.) Note **npm 12 will
+  disable install scripts by default** — the exact mechanism the Axios and TanStack worms used.
+- **`composer audit`** in CI — and note **Composer 2.9 turns a detected vulnerability into a
+  blocking fatal**, not a warning, so it fails the build rather than printing something nobody
+  reads.
 
 ## Beyond GitHub Actions
 

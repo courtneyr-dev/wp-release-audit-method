@@ -23,17 +23,19 @@ jobs:
     name: Repository checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: '3.12'
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '20'
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.35.5
         with:
           php-version: '8.3'
           coverage: none
@@ -46,6 +48,24 @@ jobs:
       - name: Run repository checks
         run: python3 scripts/check-repo.py
 
+  zizmor:
+    name: Workflow security (Zizmor)
+    runs-on: ubuntu-latest
+    # This repo ships CI workflows to plugin authors and runs three of its own;
+    # a repo that lints everyone else's rigor has to lint its own. Zizmor is the
+    # scanner the WordPress.org GitHub org is itself piloting org-wide, so this
+    # aligns rather than diverges. Scans the shipped drop-ins too, since those
+    # are the ones other people copy.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Run Zizmor
+        run: |
+          pipx run zizmor --config zizmor.yml --persona=regular \
+            .github/workflows/ plugin-theme-authors/ci/*.yml
+
   external-links:
     name: External links
     runs-on: ubuntu-latest
@@ -53,7 +73,9 @@ jobs:
     # canary in the extension-author workflows.
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Check every external URL
         run: |
@@ -80,9 +102,11 @@ jobs:
     # DDEV is the reference driver, so this is also the check that the driver
     # interface works somewhere other than the author's laptop.
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: ddev/github-action-setup-ddev@v1
+      - uses: ddev/github-action-setup-ddev@fdf2f5c97943bae638f31df6df86f1defa6210c0 # v1.12.1
         with:
           autostart: false
 
@@ -180,7 +204,9 @@ jobs:
     name: Tool smoke test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       # The inventory tool ships as a deliverable, so prove it runs and produces
       # the sections it claims to — against a fixture built here, not a real plugin.

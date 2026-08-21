@@ -23,9 +23,11 @@ on:
     - cron: '0 6 * * *'
   workflow_dispatch:
 
+# Least privilege at the top: read-only by default. The one job that needs
+# issues: write grants it to itself (see trunk-canary), so a compromised
+# dependency in any OTHER job can't open or edit issues.
 permissions:
   contents: read
-  issues: write        # only used by the canary job to file a breakage issue
 
 jobs:
   # ───────────────────────────────────────────────────────────────────────────
@@ -64,10 +66,12 @@ jobs:
           --health-timeout=5s --health-retries=5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.35.5
         with:
           php-version: ${{ matrix.php }}
           extensions: mysqli, gd, zip
@@ -114,6 +118,9 @@ jobs:
     name: WordPress trunk (nightly canary)
     runs-on: ubuntu-latest
     continue-on-error: true     # trunk breaking is news, not a red build on your PRs
+    permissions:
+      contents: read
+      issues: write             # this job files the breakage issue; nothing else needs it
 
     services:
       mysql:
@@ -127,9 +134,11 @@ jobs:
           --health-timeout=5s --health-retries=5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.35.5
         with:
           php-version: '8.3'
           extensions: mysqli, gd, zip
@@ -160,7 +169,7 @@ jobs:
 
       - name: Open an issue if trunk broke us
         if: failure() && github.event_name == 'schedule'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const title = 'WordPress trunk compatibility broke';
@@ -221,9 +230,11 @@ jobs:
           --health-timeout=5s --health-retries=5
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2.35.5
         with:
           php-version: '8.3'
           extensions: mysqli, gd, zip
@@ -261,9 +272,11 @@ jobs:
     name: Accessibility (axe + pa11y)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '20'
 
@@ -302,7 +315,7 @@ jobs:
             echo '### pa11y'; echo '```'; tail -40 pa11y-frontend.txt 2>/dev/null || echo 'no output'; echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
         with:
           name: accessibility-reports
@@ -318,7 +331,9 @@ jobs:
     name: Surface inventory
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Fetch the inventory tool
         run: |
@@ -342,7 +357,7 @@ jobs:
             echo "Commit surfaces.csv as .wp-surfaces-baseline.csv to enable diffing." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: surface-inventory
           path: surfaces.csv
