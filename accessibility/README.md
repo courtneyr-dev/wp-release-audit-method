@@ -34,6 +34,16 @@ that manual keyboard testing has to be part of the regular workflow. Automation 
 filter, not the answer. A green axe run means "no *detectable* violations," which is a much smaller
 claim than "accessible."
 
+The honest ceiling, in numbers: practitioners report roughly **70% confidence in what automated
+scanners flag** — on top of an unknown miss rate — and scanners only test the **resting state** of
+a page, so a keyboard trap or a modal that loses focus is structurally invisible to them (Joseph
+LoPreste, "Beyond Plugins," WCUS 2026). This is why a green automated run must never render as
+`PASS` on a cell it structurally cannot evaluate: the keyboard and focus-management cells below
+take their verdicts from keyboard and screen-reader work, or they read `BLOCKED`, not from axe.
+The same convergence shows up far beyond accessibility — scanner output needing a human
+verification gate is the single strongest cross-domain agreement in this project's source corpus
+(security triage, visual regression, and malware scanning all report the same shape).
+
 Keyboard testing is the highest-value manual step: cheap, needs no special software, and finds the
 failures that stop people using the thing at all.
 
@@ -216,17 +226,65 @@ welcomes testers.
 
 ---
 
+## The release-day cells
+
+For a year this page claimed accessibility was "wired into the release-day sweep" while the T1
+matrix had no accessibility rows and the posted checklist had no accessibility section. That was
+the exact confident shrug the rest of this repo warns about, and it's fixed the honest way: four
+cells now exist in [`pilots/release-day/sweep-matrix.csv`](../pilots/release-day/sweep-matrix.csv)
+(entity `accessibility`) and the posted checklist carries a four-line Accessibility section that
+renders from them and nothing else.
+
+| Cell | What it checks |
+|---|---|
+| `native-control-calibration` | A plain button and link pass the same input you test with. **This cell gates the other three** — if it fails, their verdicts are `INVALID`, because the harness is broken, not WordPress |
+| `keyboard-changed-screens` | Tab through the screens this release's change ledger touched: reachable, activatable, no traps, focus returns from modals |
+| `focus-indicator-2px` | Focus indicators on changed screens are visible and at least **2 CSS pixels** — 7.1 made this an explicit standard, which turns a judgment call into a measurable threshold |
+| `screen-reader-name-role-state` | One changed control announces a true name, role, and state |
+
+### Seeding the cells from 7.1's own record
+
+The 7.1 cycle is unusually concrete about what to look at, all from the primary source
+([Accessibility improvements in WordPress 7.1](https://make.wordpress.org/core/2026/08/13/accessibility-improvements-in-wordpress-7-1/),
+Make/Core, 2026-08-13):
+
+- **44 Core + 43 Editor accessibility enhancements and bug fixes** shipped — the changed-screens
+  list for the keyboard cell starts there.
+- **Focus indicators standardized at a minimum of 2 CSS pixels** — the threshold the
+  `focus-indicator-2px` cell measures against.
+- Component changes extensions may depend on: `RadioControl`, `ComboboxControl`,
+  `ToggleGroupControl`, `ValidatedRangeControl`, `ContentEditableControl`, `NavigableRegion`,
+  `DataForm` — if your plugin wraps one of these, it belongs on your changed-screens list too.
+
+## Read the release notes for the release's own declared regressions
+
+A new input class, and 7.1 is the worked example: **release announcements now document known-bad
+shipped defaults, with their opt-outs.** 7.1 changed the media library from a "load more" button
+to **infinite scroll** — described by the Accessibility team itself as *"a known inaccessible
+pattern"* — and shipped it anyway, because [#65775](https://core.trac.wordpress.org/ticket/65775)
+(the toggle) *"did not reach consensus in time to land in WordPress 7.1"* (it's now accepted,
+priority high, milestoned 7.1.1). Three mitigations exist: a per-user Profile toggle, the
+`media_library_infinite_scrolling` filter returning `false`, and the third-party WP Accessibility
+plugin.
+
+The generalizable Act I gate: **read the release announcement for declared regressions, and give
+each one a fleet-wide policy decision before upgrading** — accept the default, apply the filter,
+or hold. A regression the release notes disclose is not a finding; shipping it to a fleet without
+having decided is an operations failure. This step is in
+[`wp-release-prep`](../skills/wp-release-prep/SKILL.md), and the media-library line in the
+checklist exists so the decision leaves a trace.
+
 ## Where it's baked in
 
 | Place | What it does |
 |---|---|
-| [Release-day sweep](../playbooks/release-day-sweep-playbook.md) | Accessibility rows in the T1 matrix |
+| [Release-day sweep](../playbooks/release-day-sweep-playbook.md) | Four accessibility cells in the T1 matrix (entity `accessibility`), gated by native-control calibration |
 | [Plugin & theme guide](../plugin-theme-authors/README.md) | Accessibility in the compatibility matrix |
 | [Testing blocks](../plugin-theme-authors/testing-blocks.md) | Editor accessibility, which is where regressions concentrate |
 | [CI workflows](../plugin-theme-authors/ci/) | An axe job on every push |
 | [Starter tests](../plugin-theme-authors/starter-tests/) | A Playwright + axe spec |
 | [Surface inventory](../scripts/wp-surface-inventory.sh) | Flags ARIA, `tabindex`, and screen-reader-text usage |
-| [Slack report template](../playbooks/slack-test-report-template.md) | Accessibility checks in the posted checklist |
+| [Slack report template](../playbooks/slack-test-report-template.md) | A four-line Accessibility section rendering from the four cells, and nothing else |
 
 ## Related
 

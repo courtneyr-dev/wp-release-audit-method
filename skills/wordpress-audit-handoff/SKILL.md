@@ -25,6 +25,14 @@ Turn testing work into **ONE self-contained markdown file** somebody else can ac
 posture, a blast radius, a gate list, and a monitoring change. Findings are evidence for the
 posture, not the point. If the recipient runs infrastructure, use Mode B.
 
+**The "fleet release-readiness brief" this skill's description promises is Mode B's output.**
+For an agency or site-owner fleet (rather than a hosting platform), start from the fill-in
+template at [`templates/fleet-release-readiness-brief.md`](../../templates/fleet-release-readiness-brief.md)
+— inventory and denominator, tracker triage, the auto-update decision with its inputs, the
+ordered update-day runbook, keyword monitoring, and the 72-hour failure watch. The method
+behind each section is [`fleet-operators/`](../../fleet-operators/README.md). Mode B below is
+the same evidence reorganized for someone who runs hosting infrastructure.
+
 ---
 
 ## Output rules (both modes)

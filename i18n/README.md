@@ -127,7 +127,26 @@ and the `@wordpress/scripts` build can produce one. But logical properties are l
 
 ## For core release testing
 
-Add these rows to a release sweep. They're cheap and almost nobody runs them:
+These are no longer just suggestions: the T1 sweep carries four i18n cells (entity `i18n` in
+[`pilots/release-day/sweep-matrix.csv`](../pilots/release-day/sweep-matrix.csv)) and the posted
+checklist has an "i18n and RTL" section that renders from them — a long-string locale smoke
+(de_DE), an RTL admin render (ar / he_IL), the early-translation `_doing_it_wrong` scan, and
+`date_i18n()` / `number_format_i18n()` output.
+
+**The gate, because this was the repo's own known blind spot:**
+`scripts/preflight-sensitivity.sh` has reported *"en_US CANNOT detect i18n / JIT-textdomain
+bugs"* since it existed, while the checklist carried zero locale cells — a warning nothing
+consumed. Now `--gate=i18n` turns it into an exit code: on an en_US-only environment every i18n
+cell records **`BLOCKED(locale-en_US)` — never `SKIP`, and never `PASS`.** A pass on an
+environment that couldn't have detected the failure is not evidence; that's the repo's own rule,
+finally applied to its own known gap.
+
+```bash
+bash scripts/preflight-sensitivity.sh --env=ddev --gate=i18n ~/wp-test \
+  || echo "record the i18n cells BLOCKED(locale-en_US)"
+```
+
+More cheap rows worth adding when you have time:
 
 - **Install a non-English locale and re-run your smoke pass.** Does the admin still work?
 - **Install an RTL locale and look at the new screens** this release added. Every new UI is a new RTL

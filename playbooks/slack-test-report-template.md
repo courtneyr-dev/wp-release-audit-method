@@ -4,7 +4,7 @@ type: template
 status: active
 created: '2026-07-31'
 updated: '2026-08-05'
-source_run: "$WP_AUDIT_ROOT/scripts/render_slack_checklist.py (generator)"
+source_run: "scripts/render_slack_checklist.py (generator, in-repo)"
 tags:
   - wordpress
   - wp-audit
@@ -52,14 +52,15 @@ Two rules the fast block lives or dies by:
   mark a line green because a *related* cell passed — the first auto-renderer did exactly that
   (one blocked media cell painted every media line blocked, and untested WooCommerce lines
   inherited green from the "plugin" entity), which is how a checklist starts lying in both
-  directions. Until the renderer maps line → cell IDs, fill this block by hand from the
-  per-cell evidence.
+  directions. The renderer now enforces this: every line owns an explicit cell list, renders
+  the worst verdict among its own verdicted cells only, and `--strict` errors on any verdicted
+  cell no line owns and no documented rule excuses.
 - **A line that didn't run is dropped or marked** `:heavy_minus_sign:` **— never left green from
   last release.** The "Not covered" line is part of the format, not an apology.
 
-## The full form — 64 checks, for the thread or the follow-up pass
+## The full form — 75 checks, for the thread or the follow-up pass
 
-> **This is the blank form — 64 checks, all unmarked.** For a *filled-in* version with
+> **This is the blank form — 75 checks, all unmarked.** For a *filled-in* version with
 > realistic mixed verdicts, a threaded finding, and the rules for what to say in the thread,
 > see [`skills/wp-release-party`](../skills/wp-release-party/SKILL.md#example-output). That
 > skill also carries the [entity × operation coverage matrix](../skills/wp-release-party/SKILL.md#what-gets-checked--entity--operation)
@@ -72,15 +73,17 @@ Two rules the fast block lives or dies by:
 Generated, not hand-maintained. Regenerate rather than editing this note:
 
 ```bash
-python3 $WP_AUDIT_ROOT/scripts/render_slack_checklist.py --from-results --tier T1 \
+python3 scripts/render_slack_checklist.py --from-results --tier T1 \
   --source "7.1-Beta 3" --target "7.1-Beta 4" --method "Beta Tester plugin" \
   --env "single-site" --php "8.4" --theme "Twenty Twenty-Five" --browser "Chrome" \
   --site-mode single
 ```
 
-64 checks / 9 sections; `--site-mode single` drops the Multisite section (58 checks). Emoji fill from `verdict` in `pilots/release-day/sweep-matrix.csv`.
+75 checks / 12 sections; `--site-mode single` drops the Multisite section (69 checks). Three sections are new as of 2026-08-21 — Ecosystem, Accessibility, and i18n and RTL — each backed by cells in the sweep matrix rather than by claim. Emoji fill from `verdict` in your run root's copies of `pilots/release-day/sweep-matrix.csv` and `upgrade-ladder.csv` (`$WP_AUDIT_ROOT` if set; the repo copies stay blank).
 
 **Three rules before posting.** The header must name the build *actually tested* (beta is not RC) and the upgrade lane used (Beta Tester / WP-CLI / manual zip produce different results — the stale-file finding exists only because Core and WP-CLI differ). Invalid batches are counted and excluded, never reported as findings. No local paths, no credentials; confidential findings reduce to a bare acknowledgment.
+
+**No performance signal.** The form deliberately has no performance line: the [performance playbook](performance-release-audit-playbook.md) is UNEXERCISED, and a checklist line with no exercised cell behind it is a claim, not a check. If someone asks about performance, the honest answer is "unverified," not an emoji.
 
 **The assistant drafts; you post.** Making WordPress Slack is read-only under the standing source rules.
 
@@ -92,7 +95,7 @@ Smoke verdicts are `PASS`/`FAIL`/`PARTIAL`/`BLOCKED`/`SKIP`/`INVALID`. The `CONF
 *WordPress <TARGET>* — upgraded from *<SOURCE>* via *<lane>*
 
 Environment: <env> · PHP <PHP> · <theme> · <browser>
-Result: 0 passed · 0 failed · 0 partial · 0 blocked · 64 not tested
+Result: 0 passed · 0 failed · 0 partial · 0 blocked · 75 not tested
 
 *Upgrade*
 • Upgrade completed without error :white_large_square:
@@ -154,6 +157,11 @@ Result: 0 passed · 0 failed · 0 partial · 0 blocked · 64 not tested
 • WooCommerce: create, update, delete Products :white_large_square:
 • WooCommerce: cart and checkout smoke :white_large_square:
 
+*Ecosystem*
+• Co-installed pairs upgrade clean (no new fatals) :white_large_square:
+• Closure-trigger probe run, controls passing :white_large_square:
+• Fleet tracker triage done for this target :white_large_square:
+
 *Users and roles*
 • Create, update, and delete Users :white_large_square:
 • Change user role :white_large_square:
@@ -167,6 +175,18 @@ Result: 0 passed · 0 failed · 0 partial · 0 blocked · 64 not tested
 • Export and import (WXR) round-trip :white_large_square:
 • Site Health reports no new critical issues :white_large_square:
 • Widgets screen :white_large_square:
+
+*Accessibility*
+• Native-control calibration passes (gates the rows below) :white_large_square:
+• Keyboard pass of the screens this release changed :white_large_square:
+• Focus indicators visible and at least 2 CSS px :white_large_square:
+• A changed control announces name, role, and state :white_large_square:
+
+*i18n and RTL*
+• Admin smoke under a long-string locale (de_DE) :white_large_square:
+• Admin renders under an RTL locale (ar / he_IL) :white_large_square:
+• No early-translation _doing_it_wrong notices under a real locale :white_large_square:
+• date_i18n() and number_format_i18n() correct under the locale :white_large_square:
 
 *Multisite*
 • Network upgrade completes; report the full site count :white_large_square:

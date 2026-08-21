@@ -505,3 +505,8 @@ codebase. If you want the full thing:
 - [Official sources register](../sources/official-sources.md) — where authoritative answers live
 - [The debugging toolkit](../README.md#the-debugging-toolkit-works-with-any-option) — Query Monitor
   first
+- [The upload-content-signature bug class](upload-content-signature.md) — if your plugin calls
+  `wp_upload_bits()` and hands the result to Imagick, you may have inherited the 7.0.4 RCE. A
+  one-line grep tells you whether to look
+- [Co-installed plugins](co-installed-plugins.md) — the seam where your compatible plugin still
+  breaks beside another

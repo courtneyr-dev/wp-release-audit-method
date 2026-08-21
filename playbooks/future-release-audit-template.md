@@ -19,6 +19,7 @@ related:
 
 > **Where this fits:** starting a cycle cold. Then [`wp-release-prep`](../skills/wp-release-prep/SKILL.md) →
 > [`wp-release-party`](../skills/wp-release-party/SKILL.md) → [`wp-release-followup`](../skills/wp-release-followup/SKILL.md).
+> Bracketed row ids like [D-03] and [FM-15] are defined in [registers.md](../method/registers.md).
 
 A release-parameterized checklist. Every placeholder below must be substituted before use; no version number, ticket number, date, fixture path, or db_version from a prior cycle should appear here unsubstituted.
 
@@ -54,7 +55,7 @@ The 7.1 cycle's concrete values (7.1, 7.0.2, 7.1-beta3, beta4/rc1, a trunk revis
 ## G2 — change ledger with provenance tiers and challenge verdicts
 
 - **Entry condition:** G1 substantially complete — the registers supply the raw material for ledger rows.
-- **Required artifacts:** a change ledger for `$VERSION`, one row per change/feature, each carrying a `challenge_status`. The one documented description of this field (from the chain-test generation prompt, outside this loop's four core registers) says `challenge_status` distinguishes UPHELD from UNVERIFIED, with rows additionally able to carry a VERIFY-RC flag when tied to a reopened Trac ticket. Prefer UPHELD rows as anchors for any interaction/chain testing in G4. Separately, that same document's chain-seed provenance table shows anchor-level annotations — REOPENED, NEW-THIS-RUN, REVISED — attached to specific tickets; treat these as descriptive context for an anchor, not confirmed as additional values of the `challenge_status` field itself, since the ledger file's full column definitions live outside this loop's required registers. [deliverables/codex-feature-chain-test-generation-prompt.md]
+- **Required artifacts:** a change ledger for `$VERSION`, one row per change/feature, each carrying a `challenge_status`. The one documented description of this field (from the chain-test generation prompt, outside this loop's four core registers) says `challenge_status` distinguishes UPHELD from UNVERIFIED, with rows additionally able to carry a VERIFY-RC flag when tied to a reopened Trac ticket. Prefer UPHELD rows as anchors for any interaction/chain testing in G4. Separately, that same document's chain-seed provenance table shows anchor-level annotations — REOPENED, NEW-THIS-RUN, REVISED — attached to specific tickets; treat these as descriptive context for an anchor, not confirmed as additional values of the `challenge_status` field itself, since the ledger file's full column definitions live outside this loop's required registers. [prompts/codex-feature-chain-test-generation-prompt.md]
 - **Provenance discipline:** every non-clear ledger row (anything that isn't a plain NO-CHANGE) needs an evidence record — URL, status, locator, excerpt, sha256, replay command. This was release-blocking in an independent review of the r1 pass, which found narrative conclusions with no preserved original payload. [MC-13; FM-23]
 - **Exit condition:** every ledger row has a `challenge_status`, and every non-clear row has an evidence record.
 - **Detectors:** none directly; MC-13's evidence-record requirement is a process gate, not a script.

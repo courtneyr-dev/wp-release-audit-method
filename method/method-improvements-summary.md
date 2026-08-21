@@ -20,7 +20,8 @@ related:
 Executive summary of the WP 7.1 learning loop at `$WP_AUDIT_ROOT/`.
 Every claim below traces to an id in `learning/failure-mode-register.csv` (FM-*),
 `learning/method-change-proposals.csv` (MC-*), `learning/shadow-run-results.csv` (SR-*), or
-`methods/detection-rules.csv` (D-*). No RC1 build exists yet (verified 2026-07-30) — nothing below
+`methods/detection-rules.csv` (D-*) — id schemes and the public/private split are defined in
+[registers.md](registers.md). No RC1 build exists yet (verified 2026-07-30) — nothing below
 claims an RC1 test result.
 
 ## Count verification
@@ -176,7 +177,7 @@ without a genuinely new mechanism and a fresh reproduction.
 
 | Thread | Closing condition |
 |---|---|
-| D-06 and D-07 are ACCEPTED-UNEXERCISED (SR-14, SR-15); fixtures FX-07/FX-08 are WAITING-FOR-RC1; the phase-2 chain-test suite (`deliverables/codex-feature-chain-test-generation-prompt.md`) needs a verified build to run against | WordPress 7.1 RC1's build-identity gate (D-03) returns RELEASED. Does not exist as of 2026-07-30 |
+| D-06 and D-07 are ACCEPTED-UNEXERCISED (SR-14, SR-15); fixtures FX-07/FX-08 are WAITING-FOR-RC1; the phase-2 chain-test suite (`prompts/codex-feature-chain-test-generation-prompt.md`) needs a verified build to run against | WordPress 7.1 RC1's build-identity gate (D-03) returns RELEASED. Does not exist as of 2026-07-30 |
 | FM-04 (REST url-import downloads before multisite size rejection) is BLOCKED from new filing | Owner approval to comment on the existing, already-REOPENED Trac #65517 |
 | FM-10's public legacy-URL serving path remains untested | FX-09, the legacy ms-files rewrite fixture — currently PROPOSED, not yet built |
 | FM-16's Core_Upgrader run left an undiagnosed file count (331); FX-04 is marked AVAILABLE-SUSPECT | Diagnose invocation vs. fixture before reusing FX-04 or claiming this as a reproduction |

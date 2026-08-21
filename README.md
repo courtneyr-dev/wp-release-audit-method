@@ -555,7 +555,7 @@ flowchart LR
         direction TB
         B1["Build-identity gate"] --> B2["Fresh install<br/>does it install clean?"]
         B2 --> B3["Upgrade ladder<br/>9 cells, PHP 7.4"]
-        B3 --> B4["T1 sweep<br/>~61 cells"]
+        B3 --> B4["T1 sweep<br/>~72 cells"]
         B4 --> B5["Post the checklist"]
     end
 
@@ -627,8 +627,14 @@ The minimum set for a useful party:
 | Single site, current PHP | The everyday smoke lane |
 | Multisite: main + normal + archived + spam + deleted | Catches held-back sites hiding behind a success count |
 | Previous stable → target | The Core-updater lane |
-| Previous beta → target | The prior-beta lane |
 | Clean install of target | The baseline you diff everything against |
+| *Conditional:* previous beta → target | The prior-beta lane — **only buildable mid-cycle**, see below |
+
+That last row used to be listed as required, which was a quiet lie: outside a cycle there
+*is* no prior beta, and during the whole 7.1 cycle the fixture was never built in its
+window — its cells sat `BLOCKED` from beta4 through GA. The honest rule: **build it the day
+the second prerelease drops** (the only moment "prior beta → newest build" exists), and
+outside that window it's `BLOCKED(no-prior-beta)`, not a gap in your prep.
 
 That multisite fixture looks fussy. It exists because a network upgrade once reported "2 of
 2 sites upgraded" when there were five — three were archived or spam, got skipped, and sat
@@ -734,7 +740,7 @@ present, and install with it absent so WordPress has to write it.
 **Run the upgrade ladder** — 9 cells covering 4.9, 5.0, 6.2, 6.3, 6.6, 6.9, and 7.0.2 on
 single site, plus 4.9 and 7.0.2 on multisite.
 
-**Run the T1 sweep** — around 61 cells across single site, multisite subsite, and multisite
+**Run the T1 sweep** — around 72 cells across single site, multisite subsite, and multisite
 network.
 
 #### Cover as many surfaces as you can
@@ -778,7 +784,7 @@ flowchart LR
 
 Order of operations: **command line first** (fast, scriptable, parallel across fixtures),
 **browser second** (slow — reserve it for the parts of the UI this release actually changed).
-Don't browser-test all 61 cells; you'll run out of party.
+Don't browser-test all 72 cells; you'll run out of party.
 
 > [!TIP]
 > When CLI and browser disagree, **don't pick a winner.** Record both, and report the
@@ -1211,6 +1217,8 @@ lands.
 ├── accessibility/    a11y testing — layered method, tools, and where it's wired in
 ├── i18n/             internationalization, translation loading, and RTL
 ├── plugin-theme-authors/   testing your OWN plugin or theme (CI, tests, blocks)
+├── fleet-operators/  deciding whether a release ships to a fleet of sites
+├── pilots/, learning/, methods/   the run-root schema contracts and blank matrices
 ├── data/             deprecations.csv — community-maintained, PRs welcome
 ├── skills/           the three acts, as AI assistant skills (optional)
 ├── playbooks/        longer runbooks: security, performance, content, release day
@@ -1256,7 +1264,10 @@ acknowledgment only, with no reproduction steps until a fix ships.
 Stated plainly so you don't mistake them for tested ground:
 
 - The **performance playbook has never been run.** It describes what a good benchmark would
-  look like. Treat it as a plan, not a procedure.
+  look like. Treat it as a plan, not a procedure. Consequently **release-day reporting carries
+  no performance signal at all** — there is no performance line in the 75-check form, on
+  purpose: a line with no exercised cell behind it would be the exact defect this section
+  exists to prevent.
 - Two checks (Core updater vs. WP-CLI, real-input accessibility) are written but haven't been
   exercised against a release candidate.
 - A complete list of open Trac tickets still needs a human with a browser.

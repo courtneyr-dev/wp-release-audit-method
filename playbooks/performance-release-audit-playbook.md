@@ -22,6 +22,7 @@ related:
 > Hand it to an SRE as a design to execute, never as a result — see
 > [handing off performance work](../skills/wordpress-audit-handoff/SKILL.md#performance).
 > Until baselines exist the correct posture word is **unverified**, not *good*.
+> Bracketed row ids like [D-03; SR-05] are defined in [registers.md](../method/registers.md).
 
 ## How to exercise this playbook
 
@@ -68,7 +69,7 @@ A performance claim is only as good as the dataset it ran against. Define and re
 - Taxonomy/term counts if the surface under test touches term queries.
 - The exact seeding script or command and its checksum, so the dataset can be rebuilt identically on a second machine or a later date.
 
-Scale target: the loop's one existing signal on content scale at volume is the r1 content audit's attachment-count discrepancy — the REST API reported 3,437 attachments while returning only 3,305 to an anonymous client (attachment visibility filtering). That is a content-audit finding, not a performance one, but it establishes that visibility/paging effects are real at that scale. The chain-seed hypothesis for Media Library scale names 5k+ attachments as the point where infinite-scroll paging, the REST total, and per-role visibility can disagree — treat 5k+ as the dataset size to validate against, not as an established benchmark number. [deliverables/codex-feature-chain-test-generation-prompt.md, chain C-10]
+Scale target: the loop's one existing signal on content scale at volume is the r1 content audit's attachment-count discrepancy — the REST API reported 3,437 attachments while returning only 3,305 to an anonymous client (attachment visibility filtering). That is a content-audit finding, not a performance one, but it establishes that visibility/paging effects are real at that scale. The chain-seed hypothesis for Media Library scale names 5k+ attachments as the point where infinite-scroll paging, the REST total, and per-role visibility can disagree — treat 5k+ as the dataset size to validate against, not as an established benchmark number. [prompts/codex-feature-chain-test-generation-prompt.md, chain C-10]
 
 ## Baseline-vs-change comparison: repeated runs required
 

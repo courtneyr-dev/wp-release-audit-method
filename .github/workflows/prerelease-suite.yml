@@ -36,7 +36,9 @@ jobs:
     name: CRUD suite against the newest Beta/RC
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Resolve the target build
         id: target
@@ -68,7 +70,7 @@ jobs:
             *) echo "::error::detector failed with exit $rc"; exit 1 ;;
           esac
 
-      - uses: ddev/github-action-setup-ddev@v1
+      - uses: ddev/github-action-setup-ddev@fdf2f5c97943bae638f31df6df86f1defa6210c0 # v1.12.1
         if: steps.target.outputs.version != ''
         with:
           autostart: false
@@ -124,7 +126,7 @@ jobs:
 
       - name: Keep the evidence
         if: always() && steps.target.outputs.version != ''
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: crud-suite-${{ steps.target.outputs.version }}
           path: crud.txt

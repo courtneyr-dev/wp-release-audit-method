@@ -24,6 +24,12 @@ related:
 > calibration across the WP 7.1 learning loop at `$WP_AUDIT_ROOT/`
 > — grounded in `learning/failure-mode-register.csv` (FM-*), `learning/method-change-proposals.csv`
 > (MC-*), `learning/shadow-run-results.csv` (SR-*), and `methods/detection-rules.csv` (D-*).
+> Register schemas and id definitions: [registers.md](../method/registers.md).
+>
+> **Path note (2026-08-21).** The fenced block is preserved as written; one path inside it has
+> since moved — `deliverables/codex-feature-chain-test-generation-prompt.md` is
+> [`prompts/codex-feature-chain-test-generation-prompt.md`](codex-feature-chain-test-generation-prompt.md)
+> in this repo. Substitute when reusing.
 
 ## Placeholders
 

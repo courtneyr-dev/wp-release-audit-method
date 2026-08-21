@@ -3,7 +3,8 @@
 set -u
 
 SC="${STUDIO_CLI:-/Applications/Studio.app/Contents/Resources/bin/studio-cli.sh}"
-AUDIT_ROOT="${AUDIT_ROOT:-$WP_AUDIT_ROOT}"
+# Detector scripts ship in this repo; a private run root can still override.
+AUDIT_ROOT="${AUDIT_ROOT:-${WP_AUDIT_ROOT:-$(cd "$(dirname "$0")/../../.." && pwd)}}"
 VERSIONS="$HOME/.studio/server-files/wordpress-versions"
 STUDIO="$HOME/Studio"
 CLEAN="$STUDIO/codex-wp71-beta4-qa"

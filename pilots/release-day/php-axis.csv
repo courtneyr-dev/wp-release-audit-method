@@ -1,0 +1,8 @@
+chain_id,lens,php_load_bearing,php_versions,site_modes,reason
+X-ERR-01,ERRORPATH,yes,7.4;8.1;8.4,single;multisite,The server fallback IS the PHP image stack — PHP 8.4 without Imagick falls back to GD and loses HEIC
+X-QUAL-01,QUALITY,yes,7.4;8.1;8.4,single,Encoded subsize quality depends on the GD/Imagick build compiled against that PHP
+X-SERIAL-01,SERIAL,yes,7.4;8.1;8.2;8.4,single,serialize/unserialize edge cases plus the utf8 PHP fallback pipeline; byte-identity is the assertion
+X-HASH-01,HASH,yes,7.4;8.1;8.4,single;multisite,password_hash() algorithm availability and cost defaults differ; a hash written under one runtime must verify under another
+X-BOUND-01,BOUNDARY,yes,7.4;8.1,single,PHP 8.0 made sorts stable — term and menu and query ordering can differ 7.4 vs 8.x at boundary counts
+X-TIME-01,TIME,yes,7.4;8.4,single,Date/DST arithmetic shifted across 8.x; expiry and cron windows are time math
+X-HOP-01,MULTIHOP,yes,7.4;8.4,single;multisite,Migrations run under whatever runtime is present; the multisite network-upgrade loop adds timeout and memory failure modes (FX-15)

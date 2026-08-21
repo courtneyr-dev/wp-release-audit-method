@@ -26,7 +26,7 @@ related:
 
 Generalizes the vault's *prove-by-firing* discipline from owned plugins to **WordPress core release auditing**. Built 2026-07-30 from WordPress 7.1 Beta 4 runtime QA, the 7.1 Learn content audit (runs 1 + 2), and an independent adversarial review of run 1.
 
-Run root (evidence lives there, not here): `$WP_AUDIT_ROOT/`. Frozen predecessors: `$WP_LEARN_AUDIT_ROOT_R1/`, `$WP_LEARN_AUDIT_ROOT/`.
+Run root (evidence lives there, not here): `$WP_AUDIT_ROOT/`. Frozen predecessors: `$WP_LEARN_AUDIT_ROOT_R1/`, `$WP_LEARN_AUDIT_ROOT/`. Row ids like FM-03 and D-04 are defined in [registers.md](registers.md).
 
 > Authorization: authorized defensive testing in disposable local environments only. Never production, WordPress.org infrastructure, third-party sites, or unowned extensions. No tickets, issues, PRs, or disclosures without explicit operator approval.
 
@@ -49,6 +49,7 @@ Sixth law added by this loop: **refuted claims are assets.** Nine narrowed/refut
 - **Threat-model gate.** Internal footgun ≠ vulnerability; configuration-dependent ≠ default-configuration. Both distinctions came from narrowed Beta 4 claims.
 - **Batch invalidation on harness fault.** Colima storage corruption, root-owned fixtures, a self-deleting source fixture, and a wrong site count each produced non-WordPress "failures." Diagnose, invalidate, preserve the diagnosis.
 - **Mandatory evidence records** (URL, status, locator, excerpt, hash, replay command) for every non-clear claim — the single finding an independent review called release-blocking for credibility.
+- **A dependency's public issue tracker is a release-readiness input** (added 2026-08-21). The fatal that took down WP Rocket sites on 7.1 release day sat on the vendor's own tracker for 44 days beforehand — filed 2026-07-06 with a proposed one-line fix, untriaged until sites went down on 2026-08-19. Checkable step: for every plugin in your fleet, search its tracker for open issues naming the upcoming core version, before release day. The cheapest finding is one somebody else already wrote up. See [ecosystem-compatibility-lane](ecosystem-compatibility-lane.md).
 
 ## 3. Detectors (calibrated, with controls)
 

@@ -47,6 +47,15 @@ Operations: create · read-list · update · delete · trash-restore · bulk · 
 
 **Why multisite is three environments, not two:** network-admin and subsite contexts resolve capabilities, plugin activation scope, and site status differently. Collapsing them hides exactly the defects the 7.1 cycle already produced.
 
+## Phase 1A½ — Ecosystem block
+
+Three cells (`entity == ecosystem` in the sweep matrix) for the failure class where the
+release is fine and the ecosystem still breaks: a co-installed-pairs upgrade fixture, the
+closure-trigger probe with its controls, and fleet tracker triage. The reasoning, the
+worked WP Rocket incident, and the honest limits (premium plugins read
+`BLOCKED(premium-license)`; pairs still miss triples) are in
+[the ecosystem compatibility lane](../method/ecosystem-compatibility-lane.md).
+
 ## Phase 1B — Upgrade ladder
 
 **Question:** does a site that has been alive for years survive the jump?

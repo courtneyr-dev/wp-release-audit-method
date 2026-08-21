@@ -31,6 +31,43 @@ Operator-grade procedure for security-relevant findings in the WordPress release
 - Concrete case: the CONFIRMED REST url-sideload defect (full file downloads before the multisite size check rejects it) maps onto an existing, currently-REOPENED upstream ticket, Trac #65517. Filing is BLOCKED pending owner approval to comment on that ticket — it does not get a new filing. [FM-04]
 - Sensitive material (credentials, exploit-grade detail) never leaves the loop's private channel. See "Sensitive-material boundary" below. [FM-18]
 
+## The backport matrix — which branches got the fix, and to what version
+
+A fleet on mixed branches has an operational question no single-build check answers: *which
+branches carry this security fix, and what is the exact fixed version on each?* Three
+WordPress security releases shipped in under a month, and they establish the pattern —
+including that the assumptions break:
+
+| Release | Date | CVE / CVSS | Backported through | Note |
+|---|---|---|---|---|
+| **7.0.2** | July 2026 | — | — | Critical pre-auth RCE + high-severity SQLi |
+| **7.0.3** | 2026-08-06 | CVE-2026-64638 / **8.9** | **4.7** branch — every version | Pre-auth reflected XSS on the login screen. Root cause is a **parser disagreement**: a tag-like string with whitespace after the opening `<` survives `wp_strip_all_tags()` (built on PHP `strip_tags()`) as text, but `wp_kses_post()` treats it differently. Two facts worth encoding as invariants — a **nonce-based CSP using `strict-dynamic` did not block the demonstrated path**, and in the full chain **the uploaded plugin did not need to be activated** for its PHP to be requested directly |
+| **7.0.4** | — | **none published** | **4.7** through 7.0 | Author+ RCE via Imagick + Ghostscript. **No CVE and no CVSS** in available sources — encode that: a security release does not imply a CVE. The [upload-content-signature class](../plugin-theme-authors/upload-content-signature.md) is the plugin-author inheritance of this |
+
+The scope discipline in the sources is worth copying: the 7.0.3 XSS was reproduced against
+two live 7.0.2 deployments, but the full PHP-execution chain was demonstrated **only on a
+clean local install** — so "affects every version" applies to the XSS, not automatically to
+the chain (The Hacker News, 2026-08-07). State which claim your evidence actually reaches.
+
+The matrix lives in [`data/security-releases.csv`](../data/security-releases.csv). The
+security-fix presence gate reads it:
+
+```bash
+# does the build carry every fix in the matrix, across the whole backport set?
+bash scripts/security_fix_presence.sh <target-zip-or-dir> --all
+```
+
+`--all` diffs each row's `diff_prev -> fixed_in` fix set against the target and flags any
+that read VULNERABLE — so a fleet build on an arbitrary version is checked against the whole
+known set rather than one hardcoded pair. Calibrated 2026-08-21: 7.0.3 reads all-PATCHED for
+the 7.0.2 and 7.0.3 rows and correctly VULNERABLE for the 7.0.4 fix that shipped after it —
+the exact "we're a point release behind on this branch" signal. The single-pair form
+(`... <prev> <fixed>`) still works for one release.
+
+Honest limits carry over from the single-pair mode: it reads lines not semantics (a change
+confined to a docblock reads VULNERABLE), DIVERGED needs a human, and for any high-severity
+fix confirm behaviorally rather than trusting the line diff.
+
 ## Lanes: blind first-principles, changed-surface, reconcile
 
 Run two independent passes and reconcile only after both report — never mid-pass.

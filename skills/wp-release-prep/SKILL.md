@@ -9,10 +9,12 @@ Phase 0 of release testing. Ends with fixtures that are **built, seeded, asserte
 
 Never do this against production, WordPress.org infrastructure, third-party sites, or plugins or themes the operator doesn't own. All Studio sites use the `codex-` or `rel-` prefix. Read-only for external WordPress.org, Trac, and GitHub access.
 
+**Where paths point:** run commands from a clone of `wp-release-audit-method` — script and CSV paths are repo-relative. The repo carries the schemas and blank matrices; verdicts and evidence go in your run root's copies (`$WP_AUDIT_ROOT`), never the repo's. See [`pilots/README.md`](../../pilots/README.md).
+
 ## 1. Build-identity gate — always first
 
 ```bash
-$WP_AUDIT_ROOT/scripts/rc_build_identity.sh <VERSION> <LABEL>
+scripts/rc_build_identity.sh <VERSION> <LABEL>
 ```
 
 Exit 0 = RELEASED, proceed. Exit 3 = `WAITING`, **stop**. Never substitute a beta, trunk, nightly, or prior RC for a build that doesn't exist. If WAITING, still build fixtures — they're reusable — but mark every runtime cell `WAITING-FOR-<LABEL>` and say so in the handoff.
@@ -30,8 +32,8 @@ Minimum set for a release party:
 | single-site, current PHP | the T1 smoke lane |
 | multisite (5 sites: normal, archived, spam, deleted, plus main) | held-back-site denominator, network upgrade |
 | prior-stable → target upgrade source | Core-updater lane |
-| prior-beta → target upgrade source | prior-beta lane |
 | clean install of target | the comparison baseline for file-tree diffs |
+| *conditional:* prior-beta → target | prior-beta lane — **build it the day the second prerelease drops**, the only window it can exist. It went unbuilt for the whole 7.1 cycle and its C-02 cells sat BLOCKED; outside the window record `BLOCKED(no-prior-beta)`, not a prep gap |
 
 Add from `methods/test-and-fixture-registry.csv` when the release calls for it: PHP-matched pairs (FX-10..FX-14), the large network (FX-15), a classic-theme site, a block-theme site.
 
@@ -68,22 +70,33 @@ Seed **beyond** it for this method:
 Per fixture, record and keep: WordPress version, `db_version`, PHP version, image stack (GD (`php-gd`) / Imagick, HEIC/AVIF support), site mode, full site inventory with status flags, active plugins, active theme, user count, content counts, fixture hash.
 
 ```bash
-$WP_AUDIT_ROOT/scripts/assert_multisite_denominator.sh   # every multisite fixture
+scripts/assert_multisite_denominator.sh <site-path>   # every multisite fixture
 ```
 
 Harness-health precheck first — daemon, socket, container, ownership. A harness fault is an `INVALID` batch, never a product result.
 
-## 5. Calibrate controls
+## 5. Read the release's own declared regressions
+
+Release announcements now document known-bad shipped defaults with their opt-outs — 7.1
+shipped media-library infinite scroll while calling it a known inaccessible pattern, with a
+Profile toggle, the `media_library_infinite_scrolling` filter, and a third-party plugin as
+the outs ([the worked example](../../accessibility/README.md#read-the-release-notes-for-the-releases-own-declared-regressions)).
+Before the drop: read the announcement and Field Guide for anything the release itself
+declares as a regression or known-bad default, and give each one a fleet-wide policy
+decision — accept, filter off, or hold. Record the decision; the matching checklist line
+exists so it leaves a trace.
+
+## 6. Calibrate controls
 
 Before the party, prove the instruments work:
 - `scripts/stale_file_check.py <prior_tree> <target_tree>` — offline, predicts the upgrade answer
 - a native-control keyboard check if any accessibility cell is planned (it must PASS before product results count)
 - one positive and one negative control per planned batch
 
-## 6. Regenerate the matrices
+## 7. Regenerate the matrices
 
 ```bash
-python3 $WP_AUDIT_ROOT/scripts/build_release_day_matrices.py
+python3 scripts/build_release_day_matrices.py --browser-t1 <this release's ledger entities>
 ```
 
 Re-derive `BROWSER_T1` in that script from **this** release's change ledger — the entities whose UI the release actually touches. It's the one input that must not carry forward.

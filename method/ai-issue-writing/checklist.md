@@ -32,10 +32,13 @@ instant reject regardless of quality.
 | **Disclose appreciated, optional** | CPython | Allowed — disclose as courtesy. |
 | **Contested / none** | Debian, GitLab (no primary policy found) | Default to WordPress-style disclosure + a human-owned, verified report. |
 
-- [ ] **WordPress specifically:** disclose-and-allow. The official policy (Make/AI §1.2) mandates
-      **three** fields — `AI assistance:` / `Tool(s):` / `Used for:`. The **observed house
-      convention on live 7.1 tickets** (what committers themselves paste) is a `## Use of AI Tools`
-      heading with a fourth `Model(s):` line. **Match the practice** — use the heading and all four.
+- [ ] **WordPress specifically:** disclose-and-allow. The official policy (Make/AI §1.2) defines
+      **exactly three** fields — `AI assistance:` / `Tool(s):` / `Used for:` — with no `Model(s):`
+      field and no mandated heading (re-verified against the live handbook 2026-08-21; the full
+      sourcing is in `research-wordpress-and-canon.md`). A `## Use of AI Tools` heading with a
+      fourth `Model(s):` line circulates as a committer convention on live tickets — adding it is
+      harmless and often helpful, but it is a convention layered on top of the policy. **Never
+      cite the four-field form as required.**
 - [ ] **Security reports:** never paste embargoed / non-public data into a model (Debian draft norm;
       applies to any coordinated disclosure — e.g. an unpatched flaw under embargo).
 
@@ -114,18 +117,18 @@ This is the pass that most separates a trusted human report from slop. Do it del
 
 ## Phase 5 — Disclosure block
 
-- [ ] **WordPress** (match the observed convention — heading + four fields):
+- [ ] **WordPress** — the official policy is the three fields below; the bracketed heading and
+      `Model(s):` line are an optional committer convention, fine to add, never required:
 ```
-## Use of AI Tools
+[## Use of AI Tools]          <- optional heading, convention not policy
 AI assistance: Yes
 Tool(s): Claude Code
-Model(s): Claude Opus 4.8
+[Model(s): Claude Opus 4.8]   <- optional line, convention not policy
 Used for: Investigation, runtime reproduction, and drafting; I reviewed, tested,
 and take responsibility for everything here.
 ```
-  (Official minimum is three fields without the heading; the fourth line + heading is harmless and
-  is what committers use. Disclosure is required when AI "meaningfully contributes… beyond trivial
-  reformatting.")
+  (Official field set re-verified 2026-08-21: three fields, no heading, no Model(s). Disclosure is
+  required when AI "meaningfully contributes… beyond trivial reformatting.")
 - [ ] **Other ecosystems** — use their trailer if they have one: `Assisted-by:` (Fedora),
       `AI-used-for:` (QEMU), or a plain "written in part with the assistance of generative AI"
       (Kubernetes). CPython: appreciated, optional.
@@ -172,8 +175,8 @@ Title: <specific problem, ~10 words, names the breakage not the fix>
 ## Suggested fix
 <least-controversial option, as a suggestion; symptom stated independently>
 
-## Use of AI Tools
-AI assistance: Yes
+## Use of AI Tools          <- heading and Model(s) line are optional convention;
+AI assistance: Yes             the official policy requires only the other three
 Tool(s): …
 Model(s): …
 Used for: … (and what I, the human, reviewed/tested/verified)

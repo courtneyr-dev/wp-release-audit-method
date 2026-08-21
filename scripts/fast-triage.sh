@@ -45,25 +45,10 @@ else echo "  *** FAIL — these fatal when upgrading old WP on old PHP:"; echo "
 
 if [ -n "$PREVDIR" ]; then
   hdr "STATIC GATE 2 — \$_old_files completeness"
-  ( cd "$PREVDIR" && find wp-admin wp-includes -type f 2>/dev/null | sort ) > "$WORK/old.txt"
-  ( cd "$NEWDIR"  && find wp-admin wp-includes -type f 2>/dev/null | sort ) > "$WORK/new.txt"
-  comm -23 "$WORK/old.txt" "$WORK/new.txt" > "$WORK/deleted.txt"
-  python3 - "$NEWDIR" "$WORK/deleted.txt" <<'PY'
-import re, sys, collections
-src = open(sys.argv[1] + '/wp-admin/includes/update-core.php').read()
-m = re.search(r'\$_old_files\s*=\s*array\((.*?)\n\);', src, re.S)
-listed = set(re.findall(r"'([^']+)'", m.group(1))) if m else set()
-deleted = [l.strip() for l in open(sys.argv[2]) if l.strip()]
-missing = [d for d in deleted if d not in listed
-           and not any(d.startswith(e.rstrip('/') + '/') for e in listed)]
-print(f"  deleted since baseline: {len(deleted)}   listed in $_old_files: {len(listed)}")
-if missing:
-    print(f"  *** FAIL — {len(missing)} deleted files NOT in $_old_files (orphaned on upgrade):")
-    for k, v in collections.Counter('/'.join(p.split('/')[:3]) for p in missing).most_common(10):
-        print(f"      {v:5}  {k}/")
-else:
-    print("  PASS — every deleted file is accounted for")
-PY
+  # One implementation, not two that can disagree: stale_file_check.py is the
+  # canonical detector (D-05); this gate just runs it against the two trees.
+  python3 "$(cd "$(dirname "$0")" && pwd)/stale_file_check.py" "$PREVDIR" "$NEWDIR" \
+    | sed 's/^/  /'
 
   hdr "STATIC GATE 3 — changed PHP surface (what to actually test)"
   diff -rq "$PREVDIR" "$NEWDIR" 2>/dev/null | grep '\.php ' \

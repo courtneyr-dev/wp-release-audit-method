@@ -1,0 +1,15 @@
+# Zizmor config for this repo's own workflows and the CI drop-ins it ships.
+#
+# The one intentional suppression, with its reason. Everything else Zizmor finds
+# is a real finding and gets fixed, not ignored — that's the whole point of
+# running it (Desrosiers, WCUS 2026; the WordPress.org org is piloting this
+# org-wide).
+rules:
+  adhoc-packages:
+    ignore:
+      # The wp-compat drop-in installs @wordpress/env as a global CLI tool
+      # (npm install -g), which is how wp-env is meant to be used and is not a
+      # project dependency npm ci could pin. This is a tool bootstrap, not an
+      # unpinned dependency — different risk, and the brief's "npm ci not npm
+      # install" rule is about lockfile-managed deps, which this isn't.
+      - wp-compat.yml

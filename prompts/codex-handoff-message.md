@@ -18,6 +18,16 @@ related:
 
 Self-contained. Assumes only that Codex can read the local filesystem and run disposable local WordPress environments.
 
+> **Path note (2026-08-21).** The message below is preserved as run on 2026-07-30 and
+> describes that run root's layout. Since then, several artifacts it cites moved into this
+> repo: `rc_build_identity.sh`, `stale_file_check.py`, and `assert_multisite_denominator.sh`
+> live at [`scripts/`](../scripts/) (in-repo since 2026-08-05 for the identity gate), the
+> register schemas at [`learning/`](../learning/) and [`methods/`](../methods/), and
+> `deliverables/codex-feature-chain-test-generation-prompt.md` is
+> [`prompts/codex-feature-chain-test-generation-prompt.md`](codex-feature-chain-test-generation-prompt.md).
+> Reusing this message means substituting those paths; the body is unchanged because audit
+> records cite it as run.
+
 ---
 
 You are taking over feature-CHAIN test development for a WordPress core release audit. Chains = tests that compose two or more shipped features and assert the behavior of their INTERACTION. Every confirmed defect in the prior Beta 4 pass lived in an interaction, not in a feature: validation order across site modes, a UI counter reading the wrong option scope, an updater's cleanup list disagreeing with the tree it shipped. Single-feature tests are structurally blind to those.
