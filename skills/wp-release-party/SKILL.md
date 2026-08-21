@@ -9,6 +9,8 @@ Phase 1. Breadth, fast: **does the release break the ordinary things people do?*
 
 Assumes [`wp-release-prep`](../wp-release-prep/SKILL.md) has run — fixtures built, seeded, asserted, controls calibrated. If not, run that first; testing an unasserted fixture produces results nobody can trust.
 
+**Where paths point:** run commands from a clone of `wp-release-audit-method` — script and CSV paths are repo-relative. Record verdicts in your run root's copies of the matrices (`$WP_AUDIT_ROOT/pilots/release-day/`), not the repo's blank ones. See [`pilots/README.md`](../../pilots/README.md).
+
 | | |
 |---|---|
 | **Previous phase** | [`wp-release-prep`](../wp-release-prep/SKILL.md) — Act I, before the build drops |
@@ -21,7 +23,7 @@ Assumes [`wp-release-prep`](../wp-release-prep/SKILL.md) has run — fixtures bu
 ## 1. Re-run the build-identity gate
 
 ```bash
-$WP_AUDIT_ROOT/scripts/rc_build_identity.sh <VERSION> <LABEL>
+scripts/rc_build_identity.sh <VERSION> <LABEL>
 ```
 
 Even if prep passed it. Packages get republished and labels move. `WAITING` means stop the runtime cells — write the plan and report the block.
@@ -104,7 +106,7 @@ Assert before and after: version, `db_version`, site inventory and flags, conten
 ## 4. Render the Slack checklist
 
 ```bash
-python3 $WP_AUDIT_ROOT/scripts/render_slack_checklist.py --from-results --tier T1 \
+python3 scripts/render_slack_checklist.py --from-results --tier T1 \
   --source "<SOURCE BUILD>" --target "<TARGET BUILD>" --method "<Beta Tester plugin | WP-CLI | manual zip>" \
   --env "<single-site|multisite>" --php "<PHP>" --theme "<theme>" --browser "<browser>" \
   --site-mode <single|multisite|both>

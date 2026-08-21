@@ -9,10 +9,12 @@ Phase 0 of release testing. Ends with fixtures that are **built, seeded, asserte
 
 Never do this against production, WordPress.org infrastructure, third-party sites, or plugins or themes the operator doesn't own. All Studio sites use the `codex-` or `rel-` prefix. Read-only for external WordPress.org, Trac, and GitHub access.
 
+**Where paths point:** run commands from a clone of `wp-release-audit-method` — script and CSV paths are repo-relative. The repo carries the schemas and blank matrices; verdicts and evidence go in your run root's copies (`$WP_AUDIT_ROOT`), never the repo's. See [`pilots/README.md`](../../pilots/README.md).
+
 ## 1. Build-identity gate — always first
 
 ```bash
-$WP_AUDIT_ROOT/scripts/rc_build_identity.sh <VERSION> <LABEL>
+scripts/rc_build_identity.sh <VERSION> <LABEL>
 ```
 
 Exit 0 = RELEASED, proceed. Exit 3 = `WAITING`, **stop**. Never substitute a beta, trunk, nightly, or prior RC for a build that doesn't exist. If WAITING, still build fixtures — they're reusable — but mark every runtime cell `WAITING-FOR-<LABEL>` and say so in the handoff.
@@ -68,7 +70,7 @@ Seed **beyond** it for this method:
 Per fixture, record and keep: WordPress version, `db_version`, PHP version, image stack (GD (`php-gd`) / Imagick, HEIC/AVIF support), site mode, full site inventory with status flags, active plugins, active theme, user count, content counts, fixture hash.
 
 ```bash
-$WP_AUDIT_ROOT/scripts/assert_multisite_denominator.sh   # every multisite fixture
+scripts/assert_multisite_denominator.sh <site-path>   # every multisite fixture
 ```
 
 Harness-health precheck first — daemon, socket, container, ownership. A harness fault is an `INVALID` batch, never a product result.
@@ -83,7 +85,7 @@ Before the party, prove the instruments work:
 ## 6. Regenerate the matrices
 
 ```bash
-python3 $WP_AUDIT_ROOT/scripts/build_release_day_matrices.py
+python3 scripts/build_release_day_matrices.py --browser-t1 <this release's ledger entities>
 ```
 
 Re-derive `BROWSER_T1` in that script from **this** release's change ledger — the entities whose UI the release actually touches. It's the one input that must not carry forward.
