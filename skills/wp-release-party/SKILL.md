@@ -218,6 +218,16 @@ Two things that example does deliberately: it **sizes the consequence down** ("i
 
 Lead message = the checklist. Thread = one reply per non-PASS cell: mechanism → executed proof → consequence → evidence ceiling → rerun recipe. Size the consequence honestly — "243 files remain" is alarming; "integrity hygiene, not a functional break, not a vulnerability" is the same fact correctly sized.
 
+## 6. Retro — the party told you about the tool too
+
+Separate from the findings (which are about WordPress), spend two minutes on what the *tool*
+did: did every cell run, did a script error, did a rendered count not match the matrix, did the
+renderer's `--strict` flag an orphan? Fill in [`templates/skill-run-retro.md`](../../templates/skill-run-retro.md).
+`WRONG`/`GAP` items become `PROPOSED` rows in your run root's `learning/` registers; the
+shareable ones go to a [field report](../../CONTRIBUTING.md#suggesting-improvements-from-real-use).
+Method: [`retro`](../../method/retro.md). Keep it apart from the finding vocabulary — a cell that
+couldn't run is a tool `GAP`, not a WordPress `FAIL`.
+
 ## Done when
 
-Every T1 cell has a verdict or an exact blocker; invalid batches excluded with diagnosis preserved; cleanup verified; the checklist renders and is handed to the operator; non-PASS cells are queued for `wp-release-followup`.
+Every T1 cell has a verdict or an exact blocker; invalid batches excluded with diagnosis preserved; cleanup verified; the checklist renders and is handed to the operator; non-PASS cells are queued for `wp-release-followup`; the retro is filed.

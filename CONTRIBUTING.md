@@ -1,5 +1,37 @@
 # Contributing
 
+## Suggesting improvements from real use
+
+The best improvements to this method have come from running it and noticing something — a
+script that lied, a missing cell, an instruction that assumed the wrong environment. If that's
+you, there are three doors, lowest-friction first:
+
+| You have… | Use | Bar |
+|---|---|---|
+| A quick note — "I ran it and X" | [**Field report**](.github/ISSUE_TEMPLATE/field-report.yml) | None. A sentence. Refuted/inconclusive welcome |
+| A specific change, ideally with what happened when you ran it | [**Method improvement**](.github/ISSUE_TEMPLATE/method-improvement.yml) | Show the run if you have one |
+| The change already made | A **pull request** (the [template](.github/pull_request_template.md) walks you through it) | Controls if it's a detector; a green `check-repo.py` |
+
+Two minutes, from the terminal:
+
+```bash
+# a field report — the low door
+gh issue create --repo courtneyr-dev/wp-release-audit-method \
+  --title "[Field report] step 4 assumes Studio; I was on DDEV" \
+  --label field-report \
+  --body "Ran wp-release-party on 7.2-beta1, DDEV. The path in step 4 didn't resolve because it assumes a Studio site dir."
+```
+
+**This is meant to be routine, not exceptional.** Each run of a skill ends with a
+[retro](method/retro.md) whose whole job is to surface these, and the [ecosystem-signals](method/ecosystem-signals.md)
+routine surfaces the ones that come from reading the news rather than running the tool. Both
+feed the same [learning loop](method/release-audit-learning-loop.md). You don't need to
+adjudicate your own note — surfacing it is the contribution; adjudication happens here.
+
+The one rule: **a tool problem is a field report; a WordPress bug is a [test report](.github/ISSUE_TEMPLATE/test-report.yml)
+or a Trac ticket** (and a security bug is [HackerOne](https://hackerone.com/wordpress), never
+here). Keeping those apart is the same `INVALID`-vs-`FAIL` discipline the method runs on.
+
 ## The bar for a finding
 
 A claim isn't a finding until it has been fired. Every contribution that asserts WordPress

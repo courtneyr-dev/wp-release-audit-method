@@ -1,0 +1,78 @@
+name: Field report
+description: You ran a skill or playbook and something could be better. The two-minute door.
+title: "[Field report] "
+labels: [ "field-report" ]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The low-friction on-ramp. You don't need a reproduction or controls here — that's
+        what [Method improvement](?template=method-improvement.yml) is for. This is for
+        "I ran it and here's what I noticed." Refuted and inconclusive notes are welcome;
+        they become negative controls.
+
+        **Found a bug in WordPress itself?** That's a [test report](?template=test-report.yml)
+        or a Trac ticket, not this. **A security vulnerability?**
+        [HackerOne](https://hackerone.com/wordpress), never here.
+
+  - type: dropdown
+    id: skill
+    attributes:
+      label: What did you run?
+      options:
+        - wp-release-prep (Act I)
+        - wp-release-party (Act II)
+        - wp-release-followup (Act III)
+        - wordpress-audit-handoff
+        - A playbook (say which below)
+        - A script (say which below)
+        - Something else
+    validations: { required: true }
+
+  - type: dropdown
+    id: verdict
+    attributes:
+      label: Which kind of note is this?
+      description: From the retro vocabulary — see method/retro.md.
+      options:
+        - "KEEP — this worked and I'd hate to lose it"
+        - "FRICTION — it slowed me down but I got through"
+        - "GAP — something was missing (a cell, a lane, a driver, a doc)"
+        - "WRONG — the tool told me something wrong or misleading"
+    validations: { required: true }
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: |
+        A sentence or three. If a script errored or a count didn't match, paste it —
+        but you don't have to.
+      placeholder: "Step 4 of the party skill assumes a Studio site; I was on DDEV and the path didn't resolve."
+    validations: { required: true }
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Your setup (so we can tell whose it is)
+      value: |
+        - Driver (ddev / wp-env / studio / cli / lando):
+        - Site mode (single / multisite):
+        - The build you were testing:
+    validations: { required: false }
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you change? (optional)
+      description: Even a rough idea helps. No need for a full proposal.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: This is about the *tool*, not a WordPress bug (those go to Trac / a test report)
+        - label: No credentials or local filesystem paths in here
+        - label: This is not a security vulnerability (those go to HackerOne)
+          required: true

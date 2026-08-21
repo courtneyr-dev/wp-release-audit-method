@@ -11,6 +11,22 @@ Never do this against production, WordPress.org infrastructure, third-party site
 
 **Where paths point:** run commands from a clone of `wp-release-audit-method` — script and CSV paths are repo-relative. The repo carries the schemas and blank matrices; verdicts and evidence go in your run root's copies (`$WP_AUDIT_ROOT`), never the repo's. See [`pilots/README.md`](../../pilots/README.md).
 
+## 0. Scan the ecosystem for what changed since last cycle
+
+Before building anything, run the ecosystem-signals scan — the change ledger that selects this
+release's browser cells *is* an ecosystem-signals output, and the WP Rocket lane exists because
+someone read an outage post-mortem, not because a cell failed.
+
+```bash
+export WP_AUDIT_SIGNALS=<your ecosystem notes: a file or folder of .md/.txt>
+export WP_AUDIT_FLEET="<your fleet's plugin slugs, comma-separated>"
+bash scripts/ecosystem-signals.sh --version <this release>
+```
+
+Each hit is a candidate, not a finding — adjudicate against the primary source before it
+becomes a cell, a lane, or a register row. Method: [`ecosystem-signals`](../../method/ecosystem-signals.md).
+With no signals source set it prints the source types to watch by hand.
+
 ## 1. Build-identity gate — always first
 
 ```bash
@@ -101,6 +117,15 @@ python3 scripts/build_release_day_matrices.py --browser-t1 <this release's ledge
 
 Re-derive `BROWSER_T1` in that script from **this** release's change ledger — the entities whose UI the release actually touches. It's the one input that must not carry forward.
 
+## 8. Retro — before you hand off
+
+Two minutes on the tool, not on WordPress: did the fixtures build as documented, did any
+instruction assume a driver you weren't on, did a script error? Fill in
+[`templates/skill-run-retro.md`](../../templates/skill-run-retro.md); durable tool problems
+become `PROPOSED` rows in your run root's `learning/` registers, and anything worth the next
+stranger's time goes to a [field report](../../CONTRIBUTING.md#suggesting-improvements-from-real-use).
+Method: [`retro`](../../method/retro.md). A WordPress bug is a finding, not a retro item.
+
 ## Done when
 
-Every fixture has a recorded, passed state assertion for this release; both controls calibrated; matrices regenerated; build manifest pinned or honestly marked `WAITING`. Hand off to `wp-release-party`.
+Every fixture has a recorded, passed state assertion for this release; both controls calibrated; matrices regenerated; build manifest pinned or honestly marked `WAITING`; the retro is filed. Hand off to `wp-release-party`.
