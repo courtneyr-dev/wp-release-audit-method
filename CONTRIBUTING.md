@@ -57,6 +57,7 @@ Sentence case headings. Present tense. Say what failed and how you know.
 |---|---|
 | `README.md`, `sources/` | Testing WordPress releases themselves |
 | `plugin-theme-authors/` | Testing your own plugin or theme against a release |
+| `fleet-operators/`, `templates/` | Deciding whether a release ships to a fleet, and the readiness brief |
 | `accessibility/`, `i18n/` | Dimensions that apply to everything |
 | `method/`, `playbooks/` | Why the rules exist, and per-axis runbooks |
 | `scripts/`, `data/` | Executables and the data they read |

@@ -1217,6 +1217,8 @@ lands.
 ├── accessibility/    a11y testing — layered method, tools, and where it's wired in
 ├── i18n/             internationalization, translation loading, and RTL
 ├── plugin-theme-authors/   testing your OWN plugin or theme (CI, tests, blocks)
+├── fleet-operators/  deciding whether a release ships to a fleet of sites
+├── pilots/, learning/, methods/   the run-root schema contracts and blank matrices
 ├── data/             deprecations.csv — community-maintained, PRs welcome
 ├── skills/           the three acts, as AI assistant skills (optional)
 ├── playbooks/        longer runbooks: security, performance, content, release day
