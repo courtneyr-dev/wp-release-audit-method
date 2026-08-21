@@ -67,6 +67,11 @@ classify() {
     {
       if ($0 ~ /^[ \t]*$/) next;
       low = tolower($0);
+      # Strip markdown link/image targets and bare URLs before matching, so a
+      # plugin name inside a cover-image URL (jetpack.com, woocommerce.com) is
+      # not a false FLEET hit — the flood a real vault corpus produced first run.
+      gsub(/\]\([^)]*\)/, "] ", low);
+      gsub(/https?:\/\/[^ )]+/, " ", low);
       tag = "";
       # incident shape: a breakage word near a version-looking token
       if (low ~ /(fatal|white screen|wsod|regression|breaks|broke|deprecat|removed in|rce|xss|sqli|cve-)/ &&
