@@ -102,6 +102,24 @@ CLI_CELLS = [
     ("site", "subsite-loads", "multisite-subsite"),
 ]
 
+# Ecosystem cells — the lane the WP Rocket 7.1 outage exposed (see
+# method/ecosystem-compatibility-lane.md). Three parties: a core change, a
+# plugin assumption, a third plugin supplying the trigger. Single-plugin
+# matrices test pairs; this block is what reaches toward the triples.
+ECOSYSTEM_CELLS = [
+    # operation, command hint
+    ("co-installed-pairs-upgrade",
+     "pair fixture per plugin-theme-authors/co-installed-plugins.md; upgrade across the "
+     "boundary; assert no new fatals in debug.log, admin and front answer 200. Premium "
+     "plugins the tester cannot supply read BLOCKED(premium-license), never SKIP"),
+    ("closure-trigger-probe",
+     "scripts/hook-key-type-probe.sh --control positive; --control negative; then the "
+     "plain reading. Controls must pass before the reading counts"),
+    ("fleet-tracker-triage",
+     "for each fleet plugin: search its public tracker for issues naming the target core "
+     "version. An open issue with a proposed fix is an imported finding"),
+]
+
 # Browser cells: two per ledger-selected entity. The checks name what only a
 # browser can see — the beta4 plugin-dependency defect was invisible to WP-CLI.
 BROWSER_CHECKS = {
@@ -160,6 +178,18 @@ def build(browser_t1, target):
             "evidence_path": "", "fixture_hash": "", "cleanup_verified": "",
             "notes": "",
         })
+    for op, hint in ECOSYSTEM_CELLS:
+        n += 1
+        sweep.append({
+            "cell_id": f"T1-{n:02d}",
+            "entity": "ecosystem", "operation": op, "interface": "ecosystem",
+            "environment": "single", "tier": "T1",
+            "expected": "no new fatals attributable to the release boundary",
+            "observed": "", "verdict": "",
+            "command": hint,
+            "evidence_path": "", "fixture_hash": "", "cleanup_verified": "",
+            "notes": "ecosystem lane — method/ecosystem-compatibility-lane.md",
+        })
     for entity, checks in BROWSER_CHECKS.items():
         tier = "T1" if entity in browser_t1 else "T2"
         for check in checks:
@@ -178,10 +208,12 @@ def build(browser_t1, target):
 
     cli_t1 = sum(1 for c in sweep if c["interface"] == "wp-cli" and c["tier"] == "T1")
     br_t1 = sum(1 for c in sweep if c["interface"] == "browser" and c["tier"] == "T1")
+    eco_t1 = sum(1 for c in sweep if c["interface"] == "ecosystem")
     # The documented shape. If you change the model, change the docs that promise
     # these numbers (README, wp-release-party, the sweep playbook) in the same commit.
     assert cli_t1 == 51, f"CLI T1 cells: {cli_t1}, docs promise 51"
     assert br_t1 == 2 * len(browser_t1), f"browser T1 cells: {br_t1}"
+    assert eco_t1 == 3, f"ecosystem T1 cells: {eco_t1}, docs promise 3"
 
     ladder = []
     n = 0
@@ -245,7 +277,8 @@ def main():
 
     cli_t1 = sum(1 for c in sweep if c["interface"] == "wp-cli" and c["tier"] == "T1")
     br_t1 = sum(1 for c in sweep if c["interface"] == "browser" and c["tier"] == "T1")
-    print(f"sweep T1: {cli_t1} wp-cli + {br_t1} browser · ladder T1: "
+    eco = sum(1 for c in sweep if c['interface'] == 'ecosystem')
+    print(f"sweep T1: {cli_t1} wp-cli + {br_t1} browser + {eco} ecosystem · ladder T1: "
           f"{sum(1 for c in ladder if c['tier'] == 'T1')} of {len(ladder)}")
 
 

@@ -219,8 +219,12 @@ def load_results(results_dir, tier):
     ladder = results_dir / "upgrade-ladder.csv"
     if sweep.exists():
         for row in csv.DictReader(sweep.open(encoding="utf-8")):
-            key = f"sweep:{row['entity']}/{row['operation']}/{row['environment']}" \
-                if row["interface"] == "wp-cli" else f"browser:{row['entity']}/{row['operation']}"
+            if row["interface"] == "wp-cli":
+                key = f"sweep:{row['entity']}/{row['operation']}/{row['environment']}"
+            elif row["interface"] == "ecosystem":
+                key = f"eco:{row['operation']}"
+            else:
+                key = f"browser:{row['entity']}/{row['operation']}"
             if key in out:
                 sys.exit(f"selector {key} matches more than one cell — matrix is ambiguous")
             out[key] = (row["verdict"].strip().upper(), row["cell_id"], row["tier"])
