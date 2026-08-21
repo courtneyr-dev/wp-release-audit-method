@@ -218,6 +218,16 @@ def check_data():
         for i, line in enumerate(lines[1:], 2):
             if line.count(",") < 4:
                 bad.append(f"deprecations.csv:{i} too few columns")
+    sec = ROOT / "data" / "security-releases.csv"
+    if sec.exists():
+        lines = sec.read_text(encoding="utf-8").strip().splitlines()
+        expected = ["release", "date", "cve", "cvss", "summary", "fixed_in",
+                    "diff_prev", "backport_floor", "branches_patched", "source_url"]
+        if lines[0].split(",") != expected:
+            bad.append(f"security-releases.csv header is {lines[0].split(',')}, expected {expected}")
+        for i, line in enumerate(lines[1:], 2):
+            if line.count(",") < len(expected) - 1:
+                bad.append(f"security-releases.csv:{i} too few columns")
     for csv in ROOT.rglob("examples/**/*.csv"):
         if not csv.read_text(encoding="utf-8").strip():
             bad.append(f"{csv.relative_to(ROOT)} is empty")

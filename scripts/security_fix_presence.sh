@@ -31,13 +31,42 @@
 #   security_fix_presence.sh <target_dir|target_zip> <prev_version> <fixed_version>
 #   security_fix_presence.sh ~/rc/wordpress 7.0.2 7.0.3
 #
+#   security_fix_presence.sh <target_dir|target_zip> --all
+#     Run every (prev -> fixed) pair in data/security-releases.csv against the
+#     target, so a fleet on an arbitrary version checks against the whole known
+#     backport matrix rather than one hardcoded pair. Rows with a blank fixed_in
+#     or an equal prev/fixed are skipped (nothing to diff). Exit 4 if ANY pair
+#     flags VULNERABLE.
+#
 # Exit codes: 0 all fixes present · 4 one or more fixes VULNERABLE in target · 2 setup error
 set -uo pipefail
 
-TARGET="${1:?target dir or zip}"; PREV="${2:?prev version e.g. 7.0.2}"; FIXED="${3:?fixed version e.g. 7.0.3}"
+TARGET="${1:?target dir or zip}"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+
+if [ "${2:-}" = "--all" ]; then
+  CSV="${WP_SECREL_CSV:-$HERE/../data/security-releases.csv}"
+  [ -s "$CSV" ] || { echo "ERROR: no security-releases.csv at $CSV"; exit 2; }
+  overall=0
+  # release,date,cve,cvss,summary,fixed_in,diff_prev,backport_floor,branches_patched,source_url
+  # The fix set is diff_prev -> fixed_in (the immediate predecessor whose diff
+  # IS the fix). backport_floor is descriptive (how far back it was patched),
+  # NOT the thing to diff — 4.7 vs 7.0.3 is a whole-major diff, meaningless here.
+  while IFS=, read -r release _date cve _cvss _summary fixed_in prev _floor _branches _url; do
+    [ "$release" = "release" ] && continue
+    [ -z "$fixed_in" ] && continue
+    [ -z "$prev" ] && continue
+    [ "$prev" = "$fixed_in" ] && continue
+    echo "=== ${cve:-$release}: $prev -> $fixed_in"
+    if ! "$0" "$TARGET" "$prev" "$fixed_in"; then overall=4; fi
+    echo
+  done < "$CSV"
+  exit "$overall"
+fi
+
+PREV="${2:?prev version e.g. 7.0.2}"; FIXED="${3:?fixed version e.g. 7.0.3}"
 UA="wp-release-audit (read-only verification)"
 CACHE="${WP_SECFIX_CACHE:-$HOME/.wp-secfix-cache}"; mkdir -p "$CACHE"
-HERE="$(cd "$(dirname "$0")" && pwd)"
 
 say() { printf '%s\n' "$*"; }
 

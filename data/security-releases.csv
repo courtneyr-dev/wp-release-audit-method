@@ -1,0 +1,4 @@
+release,date,cve,cvss,summary,fixed_in,diff_prev,backport_floor,branches_patched,source_url
+7.0.2,2026-07,,,Critical pre-auth RCE plus a high-severity SQL injection,7.0.2,7.0.1,,,https://wordpress.org/news/
+7.0.3,2026-08-06,CVE-2026-64638,8.9,Pre-auth reflected XSS on the login screen affecting every WordPress version; parser disagreement — a tag-like string with whitespace after the opening < survives wp_strip_all_tags() as text but wp_kses_post() treats it differently,7.0.3,7.0.2,4.7,4.7-7.0,https://thehackernews.com/
+7.0.4,,,,Author-level-or-higher RCE via malicious file upload on sites using Imagick and Ghostscript; three-way trust-boundary mismatch (extension vs magic bytes vs PostScript); no CVE or CVSS published in available sources,7.0.4,7.0.3,4.7,4.7-7.0,https://patchstack.com/articles/when-a-png-isnt-a-png/
