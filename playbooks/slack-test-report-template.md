@@ -4,7 +4,7 @@ type: template
 status: active
 created: '2026-07-31'
 updated: '2026-08-05'
-source_run: "$WP_AUDIT_ROOT/scripts/render_slack_checklist.py (generator)"
+source_run: "scripts/render_slack_checklist.py (generator, in-repo)"
 tags:
   - wordpress
   - wp-audit
@@ -52,8 +52,9 @@ Two rules the fast block lives or dies by:
   mark a line green because a *related* cell passed — the first auto-renderer did exactly that
   (one blocked media cell painted every media line blocked, and untested WooCommerce lines
   inherited green from the "plugin" entity), which is how a checklist starts lying in both
-  directions. Until the renderer maps line → cell IDs, fill this block by hand from the
-  per-cell evidence.
+  directions. The renderer now enforces this: every line owns an explicit cell list, renders
+  the worst verdict among its own verdicted cells only, and `--strict` errors on any verdicted
+  cell no line owns and no documented rule excuses.
 - **A line that didn't run is dropped or marked** `:heavy_minus_sign:` **— never left green from
   last release.** The "Not covered" line is part of the format, not an apology.
 
@@ -72,13 +73,13 @@ Two rules the fast block lives or dies by:
 Generated, not hand-maintained. Regenerate rather than editing this note:
 
 ```bash
-python3 $WP_AUDIT_ROOT/scripts/render_slack_checklist.py --from-results --tier T1 \
+python3 scripts/render_slack_checklist.py --from-results --tier T1 \
   --source "7.1-Beta 3" --target "7.1-Beta 4" --method "Beta Tester plugin" \
   --env "single-site" --php "8.4" --theme "Twenty Twenty-Five" --browser "Chrome" \
   --site-mode single
 ```
 
-64 checks / 9 sections; `--site-mode single` drops the Multisite section (58 checks). Emoji fill from `verdict` in `pilots/release-day/sweep-matrix.csv`.
+64 checks / 9 sections; `--site-mode single` drops the Multisite section (58 checks). Emoji fill from `verdict` in your run root's copies of `pilots/release-day/sweep-matrix.csv` and `upgrade-ladder.csv` (`$WP_AUDIT_ROOT` if set; the repo copies stay blank).
 
 **Three rules before posting.** The header must name the build *actually tested* (beta is not RC) and the upgrade lane used (Beta Tester / WP-CLI / manual zip produce different results — the stale-file finding exists only because Core and WP-CLI differ). Invalid batches are counted and excluded, never reported as findings. No local paths, no credentials; confidential findings reduce to a bare acknowledgment.
 

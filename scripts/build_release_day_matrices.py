@@ -45,62 +45,68 @@ BROWSER_T1_71 = ["media", "plugins", "posts", "navigation-block-menu", "themes"]
 CLI_CELLS = [
     # entity, operation, environment
     ("post", "create", "single"),
-    ("post", "read-list", "single"),
     ("post", "update", "single"),
     ("post", "delete", "single"),
     ("post", "trash-restore", "single"),
+    ("post", "revision-restore", "single"),
+    ("post", "schedule-publish", "single"),
     ("post", "create", "multisite-subsite"),
     ("page", "create", "single"),
-    ("page", "read-list", "single"),
     ("page", "update", "single"),
     ("page", "delete", "single"),
-    ("page", "trash-restore", "single"),
     ("custom-post-type", "create", "single"),
-    ("custom-post-type", "read-list", "single"),
     ("custom-post-type", "update", "single"),
     ("custom-post-type", "delete", "single"),
     ("comment", "create", "single"),
-    ("comment", "read-list", "single"),
-    ("comment", "update", "single"),
+    ("comment", "update", "single"),       # includes reparenting — the beta4 class
     ("comment", "delete", "single"),
     ("category-tag", "create", "single"),
-    ("category-tag", "read-list", "single"),
-    ("category-tag", "update", "single"),
     ("category-tag", "delete", "single"),
     ("custom-taxonomy-term", "create", "single"),
-    ("custom-taxonomy-term", "update", "single"),
     ("custom-taxonomy-term", "delete", "single"),
     ("media", "create", "single"),
-    ("media", "read-list", "single"),
     ("media", "update", "single"),
     ("media", "delete", "single"),
     ("media", "create", "multisite-subsite"),  # upload against the subsite quota
     ("user", "create", "single"),
-    ("user", "read-list", "single"),
     ("user", "update", "single"),
     ("user", "delete", "single"),
+    ("user", "application-password", "single"),
     ("user", "create", "multisite-network"),
-    ("role-capability", "read-list", "single"),
     ("role-capability", "update", "single"),
     ("role-capability", "read-list", "multisite-network"),  # super-admin asymmetry
     ("theme", "create", "single"),          # install
     ("theme", "update", "single"),
     ("theme", "delete", "single"),
-    ("theme", "create", "multisite-network"),  # network enable
     ("plugin", "create", "single"),         # install
     ("plugin", "update", "single"),
     ("plugin", "delete", "single"),
     ("plugin", "create", "multisite-network"),   # network activate
     ("plugin", "create", "multisite-subsite"),   # site activate
-    ("option-setting", "read-list", "single"),
     ("option-setting", "update", "single"),
-    ("option-setting", "update", "multisite-network"),  # network settings
+    ("permalink", "update", "single"),      # save structure + front-end route answers
+    ("content", "wxr-round-trip", "single"),
+    # Post-upgrade assertions on the primary hop (current stable -> target).
+    # Each is its own cell: one hop, six individually recorded observations —
+    # a single hop verdict painting six checklist lines is the exact
+    # by-association failure the renderer exists to prevent.
+    ("upgrade", "version-db-correct", "single"),
+    ("upgrade", "no-new-fatals", "single"),
+    ("upgrade", "admin-loads", "single"),
+    ("upgrade", "front-loads", "single"),
+    ("upgrade", "tree-vs-clean-install", "single"),
+    ("upgrade", "rollback", "single"),
+    # Multisite lifecycle — the held-back-denominator class (FM-03, FM-15).
+    ("site", "lifecycle", "multisite-network"),  # create, archive, spam, delete
+    ("site", "held-back-denominator", "multisite-network"),
+    ("site", "subsite-loads", "multisite-subsite"),
 ]
 
 # Browser cells: two per ledger-selected entity. The checks name what only a
 # browser can see — the beta4 plugin-dependency defect was invisible to WP-CLI.
 BROWSER_CHECKS = {
-    "media": ["library upload and grid render", "media editor modal: crop, rotate, flip"],
+    "media": ["library grid: upload, infinite scroll, per-user opt-out",
+              "media editor modal: crop, rotate, flip"],
     "plugins": ["plugin-card install and activate buttons", "dependencies affordance (Requires Plugins)"],
     "posts": ["editor loads and publishes", "quick edit and bulk edit"],
     "navigation-block-menu": ["create and edit in the editor", "front-end render"],
