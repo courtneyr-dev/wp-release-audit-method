@@ -3,7 +3,7 @@ title: "Rollback — a procedure, not a checklist line"
 type: method
 status: active
 created: '2026-08-21'
-updated: '2026-08-21'
+updated: '2026-08-23'
 tags:
   - wordpress
   - release-audit
@@ -11,6 +11,7 @@ tags:
   - recovery
 related:
   - '[ecosystem-compatibility-lane](ecosystem-compatibility-lane.md)'
+  - '[preflight-core-probe](preflight-core-probe.md)'
   - '[standing-environment](standing-environment.md)'
 ---
 
@@ -102,6 +103,34 @@ line implies it, and the honest state is written down rather than implied:
 
 Exercising this section — old zip over a new tree on a fixture with seeded content, then a
 content diff — is a well-shaped afternoon contribution.
+
+### The ordering, for the files half
+
+If you do automate a core-files restore, the sequence matters more than the copy. Adapted
+from [Austin Ginder](https://anchor.host/)'s `update-core` remote script in
+[CaptainCore](https://github.com/CaptainCore/captaincore/blob/master/lib/remote-scripts/update-core)
+(MIT) — see [preflight core probe](preflight-core-probe.md) for the whole technique:
+
+```bash
+# per directory: wp-admin, wp-includes
+mv  "$LIVE/$name"  "$LIVE/$name.restore-$$"       # original still on disk
+if ! cp -a "$BACKUP/$name" "$LIVE/$name"; then    # if the copy fails…
+  rm -rf "$LIVE/$name"
+  mv "$LIVE/$name.restore-$$" "$LIVE/$name"       # …put the original back, then abort
+  exit 1
+fi
+rm -rf "$LIVE/$name.restore-$$"                   # only once the copy succeeded
+```
+
+**A restore that opens with `rm -rf` on live core has a window in which a failed copy leaves
+the site with no core at all** — a recovery procedure whose failure mode is worse than the
+thing it was recovering from. Move-aside-first has no such window. The same script also
+refuses to touch `wp-config.php`, refuses to operate on symlinks, and verifies the backup
+contains `wp-includes/version.php` and `wp-admin/` before it begins — a backup you never
+validated is not a backup.
+
+This ordering is **also unexercised here.** It is written down because the alternative is
+that someone reinvents the destructive version under time pressure at 2 a.m.
 
 ## The checklist line, redefined
 

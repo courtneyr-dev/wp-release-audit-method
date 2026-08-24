@@ -67,7 +67,68 @@ days, you picked it; write it down with the inputs above so future-you knows wha
 based on. What the 7.1 incident does establish: whatever your window is, core-major day
 plus untriaged plugin trackers plus auto-update is the known-bad combination.
 
-## 4. The update-day runbook
+**A probe changes the shape of this trade-off, and it is the reason §4 exists.** Every
+position above is arguing about *how long to wait*, because waiting was the only instrument
+anyone had. If you can ask a specific site "does the new core fatal on you," the question
+stops being how many days of exposure to buy and becomes how fast you can get an answer per
+site. Delay is a proxy for evidence. §4 is the evidence.
+
+## 4. Probe before you apply
+
+**Credit: this section documents [Austin Ginder](https://anchor.host/)'s `update-core`
+remote script in [CaptainCore](https://github.com/CaptainCore/captaincore) (MIT) —
+[`lib/remote-scripts/update-core`](https://github.com/CaptainCore/captaincore/blob/master/lib/remote-scripts/update-core),
+first committed 2026-08-23. Same operator as the 332/124 number in §1: this is what he built
+four days after the outage.** The full write-up, with the invariants and the honest limits,
+is [`method/preflight-core-probe.md`](../method/preflight-core-probe.md).
+
+The move: **don't clone the site, sideload the core.** Download the new WordPress into a
+temp directory, write a preview `wp-config.php` that points at the *live* database and the
+*live* `wp-content`, boot it, render the front page over both WP-CLI and real HTTP, and grep
+for fatals. Clean probe → apply. Failed probe → abort, with no live core file touched.
+
+```bash
+# on the site, from the WordPress root
+update-core --version=7.2-RC1 --probe-only     # answer only, nothing applied
+update-core --version=latest                   # probe, then apply if clean
+```
+
+Four things make it worth adopting even if you write your own:
+
+- **It answers §8.** Testing against a clone diverges the moment the update writes to the
+  database. This never clones, so there is nothing to promote backward — the site being
+  tested *is* the site.
+- **It catches the failure class §2 is about.** The probe boots the new core against the
+  exact plugin set that site runs, in its real co-installed combination. The WP Rocket fatal
+  needed a *third* plugin registering a closure; no pairwise matrix reaches that, and a probe
+  doesn't have to — the fatal fires on `init` and the probe sees it.
+- **It has no premium blind spot.** The automated top-100-plugins workflow proposed in
+  [Trac #65920](https://core.trac.wordpress.org/ticket/65920) draws from the wordpress.org
+  directory API, so it cannot see WP Rocket at all. A probe never enumerates plugins; it
+  boots whatever is installed.
+- **It reads the body, not the status code** — the same rule as §6, arrived at
+  independently.
+
+**And the thing a fleet can do that nobody else can.** Run `--probe-only` across the whole
+fleet against an **RC**, before release day. That produces a compatibility census over the
+population core-side testing structurally cannot reach: premium plugins, paid page builders,
+bespoke client code, in the combinations real sites actually run. Three hundred sites is a
+denominator. Report the failures to the plugin vendors and to
+[Make/Test](https://make.wordpress.org/test/) — an RC-stage report naming a specific fatal in
+a specific premium plugin is the single most valuable thing a fleet operator can hand the
+release, and it costs one scripted pass.
+
+> [!WARNING]
+> **Unexercised by this repo, and it runs against production.** Nothing on this page has
+> been executed here — it is documented from source, not from a run. It sideloads core,
+> writes a temporary executable file into the live web root, and boots live plugins against
+> the live database. Read the original script, run the controls in
+> [`method/preflight-core-probe.md`](../method/preflight-core-probe.md#status-in-this-repo-unexercised)
+> on a disposable fixture, and satisfy yourself about the abort path *before* you point any
+> derivative at a client site. Back up first regardless — runbook step 1 below is not
+> optional because you have a probe.
+
+## 5. The update-day runbook
 
 The best-documented sequence in this project's corpus is Mike Miler's ("The Update Day,"
 WCUS 2026 — disclosure: the visual-regression tool he recommends, Web Change Detector, is
@@ -103,7 +164,7 @@ than the list — several steps exist to make a *later* step readable:
 16. **Check Site Health** — discounting its disk-space figure on shared hosting, which
     reads the whole server.
 
-## 5. Monitor for a known string, not a status code
+## 6. Monitor for a known string, not a status code
 
 Configure uptime monitoring to check for a **known string** — an `<h1>`, a footer line —
 not just an HTTP status. A fataled WordPress site frequently serves its "There has been a
@@ -114,7 +175,7 @@ disposable fixture, a front-end `init` fatal returned 500 — but that cuts only
 monitoring catches only the second.** A keyword monitor would have caught the WP Rocket
 outage automatically, on every affected site, at update time.
 
-## 6. The three-part failure taxonomy
+## 7. The three-part failure taxonomy
 
 Structure the post-update check — and the brief — around how failures announce themselves:
 
@@ -128,7 +189,7 @@ The third column is why the runbook has manual steps that automation never absor
 quiet class is where **week-long undetected failures** live — nothing alerts, the site
 "works," and the damage is a month of lost form submissions discovered by an angry client.
 
-## 7. The unsolved problem, named
+## 8. The unsolved problem, named
 
 **Throwaway staging has no clean path back to live for database changes.** Clone → test →
 discard works until the update writes to the database (migrations, option changes,
@@ -141,8 +202,17 @@ promoting *data* backward from staging is unsolved here. Budget your update-day 
 accordingly (test on staging, then re-run the update on live with the runbook, rather than
 promoting staging to live).
 
+**§4 goes around this rather than solving it, and the distinction matters.** A preflight
+probe never copies the database, so it never diverges — but that is a *different* test, not
+a better one. It answers "does the new core fatal against this site's real code and data,"
+which is the question that took fleets down on 7.1 day. It does not answer "did the update
+change anything I care about," because it deliberately applies nothing and asserts only that
+`db_version` held. Data-forward promotion from a staging clone remains unsolved here. What
+changed is that the most expensive question no longer requires the clone.
+
 ## Related
 
+[Preflight core probe](../method/preflight-core-probe.md) ·
 [Fleet release-readiness brief template](../templates/fleet-release-readiness-brief.md) ·
 [`wordpress-audit-handoff` Mode B](../skills/wordpress-audit-handoff/SKILL.md#mode-b--sre-fleet-brief) ·
 [Ecosystem compatibility lane](../method/ecosystem-compatibility-lane.md) ·
