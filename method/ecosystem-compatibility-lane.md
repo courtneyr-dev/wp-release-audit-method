@@ -206,8 +206,7 @@ fatal.** The cheap version, which is what the core workflow does:
 
 ```bash
 wp plugin install <slug> --activate
-wp eval 'echo "booted
-";'   # loads WordPress with the plugin active — this is the test
+wp eval 'echo "booted";'   # loads WordPress with it active — this is the test
 ```
 
 It is also the same shape as the [preflight core probe](preflight-core-probe.md)'s
@@ -215,18 +214,13 @@ It is also the same shape as the [preflight core probe](preflight-core-probe.md)
 activation is a third and weakest one. Arriving at it twice from different directions in one
 week is the argument for writing it down as a rule rather than a note.
 
-So the division of labor is:
+The division of labor between this workflow, this lane, and a third source neither of them
+covers is the table at the end of the next section.
 
-| | Automated workflow (#65920) | This lane |
-|---|---|---|
-| Free directory plugins, singly | covered, at scale, every build | don't duplicate |
-| Premium plugins | structurally blind — no API source | manual cells, license required |
-| Co-installed pairs and triples | not in scope | pair cells + the closure probe |
-| Tracker triage | not in scope | the checkable step above |
-
-A draft comment for the ticket — positioning the manual lane as the complement and naming
-the premium blind spot — is in [`drafts/trac-65920-comment.md`](../drafts/trac-65920-comment.md).
-Draft, not filed; filing is the operator's call.
+A draft comment — supporting the dependency-pre-install proposal, asking for skips to be
+reported beside passes, and offering a canary mu-plugin for the closure class — is in
+[`drafts/trac-65920-comment.md`](../drafts/trac-65920-comment.md). Draft, not filed; filing
+is the operator's call.
 
 ## The third source: fleets, probing an RC against their own sites
 
@@ -245,7 +239,7 @@ limits are documented from Austin Ginder's CaptainCore script in
 [preflight-core-probe.md](preflight-core-probe.md); the operator-facing version is
 [`fleet-operators/README.md` §4](../fleet-operators/README.md#4-probe-before-you-apply).
 
-Updating the division of labor:
+The division of labor, across all three:
 
 | | Automated workflow (#65920) | This lane | Fleet preflight probe |
 |---|---|---|---|
