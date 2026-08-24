@@ -155,10 +155,23 @@ against **the exact plugin set that site actually runs**, closures and all, and 
 fires on `init` — the loudest possible place for it to land in a probe.
 
 This is the piece [Trac #65920](https://core.trac.wordpress.org/ticket/65920)'s automated
-top-100-plugins workflow structurally cannot cover. That workflow draws from the
-wordpress.org directory API, so premium plugins are invisible to it — Adam Silverstein says
-so himself, and WP Rocket is premium. The preflight probe has no such blind spot, because it
-never enumerates plugins at all. It just boots whatever is installed.
+top-100-plugins workflow structurally cannot cover — and its first full run, 2026-08-23,
+made the shape of that gap concrete rather than theoretical. **Two blind spots, both from
+the same root cause: the workflow has to enumerate plugins, and a probe doesn't.**
+
+- **Premium plugins.** The workflow draws from the wordpress.org directory API, so they are
+  invisible to it. Adam Silverstein says so himself, and WP Rocket is premium.
+- **Plugins gated behind a dependency.** 13 of the 200 in that run were skipped for an unmet
+  `Requires Plugins` header, all of them WooCommerce add-ons, because the workflow installs
+  one plugin at a time and a dependent plugin has nothing to run against. Pre-installing
+  declared dependencies is a proposed follow-up; until it lands, the skipped set correlates
+  with a market segment rather than being random.
+
+A preflight probe has neither, because it never enumerates anything. It boots whatever is
+installed — premium, dependent, or written by the client's last agency — in whatever
+combination the site actually runs. See
+[the ecosystem lane](ecosystem-compatibility-lane.md#alignment-with-trac-65920--and-what-it-structurally-cannot-cover)
+for the full numbers.
 
 **Which suggests the fleet-scale move, and it belongs to this repo's testing lane, not just
 its operations lane:** run the probe in `--probe-only` mode across a fleet against an **RC**,

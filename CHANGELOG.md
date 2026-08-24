@@ -37,6 +37,36 @@ This nearly shipped as a finding about WordPress packaging. It is written up in
 unfiled, with the checks to run before routing it to wp-cli. The probe now fetches and
 extracts the package itself and **requires the sideloaded tree to verify against the checksum
 API before anything boots** — a damaged sideload is an error, never a probe verdict.
+### Changed — Trac #65920's workflow has been run at full scale, and it moves two claims (2026-08-23)
+
+Adam Silverstein posted results from a 200-plugin run of the proposed core plugin-compatibility
+workflow on his own fork: **186 passed, 1 failed, 13 skipped**, 4m32s across 8 shards
+([PR #13198](https://github.com/WordPress/wordpress-develop/pull/13198) review comments). Two
+findings in that line are worth more than the headline, and both were folded into the docs and
+the prompts. External report — not reproduced here, and the workflow is unmerged.
+
+- **New rule: activation is not a boot.** The run's one real failure, `eps-301-redirects` 2.85,
+  installs and activates cleanly and then fatals the moment WP-CLI loads WordPress with it
+  active (`Call to a member function add_admin_message() on null`). An activation-only check
+  passes it. Now an accepted control in the learning loop, a section in the ecosystem lane, a
+  rule inside both prompts' fences, and a step in the plugin-author CI drop-in. Same family as
+  the preflight probe's *two boots are two denominators*, reached from a different direction in
+  the same week — which is the argument for writing it as a rule rather than a note.
+- **New rule: report skips beside passes, never folded into them.** The 13 skips were every
+  WooCommerce add-on in the set, skipped for an unmet `Requires Plugins` header because the
+  workflow installs one plugin at a time. "186 passed" alone reads as a clean ecosystem when
+  6.5% was never booted, and a skip class that correlates with a vendor is a blind spot rather
+  than rounding. Added to lie #3 in the README, and to both prompts.
+- **The #65920 blind spot is now two, not one.** Premium plugins (directory API can't see them)
+  *and* dependency-gated plugins (one-at-a-time installation can't run them). Both are the same
+  root cause — the workflow enumerates and a probe doesn't — so the division-of-labor table in
+  the ecosystem lane gains a row, and `fleet-operators` §4 and the preflight page now say
+  "enumeration blind spots" rather than "premium blind spot."
+- **Tide is not the alternative.** Jeff Paul, who maintains it, says on the same thread that it
+  has been "generally unsupported for years" and that PHP Compat Checker is about its only
+  consumer. Recorded in the ecosystem lane so nobody proposes it as covered ground.
+
+Corrected while in there: #13198 is no longer a draft PR, and the ecosystem lane said it was.
 
 ### Added — the preflight core probe, from CaptainCore (2026-08-23)
 
@@ -54,9 +84,9 @@ tool he built four days after the outage, which is the reason it's worth reading
   HTTP, and greps for fatals — then applies only after a clean probe. Nothing to promote
   backward, because the site under test is the site.
 - **It would have caught the WP Rocket fatal on every affected site, pre-apply**, and it has
-  no premium blind spot — unlike [Trac #65920](https://core.trac.wordpress.org/ticket/65920)'s
-  proposed top-100 workflow, which draws from the directory API and structurally cannot see a
-  paid plugin. A probe never enumerates plugins; it boots whatever is installed. New
+  none of the enumeration blind spots [Trac #65920](https://core.trac.wordpress.org/ticket/65920)'s
+  proposed top-100 workflow has (see the entry above for both of them, with numbers). A probe
+  never enumerates plugins; it boots whatever is installed. New
   [`fleet-operators/README.md` §4](fleet-operators/README.md#4-probe-before-you-apply) (§4–§7
   renumbered to §5–§8) and a third column in the ecosystem lane's division-of-labor table.
 - **The fleet-scale move this repo did not have:** `--probe-only` across a fleet against an
@@ -68,10 +98,11 @@ tool he built four days after the outage, which is the reason it's worth reading
 - **`rollback.md` gains the move-aside-first restore ordering** — `mv` live aside, `cp` the
   backup in, `mv` back on failure. A restore that opens with `rm -rf` on live core has a
   window where a failed copy leaves the site with no core at all.
-- **Marked UNEXERCISED, with the controls that would change that spelled out.** Documented
-  from source, not from a run. The page names what it can't do: `db_version` unchanged proves
-  core migration didn't run, *not* that plugins wrote nothing; front-end only; it puts a
-  token-gated executable in the live web root that a `SIGKILL` would leave behind.
+- **Shipped UNEXERCISED, with the controls that would change that spelled out** — and they
+  were run on 2026-08-24, see the entry above. The page still names what it can't do:
+  `db_version` unchanged proves core migration didn't run, *not* that plugins wrote nothing;
+  front-end only; and the original puts a token-gated executable in the live web root that a
+  `SIGKILL` would leave behind.
 
 ### Added — a standing watch on the projects this method borrows from (2026-08-23)
 
