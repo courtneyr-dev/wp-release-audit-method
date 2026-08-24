@@ -157,6 +157,64 @@ That workflow is the right infrastructure and this lane should defer to it for w
 covers. **Silverstein himself notes it would not have caught this bug**: WP Rocket is
 premium, and the directory API the workflow draws from only covers free plugins.
 
+**It has since been run at full scale, and the numbers change what we can say about it.**
+On 2026-08-23 Silverstein posted results from a 200-plugin run on his own fork: **186
+passed, 1 failed, 13 skipped**, 4m32s across 8 shards. Two things in that line are worth
+more than the headline:
+
+- **It caught a real fatal, and caught it past the point most checks stop.**
+  `eps-301-redirects` 2.85 installs and activates cleanly, then fatals the moment WP-CLI
+  loads WordPress with the plugin active (`Call to a member function add_admin_message() on
+  null`). An activation-only check reports PASS on that plugin. See
+  [activation is not a boot](#activation-is-not-a-boot), below.
+- **The 13 skips are a blind spot, not noise.** All 13 are WooCommerce add-ons with an
+  unmet `Requires Plugins` header — the workflow installs one plugin at a time, so a plugin
+  that declares a dependency has nothing to run against. Adrian Duffell proposes
+  pre-installing declared dependencies as a follow-up. Until that lands, the workflow's
+  coverage gap is **not random**: it correlates with a market segment, and WooCommerce
+  add-ons are a large slice of the popular list. "186 passed" reads as a clean ecosystem
+  when 6.5% of the population was never booted.
+
+Also settled by the same thread, and worth knowing before anyone proposes it as the
+alternative: **Tide is effectively unsupported.** Jeff Paul, who maintains it, says it has
+been "generally unsupported for years," that he has considered shutting it down, and that
+the PHP Compat Checker plugin is about the only consumer of its audit data. Treat it as a
+non-option unless somebody funds it.
+
+Source: review comments on
+[WordPress/wordpress-develop#13198](https://github.com/WordPress/wordpress-develop/pull/13198),
+2026-08-23. The workflow is proposed for 7.2 and **not merged**; the run was on a fork with
+its repository guards loosened, since manual dispatch isn't available until the workflow
+exists on trunk. External report, independently reproduced by nobody here.
+
+## Activation is not a boot
+
+The `eps-301-redirects` result is the cheapest lesson in this document, and it generalizes
+past plugin-compatibility workflows to every cell in this repo that touches a plugin.
+
+**Activation writes a row in `active_plugins`. It does not prove the plugin's code survives
+a request.** A plugin can install and activate cleanly and still fatal on the next load,
+because activation runs a narrow path — often before the hooks, globals, and other plugins
+its real code assumes are there. The failing plugin called a method on `null` at load time;
+nothing in the activation path went near it.
+
+So a compatibility check that stops at "did it activate" has a PASS that means considerably
+less than it looks like, and this is [law 1](release-audit-learning-loop.md) — source or
+partial observation needs runtime proof — with a fresh, executed receipt. **A plugin cell is
+not clean until WordPress has been loaded with the plugin active and the load produced no
+fatal.** The cheap version, which is what the core workflow does:
+
+```bash
+wp plugin install <slug> --activate
+wp eval 'echo "booted
+";'   # loads WordPress with the plugin active — this is the test
+```
+
+It is also the same shape as the [preflight core probe](preflight-core-probe.md)'s
+*two boots are two denominators*: CLI boot and an HTTP request are different tests, and
+activation is a third and weakest one. Arriving at it twice from different directions in one
+week is the argument for writing it down as a rule rather than a note.
+
 So the division of labor is:
 
 | | Automated workflow (#65920) | This lane |
@@ -194,6 +252,7 @@ Updating the division of labor:
 | Free directory plugins, singly | covered, at scale, every build | don't duplicate | incidental |
 | Premium plugins | structurally blind — no API source | manual cells, license required | covered, on any site that owns one |
 | Co-installed pairs and triples | not in scope | pair cells + the closure probe | covered by construction, on real sites |
+| Plugins gated behind `Requires Plugins` | skipped — 13 of 200 in the first full run, all WooCommerce add-ons; a proposed follow-up pre-installs dependencies | pair cells reach the common ones | covered — on a real site the dependency is already installed |
 | Bespoke client code | not in scope | not in scope | covered |
 | Isolating *which* plugin | n/a — one at a time | the point of the cells | **not covered** — a probe says "this site fatals," not why |
 | Tracker triage | not in scope | the checkable step above | not in scope |

@@ -92,6 +92,10 @@ Their shared shape is worth internalizing: **an older release wrote data or set 
 
 **Controls are mandatory.** Every chain ships a positive control (a cell expected to fail or differ) and a negative control (a cell expected to be clean). If either miscalibrates, ABORT that batch and invalidate its results — do not report them. Three of the five existing detectors failed a control on first run and were fixed before acceptance; a detector that has never failed a control has never been calibrated.
 
+**Activation is not a boot.** For any cell that installs a plugin or theme, "it activated" is not a PASS — activation runs a narrow path, often before the hooks, globals, and co-installed code the real implementation assumes. Load WordPress with it active (`wp eval 'echo 1;'`) and require no fatal. In the first full 200-plugin run of core's proposed compatibility workflow (Trac #65920, 2026-08-23), the one real failure activated cleanly and fatalled on `null` at the next load. Same family as two-boots-are-two-denominators: CLI boot, HTTP request, and activation are three different tests, and activation is the weakest.
+
+**Report skips beside passes, never folded into them.** Every count states passed / failed / SKIPPED / blocked separately, with a reason per skip. That same run read 186 passed / 1 failed / 13 skipped — and all 13 skips were one vendor's add-ons with an unmet `Requires Plugins` header. A skip class that correlates with a vendor, a dependency, a licence, or a site mode is a blind spot to name.
+
 **Assert fixture state and denominators before reading any result.** Print site inventory, status flags, `db_version`, active plugins, PHP/WP versions, and multisite mode first. Reuse `scripts/assert_multisite_denominator.sh`. A prior run reported "upgraded on 2/2 sites" while three sites sat at the old `db_version`.
 
 **Serialize mutations** against a single fixture. Never run concurrent commands against one wp-env or Studio project.

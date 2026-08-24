@@ -149,6 +149,27 @@ Add a CI job that runs your suite with your three installed:
 
 `fail-fast: false` matters — you want to know about all three, not just the first to break.
 
+Two things that job must do, both learned from the first full run of core's own
+[plugin-compatibility workflow](../method/ecosystem-compatibility-lane.md#alignment-with-trac-65920--and-what-it-structurally-cannot-cover)
+(2026-08-23, 200 plugins):
+
+- **Install the companion's own dependencies first.** 13 of that run's 200 plugins were
+  skipped outright for an unmet `Requires Plugins` header — all WooCommerce add-ons. If your
+  companion declares a dependency and you don't install it, the cell doesn't test a
+  companion, it tests nothing and says PASS.
+
+  ```bash
+  # if the companion declares one, install it before activating
+  wp plugin install woocommerce --activate --allow-root
+  wp plugin install ${{ matrix.companion }} --activate --allow-root
+  ```
+
+- **Boot WordPress after activating, not just activate.** That run's one real failure
+  (`eps-301-redirects` 2.85) installed and activated cleanly, then fatalled the moment
+  WP-CLI loaded WordPress with it active. `wp eval 'echo "booted";'` after the install step
+  costs a second and is the difference between a PASS that means something and one that
+  means the row exists in `active_plugins`.
+
 > [!NOTE]
 > **Expect some noise.** Other plugins have their own deprecations and notices, and those will show
 > up in your log. Learn to read *whose* code triggered what — the

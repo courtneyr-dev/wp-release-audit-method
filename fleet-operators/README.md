@@ -93,7 +93,7 @@ update-core --version=7.2-RC1 --probe-only     # answer only, nothing applied
 update-core --version=latest                   # probe, then apply if clean
 ```
 
-Four things make it worth adopting even if you write your own:
+Five things make it worth adopting even if you write your own:
 
 - **It answers §8.** Testing against a clone diverges the moment the update writes to the
   database. This never clones, so there is nothing to promote backward — the site being
@@ -102,10 +102,16 @@ Four things make it worth adopting even if you write your own:
   exact plugin set that site runs, in its real co-installed combination. The WP Rocket fatal
   needed a *third* plugin registering a closure; no pairwise matrix reaches that, and a probe
   doesn't have to — the fatal fires on `init` and the probe sees it.
-- **It has no premium blind spot.** The automated top-100-plugins workflow proposed in
-  [Trac #65920](https://core.trac.wordpress.org/ticket/65920) draws from the wordpress.org
-  directory API, so it cannot see WP Rocket at all. A probe never enumerates plugins; it
-  boots whatever is installed.
+- **It has no enumeration blind spots.** The top-100-plugins workflow proposed in
+  [Trac #65920](https://core.trac.wordpress.org/ticket/65920) has two, both visible in its
+  first full run (2026-08-23, 186 passed / 1 failed / 13 skipped): it draws from the
+  wordpress.org directory API, so it cannot see WP Rocket at all, and it installs one plugin
+  at a time, so the 13 skips were all WooCommerce add-ons with an unmet `Requires Plugins`
+  header. A probe never enumerates plugins; it boots whatever is installed.
+- **It tests past activation, which is where that run found its one real fatal.**
+  `eps-301-redirects` 2.85 installs and activates cleanly, then fatals when WordPress is
+  actually loaded with it active. If your own update checks stop at "the plugin is active,"
+  they would have passed it too.
 - **It reads the body, not the status code** — the same rule as §6, arrived at
   independently.
 

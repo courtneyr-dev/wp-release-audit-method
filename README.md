@@ -940,7 +940,13 @@ content, then upgrade.*
 "2 of 2 sites upgraded." There were five. Three were archived or spam, got skipped, stayed
 on the old database version. The report was true and useless.
 
-→ *Count what you expect before you read what you got.*
+The same shape at scale: a 200-plugin compatibility run reported **186 passed, 1 failed, 13
+skipped**. Read fast, that's a clean ecosystem. The 13 skips were every WooCommerce add-on
+in the set — skipped for an unmet dependency, never booted at all. A skip class that lines
+up with a market segment is a blind spot, not rounding.
+
+→ *Count what you expect before you read what you got — and report skips next to passes,
+never folded into them.*
 
 </td></tr>
 <tr><td><b>4</b></td><td>
