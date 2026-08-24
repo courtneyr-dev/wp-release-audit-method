@@ -3,6 +3,10 @@
 **Short version:** if you're about to say "WordPress 7.2 does X," this page tells you where
 to check before you say it.
 
+*(Adapting a technique from another open-source project rather than citing WordPress? That's
+the sibling page: [`upstream-techniques.md`](upstream-techniques.md) — licence discipline,
+and the register that keeps borrowed attributions from going stale.)*
+
 Most weak bug reports aren't wrong about the symptom — they're wrong about what was
 *supposed* to happen. Someone read a planning post from four months ago, or a summary blog,
 or asked an AI that remembered an older version. This page lists what's authoritative for

@@ -3,7 +3,7 @@ title: "Ecosystem signals — turning the news into method changes"
 type: method
 status: active
 created: '2026-08-21'
-updated: '2026-08-21'
+updated: '2026-08-23'
 tags:
   - wordpress
   - release-testing
@@ -57,8 +57,14 @@ Official and allowlisted only, per [the source register](../sources/official-sou
 | **Security releases** | Backport-matrix rows, new invariant checks | 7.0.3/7.0.4 → [`data/security-releases.csv`](../data/security-releases.csv) |
 | **Incident write-ups** | Whole new lanes | the WP Rocket outage → [the ecosystem lane](ecosystem-compatibility-lane.md) |
 | **Conference talks** (WCUS, WCEU) | Practice this repo hasn't encoded | Miler's update-day runbook → [fleet operators](../fleet-operators/README.md) |
+| **Host and agency tooling** released after an incident | The fix the people who got hit actually built | Ginder's CaptainCore `update-core` → [preflight core probe](preflight-core-probe.md) |
 | **Plugin trackers** (your fleet) | Release-readiness inputs before the release | the WP Rocket fix sat on its tracker 44 days early |
 | **Trac milestones** for the upcoming release | What to build cells for this cycle | the change ledger that drives `BROWSER_T1` |
+
+The tooling row has a register and a cron of its own, because it is the one source type
+where the signal is a *diff* rather than an event: [`sources/upstream-techniques.md`](../sources/upstream-techniques.md)
+and `scripts/upstream-watch.py`. Everything it surfaces still enters the pipeline above at
+**Signal**, not at **Method change**.
 
 The cross-source rule the corpus keeps proving: **a signal from any of these needs a human
 adjudication gate before it becomes a check** — the same "scanner output requires verification"

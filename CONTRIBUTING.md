@@ -87,7 +87,7 @@ Sentence case headings. Present tense. Say what failed and how you know.
 
 | Area | For |
 |---|---|
-| `README.md`, `sources/` | Testing WordPress releases themselves |
+| `README.md`, `sources/` | Testing WordPress releases themselves. Adapting a technique from another project? [`sources/upstream-techniques.md`](sources/upstream-techniques.md) — verify the licence from its LICENSE file, add a watch row |
 | `plugin-theme-authors/` | Testing your own plugin or theme against a release |
 | `fleet-operators/`, `templates/` | Deciding whether a release ships to a fleet, and the readiness brief |
 | `accessibility/`, `i18n/` | Dimensions that apply to everything |

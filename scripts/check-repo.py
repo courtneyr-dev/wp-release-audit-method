@@ -450,6 +450,30 @@ def check_ecosystem_signals():
     report("ecosystem-signals controls", bad)
 
 
+# ── 12b. Upstream-watch controls ─────────────────────────────────────────────
+def check_upstream_watch():
+    """The upstream-drift watcher's own controls, run in CI — and offline.
+
+    Same standard as every other detector here. This one matters slightly more
+    than most: it is the check that notices when a source we borrowed from has
+    moved, so its own silence is indistinguishable from "nothing changed."
+    Its controls need no network, which is the point — a watcher that stops being
+    verified the first flaky week is a rubber stamp with a cron schedule.
+    """
+    script = ROOT / "scripts" / "upstream-watch.py"
+    if not script.exists():
+        SKIPPED.append("upstream-watch (no script)")
+        return
+    r = subprocess.run([sys.executable, str(script), "--control"],
+                       capture_output=True, text=True)
+    bad = []
+    if r.returncode != 0:
+        bad = [l.strip() for l in (r.stdout + r.stderr).splitlines() if l.strip()]
+        if not bad:
+            bad = [f"exit {r.returncode}"]
+    report("upstream-watch controls", bad)
+
+
 # ── 13. Environment drivers honour the driver contract ───────────────────────
 def check_driver_conformance():
     """Every driver, against the contract in scripts/env/README.md.
@@ -482,6 +506,7 @@ def main():
     check_detector_calibration()
     check_runroot_paths()
     check_ecosystem_signals()
+    check_upstream_watch()
     check_driver_conformance()
 
     print()

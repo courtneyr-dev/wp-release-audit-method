@@ -5,6 +5,80 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — the preflight core probe, from CaptainCore (2026-08-23)
+
+[`method/preflight-core-probe.md`](method/preflight-core-probe.md) documents the technique in
+[Austin Ginder](https://anchor.host/)'s `update-core` remote script in
+[CaptainCore](https://github.com/CaptainCore/captaincore/blob/master/lib/remote-scripts/update-core)
+(MIT, © 2018–present Austin Ginder; first committed 2026-08-23). Ginder is the operator behind
+the *332 sites / 124 fataled / 37%* figure this repo already cites for 7.1 day — this is the
+tool he built four days after the outage, which is the reason it's worth reading closely.
+
+- **It goes around the hole named in the fleet lane.** `fleet-operators/README.md` §8 says
+  throwaway staging has no path back to live for database changes. The probe doesn't clone:
+  it sideloads the new core to `$HOME/tmp`, writes a preview `wp-config.php` pointing at the
+  **live** database and **live** `wp-content`, boots it, renders over both WP-CLI and real
+  HTTP, and greps for fatals — then applies only after a clean probe. Nothing to promote
+  backward, because the site under test is the site.
+- **It would have caught the WP Rocket fatal on every affected site, pre-apply**, and it has
+  no premium blind spot — unlike [Trac #65920](https://core.trac.wordpress.org/ticket/65920)'s
+  proposed top-100 workflow, which draws from the directory API and structurally cannot see a
+  paid plugin. A probe never enumerates plugins; it boots whatever is installed. New
+  [`fleet-operators/README.md` §4](fleet-operators/README.md#4-probe-before-you-apply) (§4–§7
+  renumbered to §5–§8) and a third column in the ecosystem lane's division-of-labor table.
+- **The fleet-scale move this repo did not have:** `--probe-only` across a fleet against an
+  **RC** produces a real-world compatibility census over the population core-side testing
+  can't reach — premium plugins, page builders, bespoke client code, in real co-installed
+  combinations. Wired into `wp-release-followup` §3 as an evidence source, with the honest
+  boundary stated: a probe is a **detector, not a diagnosis**. It says *this site fatals*, not
+  which plugin did it.
+- **`rollback.md` gains the move-aside-first restore ordering** — `mv` live aside, `cp` the
+  backup in, `mv` back on failure. A restore that opens with `rm -rf` on live core has a
+  window where a failed copy leaves the site with no core at all.
+- **Marked UNEXERCISED, with the controls that would change that spelled out.** Documented
+  from source, not from a run. The page names what it can't do: `db_version` unchanged proves
+  core migration didn't run, *not* that plugins wrote nothing; front-end only; it puts a
+  token-gated executable in the live web root that a `SIGKILL` would leave behind.
+
+### Added — a standing watch on the projects this method borrows from (2026-08-23)
+
+Borrowing once is a citation. Borrowing and never looking again is how an attribution goes
+stale and a technique's honest limits shift under the write-up.
+
+- **[`sources/upstream-watch.csv`](sources/upstream-watch.csv)** — one row per upstream path
+  adapted from, carrying the licence *verified from its LICENSE file*, what here came from it,
+  and the commit a human last reviewed. `baseline_sha` means **someone looked**, not someone
+  integrated: a commit reviewed and judged irrelevant still moves it, which is what separates
+  *checked and cleared* from *never opened*.
+- **`scripts/upstream-watch.py`** — reports drift (exit `3`), `--update` moves baselines after
+  review, `--control` self-tests offline. Three controls, wired into `check-repo.py`: a stale
+  baseline must report the exact drift, a current one must report none, and a baseline absent
+  from fetched history must be flagged **truncated** rather than reported as full drift — an
+  unfindable baseline can mean a force-push, and "100 new commits" for a rebase is a lie the
+  register would then carry forward.
+- **[`.github/workflows/upstream-watch.yml`](.github/workflows/upstream-watch.yml)** — weekly,
+  keeping **one** open issue and rewriting its body. A fresh issue every Monday trains everyone
+  to close it unread. Controls run before the live check, because a watcher whose controls need
+  the network becomes a rubber stamp the first flaky week.
+- **[`sources/upstream-techniques.md`](sources/upstream-techniques.md)** — the licence rules
+  (GPL-2.0 here, so GPL-3.0-only is out and "it's on GitHub" is not a licence), and the standing
+  preference for documenting a technique over vendoring the code.
+
+### Fixed — this repo credited an upstream under the wrong licence for twelve days (2026-08-23)
+
+Found by building the register above, on its first run, which is the argument for the register.
+Since 2026-08-11 `scripts/check-latest-release.sh` credited
+[jazzsequence/wpnext-test](https://github.com/jazzsequence/wpnext-test) as **MIT**. It isn't —
+its `license.txt` is WordPress core's **GPL-2.0-or-later** text, because the repo is a Pantheon
+WordPress upstream, and no MIT declaration exists anywhere in it. GitHub's licence API returns
+`NOASSERTION`, which is not a licence but a prompt to open the file.
+
+No compliance consequence (GPL into GPL, and what was adapted was a technique rather than a
+copy). But a stated fact was wrong in a repo whose whole argument is that stated facts need
+receipts, and it was wrong in a **header comment** — the least-read, longest-lived place a claim
+can hide. Corrected, and kept in the register's `notes` rather than quietly deleted, because a
+refuted claim is an asset and removing it would remove the reason the check exists.
+
 ### Fixed — the detector could not see a build that shipped before its announcement (2026-08-13)
 - **`check-latest-release.sh` now walks the package lane forward past the feeds.** Found by using
   it: on 2026-08-13 it reported 7.1-RC2 as newest while 7.1-RC3 had been packaged and downloadable
