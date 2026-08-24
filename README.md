@@ -1213,7 +1213,7 @@ lands.
 ```
 ├── CONTEXT.md        the glossary — what every term here means, exactly
 ├── scripts/          the test scripts from Step 3
-├── sources/          where official WordPress information lives
+├── sources/          where official WordPress information lives, and what this repo borrows
 ├── accessibility/    a11y testing — layered method, tools, and where it's wired in
 ├── i18n/             internationalization, translation loading, and RTL
 ├── plugin-theme-authors/   testing your OWN plugin or theme (CI, tests, blocks)

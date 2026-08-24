@@ -43,7 +43,7 @@ bug on release day.
 
 ### 4. Update-day runbook confirmation
 
-The [ordered runbook](../fleet-operators/README.md#4-the-update-day-runbook) will run
+The [ordered runbook](../fleet-operators/README.md#5-the-update-day-runbook) will run
 as written · deviations for this release: <none / list>.
 Baselines captured (visual + console): <where> · backup verified restorable: <when last
 actually restored — "we take backups" is not this line>.

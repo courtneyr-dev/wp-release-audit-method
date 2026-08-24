@@ -3,7 +3,7 @@ title: "Ecosystem compatibility lane — the release is fine and the site still 
 type: method
 status: active
 created: '2026-08-21'
-updated: '2026-08-21'
+updated: '2026-08-23'
 tags:
   - wordpress
   - release-audit
@@ -12,6 +12,7 @@ tags:
 related:
   - '[release-audit-learning-loop](release-audit-learning-loop.md)'
   - '[rollback](rollback.md)'
+  - '[preflight-core-probe](preflight-core-probe.md)'
   - '[registers](registers.md)'
 ---
 
@@ -168,3 +169,37 @@ So the division of labor is:
 A draft comment for the ticket — positioning the manual lane as the complement and naming
 the premium blind spot — is in [`drafts/trac-65920-comment.md`](../drafts/trac-65920-comment.md).
 Draft, not filed; filing is the operator's call.
+
+## The third source: fleets, probing an RC against their own sites
+
+Both approaches above enumerate plugins — the workflow from the directory API, this lane from
+a co-installed-prevalence list — and enumeration is exactly where the premium blind spot comes
+from. A **[preflight core probe](preflight-core-probe.md)** doesn't enumerate anything. It
+sideloads the new core, points it at a real site's live database and live `wp-content`, boots
+it, and greps for fatals. Whatever that site runs is what gets tested, licence or no licence,
+in its real co-installed combination — which is the triple this lane exists to chase.
+
+Run `--probe-only` across a fleet against an **RC** and the output is a compatibility census
+over the population core-side testing structurally cannot reach. One agency with 300 sites has
+a denominator; the fatal it finds on 7.2-RC1 is worth more to the release than any number of
+clean-install cells, and it costs one scripted pass. The technique, its invariants, and its
+limits are documented from Austin Ginder's CaptainCore script in
+[preflight-core-probe.md](preflight-core-probe.md); the operator-facing version is
+[`fleet-operators/README.md` §4](../fleet-operators/README.md#4-probe-before-you-apply).
+
+Updating the division of labor:
+
+| | Automated workflow (#65920) | This lane | Fleet preflight probe |
+|---|---|---|---|
+| Free directory plugins, singly | covered, at scale, every build | don't duplicate | incidental |
+| Premium plugins | structurally blind — no API source | manual cells, license required | covered, on any site that owns one |
+| Co-installed pairs and triples | not in scope | pair cells + the closure probe | covered by construction, on real sites |
+| Bespoke client code | not in scope | not in scope | covered |
+| Isolating *which* plugin | n/a — one at a time | the point of the cells | **not covered** — a probe says "this site fatals," not why |
+| Tracker triage | not in scope | the checkable step above | not in scope |
+
+That last row is the honest boundary. A probe is a **detector, not a diagnosis**: it converts
+"is my fleet ready" into a number, and then someone still has to bisect the failing site to
+name the plugin. This lane's cells and the closure probe are what do that naming. Neither
+replaces the other, and a fleet reading fatals it never diagnoses has bought monitoring, not
+understanding.

@@ -54,6 +54,7 @@ Start here if a constraint in this skill seems excessive:
 | [retro](../../method/retro.md) | The short post-run pass that turns a run into method improvements |
 | [ecosystem-signals](../../method/ecosystem-signals.md) | Turning dev notes, security releases, and incident write-ups into method changes |
 | [ecosystem compatibility lane](../../method/ecosystem-compatibility-lane.md) | The release is fine and the site still dies — the WP Rocket class, its probe, and its cells |
+| [preflight core probe](../../method/preflight-core-probe.md) | Boot the new core against a live site's real plugins before applying — the fleet-scale RC signal core-side testing can't reach (Austin Ginder / CaptainCore) |
 | [rollback](../../method/rollback.md) | The escape hatches when the fatal kills WP-CLI too, and what core rollback can't recover |
 | [validation and proof](../../method/validation-and-proof.md) | What counts as proof; the finding templates; controls |
 | [security invariants](../../method/security-invariants.md) | The invariant catalog — audit broken invariants, not dangerous sinks |
@@ -134,6 +135,8 @@ PHP is an axis, not a chain — multiply only the seven chains listed in `pilots
 
 Sweep the remaining tiers too: sweep-matrix T2/T3 and upgrade-ladder T2/T3, including the WP-CLI-updater lane.
 
+**Import fleet probe results if any exist.** The ecosystem cell block can only build cells for plugins you can obtain — premium plugins read `BLOCKED(premium-license)`, and that block is where the 7.1 outage lived. A fleet operator running a [preflight core probe](../../method/preflight-core-probe.md) in `--probe-only` mode across their sites against an RC produces exactly the evidence those cells can't: real fatals, on real co-installed plugin sets, with a denominator. Ask for it, in the [ecosystem-signals](../../method/ecosystem-signals.md) sweep, before concluding that a silent ecosystem lane means a clean one. Treat an imported result as an external report — it goes to step 2's retest discipline and gets a `CONFIRMED`/`INCONCLUSIVE` verdict here, not a free pass — and route what survives to the plugin's own tracker and [Make/Test](https://make.wordpress.org/test/) in step 4, not only to Trac.
+
 ## 4. Draft new issues, tickets, and security reports
 
 One draft per confirmed defect, routed by system:
@@ -160,6 +163,8 @@ Update `filed-issues-register.csv` when the operator confirms a filing.
 ## 5. Feed the loop
 
 New failure modes, false-positive classes, blocked fixtures, and method changes → `learning/failure-mode-register.csv` and `learning/method-change-proposals.csv`. Any new detector needs a shadow run with both controls before it's `ACCEPTED`. Bank durable method decisions to the vault projects; leave evidence in the run root.
+
+**Check what the projects this method borrows from learned since last cycle.** `python3 scripts/upstream-watch.py` reports commits landed in the upstream paths this repo adapts technique from, against the baselines in [`sources/upstream-watch.csv`](../../sources/upstream-watch.csv). Review the drift, then `--update` to move the baselines and commit — the baseline means *someone looked*, not *someone integrated*, so a cycle where nothing was worth taking still moves it. The review question is whether anything upstream changes a limit written down here, contradicts an attribution, or covers a lane left `BLOCKED`. The discipline and the licence rules are in [`sources/upstream-techniques.md`](../../sources/upstream-techniques.md); a weekly workflow files the same report as one standing issue, so this step is usually reading a queue rather than starting a search.
 
 This is the deep end of the same loop the lighter [retro](../../method/retro.md) feeds after every run, and that [ecosystem-signals](../../method/ecosystem-signals.md) feeds from reading the news. The routine ones stay in your run root; the ones worth the next stranger's time go to a [field report or PR](../../CONTRIBUTING.md#suggesting-improvements-from-real-use). Nothing is filed upstream without the operator's approval.
 

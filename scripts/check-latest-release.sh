@@ -2,7 +2,8 @@
 # Detect the newest WordPress Beta/RC — and whether a prerelease cycle is actually ACTIVE.
 #
 # Feed-scraping approach adapted from Chris Reynolds's wpnext-test
-# (https://github.com/jazzsequence/wpnext-test, MIT), where a weekly cron uses it to
+# (https://github.com/jazzsequence/wpnext-test, GPL-2.0-or-later — its license.txt is
+# WordPress core's, as a Pantheon upstream), where a weekly cron uses it to
 # upgrade a standing Pantheon site unattended. One structural difference: his script
 # answers "what is the newest Beta/RC ever announced" and lets the caller compare against
 # a live site's version. This repo has no site to compare against, so the cycle check
