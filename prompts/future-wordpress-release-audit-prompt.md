@@ -203,6 +203,19 @@ review.
   is an INVALID batch, not a product failure — exclude it from all counts and record the diagnosis.
 - Do not claim a "reproduction" from a fixture whose deviation from expectation is undiagnosed.
   Diagnose invocation-vs-fixture before calling anything reproduced.
+- ACTIVATION IS NOT A BOOT. For any cell that installs a plugin or theme, "it activated" is not a
+  PASS. Activation runs a narrow path, often before the hooks, globals, and co-installed code the
+  real implementation assumes; a plugin can activate cleanly and fatal on the very next load. No
+  plugin/theme cell is clean until WordPress has been LOADED with it active and the load produced no
+  fatal (`wp eval 'echo 1;'` after `--activate` is the whole check). Receipt: in the first full
+  200-plugin run of the workflow proposed in Trac #65920 (2026-08-23), the single real failure
+  activated cleanly and then fatalled on `null` at load.
+- REPORT SKIPS BESIDE PASSES, NEVER FOLDED INTO THEM. Every count you report states passed / failed /
+  SKIPPED / blocked separately, with the reason each skip skipped. A skip is an untested unit, and a
+  skip class that correlates with anything (a vendor, a dependency header, a site mode, a licence) is
+  a blind spot to name, not rounding to absorb. Same run: 186 passed / 1 failed / 13 skipped, where
+  all 13 skips were one vendor's add-ons with an unmet `Requires Plugins` header — "186 passed" alone
+  would have read as a clean ecosystem.
 </method_rules>
 
 <threat_model_gate>
@@ -326,7 +339,7 @@ this phase's gate has not verified as $TARGET_LABEL.
 | `source_universe` | run-spec's four-register requirement (Make matrix, GitHub org register, Trac census, SoT register); FM-20, FM-21, FM-26 |
 | `change_ledger_and_challenge` | FM-22; the r2 challenge protocol's UPHELD/REVISED/REFUTED/UNVERIFIED verdicts |
 | `evidence_records` | FM-23; MC-13 |
-| `method_rules` | MC-17; MC-09 (H-01, H-02); FM-13, FM-14, FM-16, FM-17 |
+| `method_rules` | MC-17; MC-09 (H-01, H-02); FM-13, FM-14, FM-16, FM-17. The two rules added 2026-08-23 (activation-is-not-a-boot, skips-beside-passes) trace to an **external executed report** — the first full run of Trac #65920's workflow — not to an internal FM/SR case; this repo has not reproduced them |
 | `threat_model_gate` | FM-07, FM-12, FM-18; MC-11 |
 | `a11y_calibration_rule` | FM-06; MC-10; D-07 |
 | `performance_rule` | Standing operating rule requested for this prompt — not yet exercised by any FM/SR case; no performance detector exists in D-01–D-07 |
