@@ -210,32 +210,60 @@ Named plainly, because a probe you trust past its edges is worse than no probe:
   drop-ins, and `object-cache.php`.** That is the point — but a drop-in incompatible with the
   new core is being loaded against a production object cache while you probe.
 
-## Status in this repo: UNEXERCISED
+## Status in this repo: PARTLY EXERCISED — 2026-08-24
 
-**Not one line of this has been executed by this project.** It is documented from source,
-not from a run. Per [rollback](rollback.md)'s standard — *a recovery path you have never run
-is a hypothesis about your worst day* — this page is a hypothesis about someone else's good
-idea until a run is recorded against it.
+**The probe half is exercised. The apply half is not, and never will be here** — this
+repo's adaptation, [`scripts/core-preflight-probe.sh`](../scripts/core-preflight-probe.sh),
+has no apply path at all. For the production-grade version with backup, apply, and
+auto-restore, run Ginder's original.
 
-What would move it to EXERCISED, roughly in order of what each buys:
+### What ran, 2026-08-24
 
-1. Run `--probe-only` against a disposable fixture seeded with the WP Rocket triple from
-   [the ecosystem lane](ecosystem-compatibility-lane.md) — a positive control. The probe must
-   **fail**. A probe that has never failed on a known-bad input is not a detector, it's a
-   formality.
-2. Run it against the same fixture without the closure-registering third plugin — the
-   negative control. It must pass. Both controls in one run, per
-   [validation and proof](validation-and-proof.md).
-3. Assert the abort is genuinely non-destructive: checksum live `wp-admin`, `wp-includes`,
-   and root PHP files before and after a failed probe, and diff. The claim "failed probes
-   abort before any live core files change" is checkable, and unchecked it is marketing.
-4. Confirm the `db_version` invariant fires — force a probe with a target whose
-   `wp_db_version` differs and confirm the mismatch aborts rather than migrating.
-5. Only then, the apply path with its auto-restore, on a fixture you are happy to lose.
+A disposable DDEV fixture on **WordPress 7.0.4** (`db_version` 61833), target **7.1**, with
+the two [fixture plugins](../fixtures/plugins/) reconstructing the WP Rocket mechanism —
+`substr()` on a `$wp_filter` key under `strict_types` on `init`, plus a third plugin
+registering a closure on `deleted_post`.
 
-Steps 1–3 are a well-shaped afternoon on a DDEV fixture. Anyone with a spare evening and the
-[standing environment](standing-environment.md) can convert this page from documentation into
-a result — and a `BLOCKED` or a surprising failure is as publishable as a pass.
+| Control | Expectation | Result |
+|---|---|---|
+| **Positive** — consumer + closure registrar (the triple) | probe must FAIL | `probe=FATAL`, `TypeError` at the `substr()` line. `CONTROL-PASS` |
+| **Negative** — consumer only (the pair) | probe must come back clean | `booted=7.1`, rendered 69,631 bytes, `fatal_in_html=0`. `CONTROL-PASS` |
+| **Non-destructive abort** | a failed probe changes no core file | exit 3; SHA-256 over every file in `wp-admin` and `wp-includes` **identical** before and after; `wp core verify-checksums` still passes |
+
+The `db_version` invariant held (61833 → 61833) but was **not meaningfully exercised**: 7.0.4
+and 7.1 carry the same `wp_db_version`, so the mismatch branch never had a chance to fire.
+That check remains untested.
+
+**It also reproduced the pair/triple asymmetry the ecosystem lane is built on** — the pair is
+green and the triple is down — which this repo had previously only cited from external
+reports. Stated precisely, because the distinction matters: this reproduces the *mechanism*
+using a reconstruction of WP Rocket's code shape. It does not reproduce WP Rocket, which is
+premium and was never installed.
+
+### Still unexercised
+
+- **The HTTP half.** The original probes over its hosts' on-server loopback and checks the
+  `X-Core-Preview-Version` header; this adaptation is WP-CLI only. Everything conditioned on
+  the web-request path is therefore untested here — which is the *two boots are two
+  denominators* rule applying to this page's own evidence.
+- **The `db_version` mismatch branch**, per above.
+- **The apply path, the backup, and the auto-restore.** Out of scope by design.
+- **A real fleet.** One fixture is not a census.
+
+### What the run cost, and what it caught on the way
+
+One afternoon, and it found a harness fault worth more than the controls did: **`wp core
+download` silently truncates long filenames** on wp-cli 2.12 inside a ddev/colima container.
+Twenty-five files under `wp-includes/php-ai-client/` arrive with their names cut mid-word and
+their `.php` extension gone, so `wp core verify-checksums` fails on a *pristine* install. The
+release zip is fine and `unzip` extracts it correctly on the same machine; only wp-cli's
+extractor does it.
+
+That nearly became a false finding about WordPress packaging. It is written up as
+[a fixture-integrity failure mode](../drafts/open-issues.md) instead, and the probe script now
+fetches and extracts the package itself and makes the sideloaded tree verify against the
+checksum API **before anything boots** — because a probe that boots a quietly damaged target
+tree reports verdicts about a build that does not exist.
 
 ## Related
 

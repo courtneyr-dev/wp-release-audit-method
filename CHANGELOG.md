@@ -5,6 +5,38 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — the preflight core probe is exercised, and it found a fixture-integrity bug (2026-08-24)
+
+`scripts/core-preflight-probe.sh` is this repo's CLI-only adaptation of Ginder's `update-core`,
+with no apply path by design. Run against a disposable DDEV fixture on 7.0.4, target 7.1, with
+two new [fixture plugins](fixtures/plugins/) reconstructing the WP Rocket mechanism.
+
+- **Both controls pass.** Positive (consumer + closure registrar) → `probe=FATAL`, `TypeError`
+  at the `substr()` line. Negative (consumer only) → `booted=7.1`, 69,631 bytes rendered, no
+  fatal. Non-destructive abort proven by checksum: exit 3, every file in `wp-admin` and
+  `wp-includes` byte-identical before and after, `wp core verify-checksums` still passing.
+- **It reproduced the pair/triple asymmetry** the ecosystem lane rests on, which this repo had
+  only ever cited from external reports. Precisely: it reproduces the *mechanism* via a
+  reconstruction of WP Rocket's code shape. WP Rocket is premium and was never installed.
+- **Still unexercised, and now said so explicitly:** the HTTP half (this adaptation is WP-CLI
+  only, so *two boots are two denominators* applies to its own evidence), the `db_version`
+  mismatch branch (7.0.4 and 7.1 share `wp_db_version` 61833, so it never fired), and the
+  apply/restore path.
+
+### Fixed — the probe was sideloading a silently damaged core, and so is every fixture here (2026-08-24)
+
+`wp core download` truncates long filenames on wp-cli 2.12 inside a ddev/colima container: 25
+files under `wp-includes/php-ai-client/` lose their name mid-word and their `.php` extension,
+so `wp core verify-checksums` fails on a *pristine* install. Ruled out, in order: the release
+zip (full names, longest is 53 chars), the filesystem (`touch` succeeds), host path length
+(reproduced at 173 chars and at `/tmp/pfx`), and the container mount (`unzip` inside the
+container onto the same volume is correct). Only wp-cli's extractor does it.
+
+This nearly shipped as a finding about WordPress packaging. It is written up in
+[`drafts/open-issues.md`](drafts/open-issues.md) as a fixture-integrity failure mode instead,
+unfiled, with the checks to run before routing it to wp-cli. The probe now fetches and
+extracts the package itself and **requires the sideloaded tree to verify against the checksum
+API before anything boots** — a damaged sideload is an error, never a probe verdict.
 ### Changed — Trac #65920's workflow has been run at full scale, and it moves two claims (2026-08-23)
 
 Adam Silverstein posted results from a 200-plugin run of the proposed core plugin-compatibility
@@ -66,10 +98,11 @@ tool he built four days after the outage, which is the reason it's worth reading
 - **`rollback.md` gains the move-aside-first restore ordering** — `mv` live aside, `cp` the
   backup in, `mv` back on failure. A restore that opens with `rm -rf` on live core has a
   window where a failed copy leaves the site with no core at all.
-- **Marked UNEXERCISED, with the controls that would change that spelled out.** Documented
-  from source, not from a run. The page names what it can't do: `db_version` unchanged proves
-  core migration didn't run, *not* that plugins wrote nothing; front-end only; it puts a
-  token-gated executable in the live web root that a `SIGKILL` would leave behind.
+- **Shipped UNEXERCISED, with the controls that would change that spelled out** — and they
+  were run on 2026-08-24, see the entry above. The page still names what it can't do:
+  `db_version` unchanged proves core migration didn't run, *not* that plugins wrote nothing;
+  front-end only; and the original puts a token-gated executable in the live web root that a
+  `SIGKILL` would leave behind.
 
 ### Added — a standing watch on the projects this method borrows from (2026-08-23)
 

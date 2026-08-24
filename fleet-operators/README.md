@@ -125,14 +125,17 @@ a specific premium plugin is the single most valuable thing a fleet operator can
 release, and it costs one scripted pass.
 
 > [!WARNING]
-> **Unexercised by this repo, and it runs against production.** Nothing on this page has
-> been executed here — it is documented from source, not from a run. It sideloads core,
-> writes a temporary executable file into the live web root, and boots live plugins against
-> the live database. Read the original script, run the controls in
-> [`method/preflight-core-probe.md`](../method/preflight-core-probe.md#status-in-this-repo-unexercised)
-> on a disposable fixture, and satisfy yourself about the abort path *before* you point any
-> derivative at a client site. Back up first regardless — runbook step 1 below is not
-> optional because you have a probe.
+> **The probe half is exercised on a fixture. Ginder's script itself is not, and it runs
+> against production.** On 2026-08-24 this repo ran its own CLI-only adaptation against a
+> disposable DDEV fixture and both controls passed — the seeded fatal was caught, a clean
+> fixture came back clean, and an aborted probe left every core file byte-identical
+> ([the run](../method/preflight-core-probe.md#what-ran-2026-08-24)). That is **not** the same
+> as having exercised the original, which additionally probes over HTTP, writes a temporary
+> executable file into the live web root, applies the update, and restores on failure. None
+> of that has been run here.
+>
+> Read the original before you point any derivative at a client site, and back up first
+> regardless — runbook step 1 below is not optional because you have a probe.
 
 ## 5. The update-day runbook
 

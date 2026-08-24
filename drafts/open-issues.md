@@ -159,3 +159,46 @@ page builders, eCommerce): build the pair fixture, run the block across the next
 prerelease boundary, and report — including "no new fatals," which is a real result.
 
 Done when: one recorded run of the pair block includes at least one premium plugin.
+
+
+---
+
+## `wp core download` silently truncates long filenames (wp-cli) — not filed
+
+Found 2026-08-24 while exercising the [preflight core probe](../method/preflight-core-probe.md).
+Not a WordPress bug. Recorded because it nearly became a false finding about WordPress
+packaging, and because it silently corrupts fixtures this repo's whole method depends on.
+
+**Symptom.** `wp core download --version=7.0.4` produces a tree in which 25 files under
+`wp-includes/php-ai-client/` have their names cut mid-word and their `.php` extension
+dropped — `AbstractApiBasedModelMetadataDirectory.php` arrives as
+`AbstractApiBasedModelMetada`. `wp core verify-checksums` then fails on what is otherwise a
+pristine install.
+
+**What it is not.** Checked, in this order:
+
+- Not the package. `unzip -l wordpress-7.0.4.zip` lists the full 42-character name; the
+  longest filename in the release is 53 characters.
+- Not the filesystem. `touch` with the full name at the same directory succeeds.
+- Not host path length. Reproduced identically at `/tmp/pfx` and at a 173-character path.
+- Not the container mount. `unzip` **inside the container**, writing to the same mounted
+  volume, extracts every name correctly.
+
+Only wp-cli's own extractor does it. Observed on wp-cli 2.12.0, PHP 8.3, ddev v1.25.3 on
+colima 0.10.3 / Docker 29.6.2, macOS arm64.
+
+**Why it matters here beyond the annoyance.** Every fixture this repo builds with
+`wp core download` is silently short some files, which means `wp core verify-checksums` is
+unusable as an independent check on those fixtures, and any stale-file or file-tree
+assertion built on one is measuring the extractor as much as WordPress. This is
+[law 3](../method/release-audit-learning-loop.md) — assert fixture state before reading
+results — arriving through a door nobody was watching.
+
+**Mitigation, already applied.** `scripts/core-preflight-probe.sh` no longer uses
+`wp core download`; it fetches the release zip, extracts with `unzip`, and requires the tree
+to verify against the checksum API before anything boots. A damaged sideload is an **error**,
+never a probe verdict.
+
+**Before filing:** reproduce outside ddev (plain wp-cli on the host, and a second wp-cli
+version) to pin whether it is wp-cli's extractor generally or this container image's PHP
+zip support. Route: <https://github.com/wp-cli/core-command>.

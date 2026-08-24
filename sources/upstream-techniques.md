@@ -121,6 +121,63 @@ longest-lived place a claim can hide. Corrected 2026-08-23 and recorded in the r
 `notes`, because [a refuted claim is an asset](../method/release-audit-learning-loop.md) and
 deleting the mistake would delete the reason the check exists.
 
+## Review log — CaptainCore `lib/remote-scripts`, 2026-08-24
+
+The first pass over the backlog the register recorded. **57 scripts** (the register previously
+said 58 — miscount, corrected). Read in full: `component-hashes`, `php-in-uploads`,
+`plugin-diff`, `update-core`. The rest were triaged by their header comments, which in this
+codebase are unusually good — most state the invariant they rest on in the first three lines.
+Triaged-by-header is a weaker reading than read-in-full and the verdicts below say which.
+
+Nothing here is adopted yet. Per [ecosystem-signals](../method/ecosystem-signals.md), a
+review produces **candidates**, not method changes; each still needs adjudication and
+controls before it becomes a cell.
+
+### Candidates — these touch a lane this repo already has
+
+| Script | Why it's a candidate | Lands in |
+|---|---|---|
+| `detect-database-triggers` | *"Stock WordPress has ZERO triggers, events, and stored routines."* A clean stated invariant, and the persistence class that survives plugin reinstalls, core reinstalls, password resets and salt shuffles — file-based cleanup never touches it | [security invariants](../method/security-invariants.md) |
+| `detect-binary-payloads` | *"A WordPress site is PHP + assets."* ELF binaries, `.so`, and `.socket` files in the document root break that invariant, and being non-PHP they are invisible to checksum scans and to `php-in-uploads` | [security invariants](../method/security-invariants.md) · [attack surfaces](../method/wordpress-attack-surfaces.md) |
+| `component-hashes` | Deterministic per-component SHA-256 over plugins/themes/mu-plugins — and it hashes symlinks as `SYMLINK:<target>`, so a swapped symlink changes the hash. A content-only hash does not. That detail is the whole value | the stale-file and upgrade-artifact work behind `stale_file_check.py` |
+| `plugin-diff` | Unified diff of an installed plugin against a clean wordpress.org copy. Explicitly the follow-up to a failed `wp plugin verify-checksums` — *what changed*, not just *something changed*. This repo needed exactly that for **core** on 2026-08-24 and had no tool for it | [release-diff method](../plugin-theme-authors/release-diff-method.md) |
+| `detect-fake-dates` | Files whose `mtime` is older than their birth time — a forged timestamp, which is also a way an upgrade-artifact assertion gets quietly fooled | upgrade-artifact assertions |
+| `detect-elevated-permissions` | Non-admin roles holding `manage_options`/`edit_plugins`, and capabilities injected directly into usermeta — a capability-boundary invariant, which is the shape this repo's security lane prefers | [security invariants](../method/security-invariants.md) |
+| `db-code-audit` | Executable code stored in options, WPCode snippets, and widgets — bypasses every file-based scanner by construction | [attack surfaces](../method/wordpress-attack-surfaces.md) |
+| `detect-user-enumeration` | Anonymous HTTP checks for username exposure via REST, oEmbed, sitemaps, `?author=N`, xmlrpc, and `wp-login.php` differential responses. Notably **testable on a disposable fixture** — no fleet required | [attack surfaces](../method/wordpress-attack-surfaces.md) |
+
+### Interesting, but not this repo's lane
+
+`malware-hunt` (a standalone scanner, far past release auditing), `detect-seo-spam`,
+`detect-seo-cloaking`, `detect-web3-injection`, `detect-upload-probes`,
+`detect-forged-registrations`, `detect-malformed-passwords`, `php-in-uploads`,
+`quicksave-fingerprint`, `fetch-users-logins`, `file-manager`. Real work, aimed at
+compromise response rather than at whether a release is correct. Revisit only if this repo
+ever grows an incident-response lane.
+
+### Checked and cleared — fleet operations, not testing
+
+`activate`, `deactivate`, `apply-https`, `apply-https-with-www`, `archive-logs`, `arguments`,
+`check-security-log-size`, `db-backup`, `db-convert-to-innodb`, `db-import`, `deploy-fathom`,
+`deploy-helper`, `deploy-mailgun`, `email-health-check`, `fetch-database-tables`,
+`fetch-error-log-size`, `fetch-folder-size`, `fetch-log-file`, `fetch-log-files`,
+`fetch-site-data`, `fetch-token`, `kickstart`, `launch`, `master-db-query`, `migrate`,
+`performance-monitor-deploy`, `performance-monitor-remove`, `plugins-zip`,
+`prepare-wordpress`, `report-compromised-passwords`, `reset-permissions`,
+`restic-cache-check`, `restic-cache-purge`, `rewrite-prep`, `update`, `vault`,
+`verify-google-analytics-takeover`.
+
+Cleared is a **result**, not an absence of one — it is what stops the next reader spending
+the same afternoon. `update-core` is [already adopted](../method/preflight-core-probe.md).
+
+### The pattern worth naming
+
+Six of the eight candidates open by stating an invariant — *stock WordPress has zero
+triggers*, *a WordPress site is PHP plus assets* — and then detect its violation. That is
+[the security lane's own rule](../method/security-invariants.md) (audit broken invariants,
+not dangerous sinks) arrived at independently by someone doing incident response on a fleet.
+Where two practices converge from different directions, the rule is usually load-bearing.
+
 ## Adding a row
 
 1. Verify the licence from the upstream's own LICENSE file. Check it against the table above.
