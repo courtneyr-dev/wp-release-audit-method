@@ -5,6 +5,39 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — the preflight core probe is exercised, and it found a fixture-integrity bug (2026-08-24)
+
+`scripts/core-preflight-probe.sh` is this repo's CLI-only adaptation of Ginder's `update-core`,
+with no apply path by design. Run against a disposable DDEV fixture on 7.0.4, target 7.1, with
+two new [fixture plugins](fixtures/plugins/) reconstructing the WP Rocket mechanism.
+
+- **Both controls pass.** Positive (consumer + closure registrar) → `probe=FATAL`, `TypeError`
+  at the `substr()` line. Negative (consumer only) → `booted=7.1`, 69,631 bytes rendered, no
+  fatal. Non-destructive abort proven by checksum: exit 3, every file in `wp-admin` and
+  `wp-includes` byte-identical before and after, `wp core verify-checksums` still passing.
+- **It reproduced the pair/triple asymmetry** the ecosystem lane rests on, which this repo had
+  only ever cited from external reports. Precisely: it reproduces the *mechanism* via a
+  reconstruction of WP Rocket's code shape. WP Rocket is premium and was never installed.
+- **Still unexercised, and now said so explicitly:** the HTTP half (this adaptation is WP-CLI
+  only, so *two boots are two denominators* applies to its own evidence), the `db_version`
+  mismatch branch (7.0.4 and 7.1 share `wp_db_version` 61833, so it never fired), and the
+  apply/restore path.
+
+### Fixed — the probe was sideloading a silently damaged core, and so is every fixture here (2026-08-24)
+
+`wp core download` truncates long filenames on wp-cli 2.12 inside a ddev/colima container: 25
+files under `wp-includes/php-ai-client/` lose their name mid-word and their `.php` extension,
+so `wp core verify-checksums` fails on a *pristine* install. Ruled out, in order: the release
+zip (full names, longest is 53 chars), the filesystem (`touch` succeeds), host path length
+(reproduced at 173 chars and at `/tmp/pfx`), and the container mount (`unzip` inside the
+container onto the same volume is correct). Only wp-cli's extractor does it.
+
+This nearly shipped as a finding about WordPress packaging. It is written up in
+[`drafts/open-issues.md`](drafts/open-issues.md) as a fixture-integrity failure mode instead,
+unfiled, with the checks to run before routing it to wp-cli. The probe now fetches and
+extracts the package itself and **requires the sideloaded tree to verify against the checksum
+API before anything boots** — a damaged sideload is an error, never a probe verdict.
+
 ### Added — the preflight core probe, from CaptainCore (2026-08-23)
 
 [`method/preflight-core-probe.md`](method/preflight-core-probe.md) documents the technique in
