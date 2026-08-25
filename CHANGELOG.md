@@ -70,6 +70,7 @@ This nearly shipped as a finding about WordPress packaging. It is written up in
 unfiled, with the checks to run before routing it to wp-cli. The probe now fetches and
 extracts the package itself and **requires the sideloaded tree to verify against the checksum
 API before anything boots** — a damaged sideload is an error, never a probe verdict.
+
 ### Changed — Trac #65920's workflow has been run at full scale, and it moves two claims (2026-08-23)
 
 Adam Silverstein posted results from a 200-plugin run of the proposed core plugin-compatibility
@@ -85,11 +86,12 @@ the prompts. External report — not reproduced here, and the workflow is unmerg
   rule inside both prompts' fences, and a step in the plugin-author CI drop-in. Same family as
   the preflight probe's *two boots are two denominators*, reached from a different direction in
   the same week — which is the argument for writing it as a rule rather than a note.
-- **New rule: report skips beside passes, never folded into them.** The 13 skips were every
-  WooCommerce add-on in the set, skipped for an unmet `Requires Plugins` header because the
-  workflow installs one plugin at a time. "186 passed" alone reads as a clean ecosystem when
-  6.5% was never booted, and a skip class that correlates with a vendor is a blind spot rather
-  than rounding. Added to lie #3 in the README, and to both prompts.
+- **New rule: report skips beside passes, never folded into them.** The run reported 13 skips
+  with the reason given as add-ons with an unmet `Requires Plugins` header, and the workflow
+  installed one plugin at a time. "186 passed" alone reads as a clean ecosystem when 6.5% was
+  never booted. Added to lie #3 in the README, and to both prompts. **Superseded 2026-08-24**
+  — see the entry at the top: that single reason turned out to fit four of the thirteen, which
+  extended the rule rather than retiring it.
 - **The #65920 blind spot is now two, not one.** Premium plugins (directory API can't see them)
   *and* dependency-gated plugins (one-at-a-time installation can't run them). Both are the same
   root cause — the workflow enumerates and a probe doesn't — so the division-of-labor table in
