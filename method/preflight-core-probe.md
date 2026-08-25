@@ -161,11 +161,12 @@ the same root cause: the workflow has to enumerate plugins, and a probe doesn't.
 
 - **Premium plugins.** The workflow draws from the wordpress.org directory API, so they are
   invisible to it. Adam Silverstein says so himself, and WP Rocket is premium.
-- **Plugins gated behind a dependency.** 13 of the 200 in that run were skipped for an unmet
-  `Requires Plugins` header, all of them WooCommerce add-ons, because the workflow installs
-  one plugin at a time and a dependent plugin has nothing to run against. Pre-installing
-  declared dependencies is a proposed follow-up; until it lands, the skipped set correlates
-  with a market segment rather than being random.
+- **Plugins gated behind a dependency** — *closed on 2026-08-24, in the PR.* 13 of the 200
+  in that run were skipped, and four named WooCommerce extensions among them were skipped for
+  an unmet `Requires Plugins` header, because the workflow installed one plugin at a time and
+  a dependent plugin had nothing to run against. `67005f527b` now installs and activates
+  declared dependencies first, and those four pass. Unmerged, so it is not yet true of core.
+  The premium blind spot above is structural and remains.
 
 A preflight probe has neither, because it never enumerates anything. It boots whatever is
 installed — premium, dependent, or written by the client's last agency — in whatever

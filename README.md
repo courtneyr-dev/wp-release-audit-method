@@ -941,12 +941,14 @@ content, then upgrade.*
 on the old database version. The report was true and useless.
 
 The same shape at scale: a 200-plugin compatibility run reported **186 passed, 1 failed, 13
-skipped**. Read fast, that's a clean ecosystem. The 13 skips were every WooCommerce add-on
-in the set — skipped for an unmet dependency, never booted at all. A skip class that lines
-up with a market segment is a blind spot, not rounding.
+skipped**. Read fast, that's a clean ecosystem — 13 units were never booted at all. The
+reason written beside the 13 was "add-ons with an unmet dependency," and when someone fixed
+that, it turned out to cover **four** of them. What the other nine were, nobody had written
+down.
 
-→ *Count what you expect before you read what you got — and report skips next to passes,
-never folded into them.*
+→ *Count what you expect before you read what you got. Report skips next to passes, never
+folded into them — and give each skip its own reason, because one plausible cause written
+beside a total will fit some of it and hide the rest.*
 
 </td></tr>
 <tr><td><b>4</b></td><td>

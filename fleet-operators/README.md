@@ -105,9 +105,11 @@ Five things make it worth adopting even if you write your own:
 - **It has no enumeration blind spots.** The top-100-plugins workflow proposed in
   [Trac #65920](https://core.trac.wordpress.org/ticket/65920) has two, both visible in its
   first full run (2026-08-23, 186 passed / 1 failed / 13 skipped): it draws from the
-  wordpress.org directory API, so it cannot see WP Rocket at all, and it installs one plugin
-  at a time, so the 13 skips were all WooCommerce add-ons with an unmet `Requires Plugins`
-  header. A probe never enumerates plugins; it boots whatever is installed.
+  wordpress.org directory API, so it cannot see WP Rocket at all, and it installed one plugin
+  at a time, so plugins declaring `Requires Plugins` had nothing to run against. The second
+  of those was fixed in the PR on 2026-08-24 and four named WooCommerce extensions now pass;
+  the premium one is structural. A probe never enumerates plugins, so it has neither — it
+  boots whatever is installed.
 - **It tests past activation, which is where that run found its one real fatal.**
   `eps-301-redirects` 2.85 installs and activates cleanly, then fatals when WordPress is
   actually loaded with it active. If your own update checks stop at "the plugin is active,"

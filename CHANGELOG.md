@@ -5,6 +5,39 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Changed — the #65920 dependency gap closed, and our account of the skips was wrong (2026-08-24)
+
+`67005f527b` on [PR #13198](https://github.com/WordPress/wordpress-develop/pull/13198) installs
+and activates a plugin's `Requires Plugins` dependencies before activating the plugin itself.
+Unmerged, so not yet true of core. Three consequences here.
+
+- **We repeated a claim the source didn't support.** Every page here said the run's *13 skips
+  were all WooCommerce add-ons with an unmet `Requires Plugins` header* — because the summary
+  line said so. The fix names **four**: `woocommerce-payments`, `google-listings-and-ads`,
+  `woocommerce-paypal-payments`, `woocommerce-gateway-stripe`. What the other nine were is
+  stated nowhere. Corrected in seven files, and the conflict is preserved rather than resolved
+  to a number.
+- **The skips-beside-passes rule gained a sharper edge from its own failure.** The original
+  reading was that "186 passed" hides 13 untested units. The second is that a **reason attached
+  to a count rather than to each skip** is its own hiding place: one plausible cause was written
+  beside thirteen units and fitted four. Both prompts now say attach the reason per unit; lie #3
+  in the README says the same.
+- **A misattribution guard worth stealing.** After the dependencies activate and *before* the
+  subject does, the workflow requests the front page and login screen and clears `debug.log`.
+  Broken there is the dependency's fault, so the subject is skipped *against the dependency*
+  instead of failing for someone else's bug, and an "Also active" column makes the verdict
+  auditable. That is the standing objection to every co-installed matrix — including our own
+  cell block — and it now has an answer. Added to the ecosystem lane and to the plugin-author
+  CI drop-in. Cost: the job timeout went 30 → 45 minutes.
+
+Also recorded: **`instagram-feed` 6.12.0 fatals on `wp_loaded` against 7.1** on a fresh database
+(`wp_get_image_editor( WP_Error )`), reached directly rather than through cron. Second real
+plugin fatal that workflow has surfaced. External report; not reproduced here.
+
+`drafts/trac-65920-comment.md` revised again — the paragraph arguing for the dependency
+pre-install is gone, and its evidence ceiling now reflects that the probe half is exercised.
+Still unfiled.
+
 ### Added — the preflight core probe is exercised, and it found a fixture-integrity bug (2026-08-24)
 
 `scripts/core-preflight-probe.sh` is this repo's CLI-only adaptation of Ginder's `update-core`,
