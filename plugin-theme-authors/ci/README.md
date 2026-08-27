@@ -10,7 +10,7 @@ minutes.
 |---|---|
 | [`wp-compat.yml`](wp-compat.yml) | Test matrix across the WordPress and PHP versions you claim to support, **plus a nightly canary against trunk that opens an issue when core breaks you** |
 | **accessibility job** (in `wp-compat.yml`) | axe **and** pa11y against your screens on every push — two engines, different rule sets |
-| [`plugin-check.yml`](plugin-check.yml) | Plugin Check on every push, plus readme.txt header validation and a "Tested up to is drifting" warning |
+| [`plugin-check.yml`](plugin-check.yml) | Plugin Check on every push, readme.txt header validation, a "Tested up to is drifting" warning, and a check that your repo and wordpress.org agree on the field |
 
 ## Install
 
@@ -81,9 +81,15 @@ validate your `theme.json` against
 **The PHP lint step** is cheap and catches something tests can't: syntax valid on your dev PHP but a
 parse error on your declared floor. A parse error is a white screen, not a caught exception.
 
-**The "Tested up to" check warns, never fails.** Nothing in CI can verify you actually tested — only
-you can do that. It catches drift, which is the common case. The
-[nine boxes](../README.md#bump-it-only-when-this-is-true) are still your job.
+**The "Tested up to" checks warn, never fail.** Nothing in CI can verify you actually tested — only
+you can do that. What CI *can* catch is the two mechanical failures around an honest test: the
+field falling behind current WordPress, and your Git copy disagreeing with what wordpress.org
+serves. The second one needs your directory slug — set `DOTORG_SLUG` at the top of
+`plugin-check.yml` (the one `EDIT:` in that file); leave it empty and the check skips itself.
+Disagreement usually means a bump was made by hand in SVN and never committed to Git, so the next
+deploy will quietly re-lower the field on .org. The
+[nine boxes](../README.md#bump-it-only-when-this-is-true) are still your job, and so is
+[bumping every copy](../README.md#bump-every-copy--the-field-lives-in-more-than-one-place).
 
 **Permissions** — the workflow is read-only at the top; the canary job grants itself
 `issues: write` because it's the only job that files the breakage issue. That's least privilege:

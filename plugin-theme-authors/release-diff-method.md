@@ -355,7 +355,9 @@ is more useful than a vague sense that testing went fine.
 
 ### Close
 - [ ] Core bugs filed on Trac
-- [ ] "Tested up to" bumped — [the nine boxes](README.md#bump-it-only-when-this-is-true)
+- [ ] "Tested up to" bumped — [the nine boxes](README.md#bump-it-only-when-this-is-true), then
+      [every copy of the field](README.md#bump-every-copy--the-field-lives-in-more-than-one-place):
+      Git readme, SVN trunk and stable tag, style.css for themes
 - [ ] Not-covered list written down for next cycle
 ```
 

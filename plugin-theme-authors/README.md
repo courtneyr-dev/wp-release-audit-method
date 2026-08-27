@@ -13,7 +13,7 @@ Works for any codebase; nothing here assumes a particular framework or build set
 | [The three acts, scaled to one plugin](#the-three-acts-scaled-to-one-plugin) | Before, during, after — for your own code |
 | [The compatibility matrix](#the-compatibility-matrix) | What to actually test, and in what order |
 | [Finding what will break](#finding-what-will-break-before-it-does) | Deprecations, removals, and where they're announced |
-| [The "Tested up to" bump](#the-tested-up-to-bump) | What you're claiming, and what to verify before claiming it |
+| [The "Tested up to" bump](#the-tested-up-to-bump) | The deliverable of the whole audit — what to verify, and every copy of the field to change |
 | [Shipping to the directory](#shipping-to-the-directory) | Guidelines, Plugin Check, and the common rejections |
 | [Themes specifically](#themes-specifically) | The surfaces only themes have |
 | [The release checklist](#the-release-checklist) | Copy-paste, per release |
@@ -49,6 +49,10 @@ There's a second reason that matters more than it looks. **"Tested up to" is a c
 every user**, and it's the field the update screen uses to decide whether to warn people away from
 your plugin. Bumping it without testing is the most common way a well-meaning author ships a
 compatibility problem.
+
+The mirror failure is quieter and just as common: testing carefully and never moving the field.
+Every install screen then warns users away from work you already did. The audit isn't finished
+until [the field changes — in every copy of it](#the-tested-up-to-bump).
 
 ---
 
@@ -112,7 +116,10 @@ with the replacement named. Free bug reports from the source.
 - If something in core broke and it looks like a core bug rather than yours,
   [report it](../README.md#how-to-report-what-you-find). Plugin authors catch real core regressions
   every cycle — you're testing a combination core's own test suite doesn't have.
-- [Bump "Tested up to"](#the-tested-up-to-bump) — but only if you actually tested.
+- [Bump "Tested up to"](#the-tested-up-to-bump) — but only if you actually tested. And bump it
+  [in **every copy**](#bump-every-copy--the-field-lives-in-more-than-one-place): the readme in
+  your Git repo *and* on wordpress.org. Tested-but-didn't-bump gets the same "untested" warning
+  as didn't-test.
 - Write down what you tested. Next cycle, that list is your starting point instead of a blank page.
 
 ---
@@ -341,6 +348,23 @@ inheritance bugs surface.
 
 ## The "Tested up to" bump
 
+**The bump is not paperwork after the real work — it *is* the deliverable.** Everything else in
+this guide produces exactly one output the outside world can see: this field. Test for an
+afternoon and leave the field alone, and to every user, every install screen, and the directory
+itself, you did nothing.
+
+A stale value costs you in ways you don't see from your own dashboard:
+
+- In wp-admin, the plugin browser prints **"Untested with your version of WordPress"** next to
+  your plugin the moment a user's WordPress is newer than your claim. A user comparing you
+  against a competitor sees one warning and one clean listing.
+- Once the field falls three major releases behind, your directory page gets the banner: *"This
+  plugin hasn't been tested with the latest 3 major releases of WordPress. It may no longer be
+  maintained or supported…"* — above your own description, before a word you wrote.
+
+Both are computed from this one field. Nothing else you did during the beta window is visible to
+anyone.
+
 Your `readme.txt` header carries four fields that are promises to your users:
 
 ```
@@ -379,13 +403,55 @@ If any box is unchecked, that's fine — just don't bump the field. An accurate 
 a "may not be compatible" notice. **An inaccurate higher number costs a user a broken site**, and it
 is the difference between a plugin that's behind and a plugin that lied.
 
+**But if every box is checked, bumping is not optional — it's the last test.** An audit that ends
+with the field unchanged reports "untested" to the world, which is now false in the other
+direction.
+
+### Bump every copy — the field lives in more than one place
+
+The most common failure *after* honest testing: bumping one copy of the field and forgetting the
+others. If you develop on GitHub and ship through the wordpress.org SVN, you have at least two
+readmes — and the directory only reads one of them.
+
+| Copy | Who reads it | The trap |
+|---|---|---|
+| `readme.txt` in your Git repo | Contributors, your CI, Git-based installers | Drifts silently when you only edit SVN — and your next deploy **re-lowers the field on .org** |
+| SVN `trunk/readme.txt` | The directory — for `Stable tag` only | Bumping here alone changes nothing visible |
+| SVN `tags/<stable>/readme.txt` | **The directory reads "Tested up to" from here** | Missed by everyone who assumes trunk is "the" readme |
+| `style.css` (themes) | The theme directory | Themes carry the claim in the stylesheet header, not just a readme |
+| Compatibility badge in `README.md` | Everyone landing on your GitHub page | No tool updates it — hand-edit it in the same commit, or delete it |
+
+(`Tested up to` is **not** a plugin-file header — WordPress ignores it in your main PHP file. It
+belongs in `readme.txt` for plugins and `style.css` for themes.)
+
+So the mechanics of a bump, by how you ship:
+
+- **You deploy from GitHub** — bump `readme.txt` in Git and let the deploy carry it. For a
+  readme-only bump between releases,
+  [`10up/action-wordpress-plugin-asset-update`](https://github.com/10up/action-wordpress-plugin-asset-update)
+  exists for exactly this: it pushes readme and asset changes to trunk *and* the stable tag with
+  no version bump and no code shipped.
+- **You commit to SVN by hand** — edit `trunk/readme.txt` **and** `tags/<stable>/readme.txt`.
+  Editing a released tag's readme feels wrong and isn't: once a Stable Tag resolves,
+  ["nothing in trunk will be read any further"](https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#how-the-readme-is-parsed)
+  — the tag's readme is the only one the directory parses, so it's the only place the bump can
+  land. Then make the same edit in Git, or the copies drift.
+- **Themes** — bump `Tested up to` in `style.css`, and ship it with your next version upload;
+  the theme directory has no readme-only path.
+
 > [!TIP]
 > You can bump `Tested up to` **without shipping a code change**. If your plugin works fine on the
-> new release, update the readme, and commit. Users see a supported plugin; you ship nothing risky.
+> new release, update the readmes — all of them — and you're done. Users see a supported plugin;
+> you ship nothing risky.
 >
 > Do this in the **RC window** rather than after GA. RC is code-frozen apart from regressions, so
 > testing against RC1 is testing against what ships — and it means your users never see a
 > compatibility warning at all.
+
+> [!NOTE]
+> [The drop-in CI](ci/) warns when the `Tested up to` in your Git repo and the one wordpress.org
+> is serving stop agreeing — set your slug in `plugin-check.yml` and the drift check runs on
+> every push.
 
 ---
 
@@ -486,6 +552,8 @@ Copy this into your repo and work it each cycle.
 - [ ] Version number incremented
 - [ ] Changelog updated
 - [ ] "Tested up to" bumped — every box above checked
+- [ ] Bumped in EVERY copy: readme.txt in Git, SVN trunk AND tags/<stable> (style.css for themes)
+- [ ] Git and wordpress.org now agree — check your own directory page
 - [ ] Released before GA, ideally during the RC window
 
 ### If core broke something

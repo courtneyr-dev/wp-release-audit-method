@@ -18,6 +18,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # EDIT: your wordpress.org plugin slug (wordpress.org/plugins/<slug>/).
+  # Leave empty if the plugin isn't in the directory — the drift check skips itself.
+  DOTORG_SLUG: ''
+
 jobs:
   plugin-check:
     name: WordPress Plugin Check
@@ -65,14 +70,36 @@ jobs:
       # "Tested up to" is a claim you make to every user. This does not verify
       # that you tested — nothing can. It only catches the case where the field
       # has drifted far behind current WordPress, which is the usual failure.
+      # Comparison is major.minor only: the field should say "6.8" not "6.8.2",
+      # and wordpress.org pads the point release onto whatever you write.
       - name: Warn when "Tested up to" is far behind
         run: |
           F=$(ls readme.txt README.txt 2>/dev/null | head -1)
-          TESTED=$(grep -i '^Tested up to:' "$F" | sed 's/.*: *//' | tr -d ' \r')
+          TESTED=$(grep -i '^Tested up to:' "$F" | sed 's/.*: *//' | tr -d ' \r' | cut -d. -f1,2)
           LATEST=$(curl -s https://api.wordpress.org/core/version-check/1.7/ \
-                   | grep -oE '"current":"[0-9.]+"' | head -1 | grep -oE '[0-9.]+')
+                   | grep -oE '"current":"[0-9.]+"' | head -1 | grep -oE '[0-9.]+' | cut -d. -f1,2)
           echo "readme says: $TESTED · current WordPress: $LATEST"
           echo "TESTED=$TESTED LATEST=$LATEST" >> "$GITHUB_STEP_SUMMARY"
           if [ "$TESTED" != "$LATEST" ]; then
-            echo "::warning::Tested up to ($TESTED) is behind current WordPress ($LATEST). Bump it ONLY after actually testing — see the nine boxes in the guide."
+            echo "::warning::Tested up to ($TESTED) is behind current WordPress ($LATEST). Bump it ONLY after actually testing — then bump EVERY copy: this repo, and on wordpress.org both trunk and the stable tag. See 'Bump every copy' in the guide."
+          fi
+
+      # An author who develops on GitHub and ships through SVN has two readmes,
+      # and the directory only reads one of them. This catches the day they stop
+      # agreeing — usually because one bump was made by hand in SVN and never
+      # committed here, so the next deploy silently re-lowers the field on .org.
+      - name: Compare "Tested up to" against wordpress.org
+        if: env.DOTORG_SLUG != ''
+        run: |
+          F=$(ls readme.txt README.txt 2>/dev/null | head -1)
+          # major.minor only — .org pads "6.8" out to "6.8.2" in what it serves
+          GIT_TESTED=$(grep -i '^Tested up to:' "$F" | sed 's/.*: *//' | tr -d ' \r' | cut -d. -f1,2)
+          ORG_TESTED=$(curl -s "https://api.wordpress.org/plugins/info/1.2/?action=plugin_information&request%5Bslug%5D=${DOTORG_SLUG}" \
+                       | grep -oE '"tested":"[0-9.]+"' | head -1 | grep -oE '[0-9.]+' | cut -d. -f1,2)
+          echo "this repo says: $GIT_TESTED · wordpress.org serves: $ORG_TESTED"
+          echo "GIT_TESTED=$GIT_TESTED ORG_TESTED=$ORG_TESTED" >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$ORG_TESTED" ]; then
+            echo "::warning::Could not read 'tested' for slug '$DOTORG_SLUG' from wordpress.org — check DOTORG_SLUG."
+          elif [ "$GIT_TESTED" != "$ORG_TESTED" ]; then
+            echo "::warning::This repo claims Tested up to $GIT_TESTED but wordpress.org serves $ORG_TESTED. The copies have drifted — bump BOTH: this readme, and on SVN trunk AND tags/<stable>. See 'Bump every copy' in the guide."
           fi
