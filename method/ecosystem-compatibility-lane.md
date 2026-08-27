@@ -167,13 +167,48 @@ more than the headline:
   loads WordPress with the plugin active (`Call to a member function add_admin_message() on
   null`). An activation-only check reports PASS on that plugin. See
   [activation is not a boot](#activation-is-not-a-boot), below.
-- **The 13 skips are a blind spot, not noise.** All 13 are WooCommerce add-ons with an
-  unmet `Requires Plugins` header — the workflow installs one plugin at a time, so a plugin
-  that declares a dependency has nothing to run against. Adrian Duffell proposes
-  pre-installing declared dependencies as a follow-up. Until that lands, the workflow's
-  coverage gap is **not random**: it correlates with a market segment, and WooCommerce
-  add-ons are a large slice of the popular list. "186 passed" reads as a clean ecosystem
-  when 6.5% of the population was never booted.
+- **The 13 skips are a blind spot, not noise** — and the skip line turned out to be looser
+  than it read. The summary reported *13 skipped (WooCommerce add-ons with an unmet
+  `Requires Plugins` header)*, which sounds like one clean cause. When the fix landed
+  (below), it named **four**: `woocommerce-payments`, `google-listings-and-ads`,
+  `woocommerce-paypal-payments`, `woocommerce-gateway-stripe`. **What the other nine were
+  skipped for is not stated anywhere in the thread.** Preserved as a conflict rather than
+  resolved to a number, per [validation and proof](validation-and-proof.md).
+
+  That gap is the *skips-beside-passes* rule proving itself twice over. The first reading
+  was that "186 passed" hides 13 untested units. The second is that a **reason attached to
+  a count rather than to each skip** is itself a place error hides: one plausible cause got
+  written next to thirteen units and only fit four of them.
+
+**The dependency gap was closed on 2026-08-24, in `67005f527b`** (in the PR; still
+unmerged). A plugin declaring `Requires Plugins` now gets its dependencies installed and
+activated before it is activated itself. Three details make it more than a convenience:
+
+- The header is read with `get_plugin_data()`, not a grep — so the workflow applies the same
+  rules core does when it decides whether a plugin's requirements are met.
+- Chains are followed one level at a time, and anything already installed is left alone,
+  which is what terminates a circular declaration rather than a cycle-detector.
+- **The misattribution guard is the part this lane should steal.** After the dependencies
+  are activated and *before* the plugin under test is, the front page and login screen are
+  requested on their own, and `debug.log` is cleared at that same point. A site already
+  broken there is the dependency's fault, so the plugin under test is recorded as skipped
+  *against the dependency* instead of failing for someone else's bug. The results table
+  gains an **"Also active"** column so a failure can be read in context.
+
+That guard is the answer to the objection every co-installed matrix runs into, including
+[the cell block above](#the-co-installed-cell-block-in-the-t1-sweep): once you stop testing
+one plugin at a time, a failure has more than one candidate owner. **Baseline the
+environment after the companions are active and before the subject is**, and the ambiguity
+mostly goes away — you get "broken before we touched it" as a distinct, recordable state
+rather than a mystery failure attributed to whatever was activated last. Cost: the job
+timeout went 30 → 45 minutes, because activating something the size of WooCommerce once per
+extension is not free.
+
+A second real plugin fatal surfaced in the same re-test: **`instagram-feed` 6.12.0 fatals on
+`wp_loaded` against 7.1** on a fresh database — `wp_get_image_editor( WP_Error )`, the same
+trace as an earlier sighting but reached directly rather than through cron, and the previous
+version of the script reports it identically. Two real fatals now, from a workflow whose
+whole premise was that this class is findable at scale before release day.
 
 Also settled by the same thread, and worth knowing before anyone proposes it as the
 alternative: **Tide is effectively unsupported.** Jeff Paul, who maintains it, says it has
@@ -246,7 +281,7 @@ The division of labor, across all three:
 | Free directory plugins, singly | covered, at scale, every build | don't duplicate | incidental |
 | Premium plugins | structurally blind — no API source | manual cells, license required | covered, on any site that owns one |
 | Co-installed pairs and triples | not in scope | pair cells + the closure probe | covered by construction, on real sites |
-| Plugins gated behind `Requires Plugins` | skipped — 13 of 200 in the first full run, all WooCommerce add-ons; a proposed follow-up pre-installs dependencies | pair cells reach the common ones | covered — on a real site the dependency is already installed |
+| Plugins gated behind `Requires Plugins` | **covered as of `67005f527b`** — dependencies are installed and activated first, and four named WooCommerce extensions moved from SKIPPED to passing. Unmerged | pair cells reach the common ones | covered — on a real site the dependency is already installed |
 | Bespoke client code | not in scope | not in scope | covered |
 | Isolating *which* plugin | n/a — one at a time | the point of the cells | **not covered** — a probe says "this site fatals," not why |
 | Tracker triage | not in scope | the checkable step above | not in scope |

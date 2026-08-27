@@ -5,6 +5,39 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Changed — the #65920 dependency gap closed, and our account of the skips was wrong (2026-08-24)
+
+`67005f527b` on [PR #13198](https://github.com/WordPress/wordpress-develop/pull/13198) installs
+and activates a plugin's `Requires Plugins` dependencies before activating the plugin itself.
+Unmerged, so not yet true of core. Three consequences here.
+
+- **We repeated a claim the source didn't support.** Every page here said the run's *13 skips
+  were all WooCommerce add-ons with an unmet `Requires Plugins` header* — because the summary
+  line said so. The fix names **four**: `woocommerce-payments`, `google-listings-and-ads`,
+  `woocommerce-paypal-payments`, `woocommerce-gateway-stripe`. What the other nine were is
+  stated nowhere. Corrected in seven files, and the conflict is preserved rather than resolved
+  to a number.
+- **The skips-beside-passes rule gained a sharper edge from its own failure.** The original
+  reading was that "186 passed" hides 13 untested units. The second is that a **reason attached
+  to a count rather than to each skip** is its own hiding place: one plausible cause was written
+  beside thirteen units and fitted four. Both prompts now say attach the reason per unit; lie #3
+  in the README says the same.
+- **A misattribution guard worth stealing.** After the dependencies activate and *before* the
+  subject does, the workflow requests the front page and login screen and clears `debug.log`.
+  Broken there is the dependency's fault, so the subject is skipped *against the dependency*
+  instead of failing for someone else's bug, and an "Also active" column makes the verdict
+  auditable. That is the standing objection to every co-installed matrix — including our own
+  cell block — and it now has an answer. Added to the ecosystem lane and to the plugin-author
+  CI drop-in. Cost: the job timeout went 30 → 45 minutes.
+
+Also recorded: **`instagram-feed` 6.12.0 fatals on `wp_loaded` against 7.1** on a fresh database
+(`wp_get_image_editor( WP_Error )`), reached directly rather than through cron. Second real
+plugin fatal that workflow has surfaced. External report; not reproduced here.
+
+`drafts/trac-65920-comment.md` revised again — the paragraph arguing for the dependency
+pre-install is gone, and its evidence ceiling now reflects that the probe half is exercised.
+Still unfiled.
+
 ### Added — the preflight core probe is exercised, and it found a fixture-integrity bug (2026-08-24)
 
 `scripts/core-preflight-probe.sh` is this repo's CLI-only adaptation of Ginder's `update-core`,
@@ -37,6 +70,7 @@ This nearly shipped as a finding about WordPress packaging. It is written up in
 unfiled, with the checks to run before routing it to wp-cli. The probe now fetches and
 extracts the package itself and **requires the sideloaded tree to verify against the checksum
 API before anything boots** — a damaged sideload is an error, never a probe verdict.
+
 ### Changed — Trac #65920's workflow has been run at full scale, and it moves two claims (2026-08-23)
 
 Adam Silverstein posted results from a 200-plugin run of the proposed core plugin-compatibility
@@ -52,11 +86,12 @@ the prompts. External report — not reproduced here, and the workflow is unmerg
   rule inside both prompts' fences, and a step in the plugin-author CI drop-in. Same family as
   the preflight probe's *two boots are two denominators*, reached from a different direction in
   the same week — which is the argument for writing it as a rule rather than a note.
-- **New rule: report skips beside passes, never folded into them.** The 13 skips were every
-  WooCommerce add-on in the set, skipped for an unmet `Requires Plugins` header because the
-  workflow installs one plugin at a time. "186 passed" alone reads as a clean ecosystem when
-  6.5% was never booted, and a skip class that correlates with a vendor is a blind spot rather
-  than rounding. Added to lie #3 in the README, and to both prompts.
+- **New rule: report skips beside passes, never folded into them.** The run reported 13 skips
+  with the reason given as add-ons with an unmet `Requires Plugins` header, and the workflow
+  installed one plugin at a time. "186 passed" alone reads as a clean ecosystem when 6.5% was
+  never booted. Added to lie #3 in the README, and to both prompts. **Superseded 2026-08-24**
+  — see the entry at the top: that single reason turned out to fit four of the thirteen, which
+  extended the rule rather than retiring it.
 - **The #65920 blind spot is now two, not one.** Premium plugins (directory API can't see them)
   *and* dependency-gated plugins (one-at-a-time installation can't run them). Both are the same
   root cause — the workflow enumerates and a probe doesn't — so the division-of-labor table in

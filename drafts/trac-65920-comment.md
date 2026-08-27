@@ -6,8 +6,9 @@ paragraphs also work on [Trac #65920](https://core.trac.wordpress.org/ticket/659
 rather put the lane-division framing there — see *Trimming for Trac* at the bottom.
 
 **Rewritten 2026-08-23** against Adam Silverstein's full-scale run and Adrian Duffell's
-dependency proposal. The previous draft predated both and argued the workflow was "worth
-building" — it's built and it caught something, so that framing is gone.
+dependency proposal. **Revised again 2026-08-24**: the dependency pre-install shipped in
+`67005f527b`, so the paragraph that argued for it is gone — arguing for something already
+merged into the PR is the fastest way to look like you skimmed the thread.
 
 Review, adjust, file manually, then log it in `pilots/filed-issues-register.csv`.
 
@@ -24,13 +25,26 @@ narrow path, usually before the hooks and globals a plugin's real code assumes a
 "activated" and "boots" are genuinely different results and this workflow is currently
 measuring the useful one.
 
-**Strong +1 to pre-installing `Requires Plugins` dependencies, and please report skips
-separately from passes in the summary.** 13 of 200 is 6.5% of the run untested, and it isn't
-a random 6.5% — it's the WooCommerce add-ons, which are a large share of what the popular
-list actually is. A summary line reading "186 passed" is easy to read as a clean ecosystem.
-"186 passed / 1 failed / 13 skipped (unmet dependency)" says the true thing at the same
-length, and it keeps the skip count visible as the number that should shrink once dependency
-pre-install lands.
+**The dependency pre-install looks right, and the isolation guard is the good part.**
+Baselining the front page and login screen after the dependencies are active but before the
+plugin under test is, then recording "broken already" as a skip against the dependency
+rather than a failure of the subject, is the thing that makes multi-plugin testing readable
+at all. The "Also active" column is what lets someone else audit the verdict afterwards.
+Reading the header with `get_plugin_data()` rather than a grep seems worth keeping too, so
+the workflow's notion of "requirements met" can't drift from core's.
+
+**One loose end from the earlier numbers, offered as a question rather than a request.** The
+first full run reported *186 passed / 1 failed / 13 skipped*, with the skip reason given as
+add-ons with an unmet `Requires Plugins` header. The fix names four such plugins. If the
+other nine were skipped for some other reason, it'd be useful to have that in the output —
+one reason per skip rather than one reason beside the count. A count with a single plausible
+cause written next to it is easy to read as solved, and nine units would still be untested.
+Entirely possible this is already in the per-shard logs and only the summary flattens it.
+
+**On the 45-minute timeout question:** capping the number of dependencies pulled in trades a
+known cost for an unknown blind spot, and the blind spot is the thing this workflow exists
+to remove. If the wall-clock becomes a problem, sharding harder seems less lossy than
+capping — but you have the runner budget and I don't.
 
 **One class this can't reach even with dependencies resolved, and a cheap partial
 mitigation.** The fatal that took sites down on 7.1 day needed three parties, not two: the
@@ -57,12 +71,22 @@ complementary rather than overlapping.
 Method and lane definitions:
 <https://github.com/courtneyr-dev/wp-release-audit-method>
 
-**Evidence ceiling for the above:** the run numbers and the `eps-301-redirects` failure are
-yours, quoted back, not independently reproduced by me. The 7.1 / WP Rocket mechanism is
-from public sources (#65919, the vendor's own issue and fix PR) and I haven't reproduced
-that fatal either. The canary mu-plugin idea is untested — it's a suggestion, not a measured
-result. The preflight-probe technique is documented from Austin Ginder's CaptainCore
-implementation and my write-up of it is explicitly marked unexercised.
+**Evidence ceiling for the above:** the run numbers, the `eps-301-redirects` failure and the
+`instagram-feed` one are yours, quoted back, not independently reproduced by me. The
+7.1 / WP Rocket fatal itself I have not reproduced — WP Rocket is premium and I don't hold a
+licence.
+
+Two things I *have* run, on a disposable DDEV fixture (7.0.4 → 7.1), so you can weigh the
+canary suggestion accordingly: a plugin doing a string operation on a `$wp_filter` key under
+`strict_types`, plus a second plugin registering a closure on `deleted_post`, reproduces the
+mechanism — the pair is green and the triple fatals on `init`. That's a reconstruction of WP
+Rocket's code shape rather than WP Rocket, and it says the closure is the trigger the canary
+would supply. It does **not** show that a canary inside your workflow would catch a real
+plugin; nobody has run that.
+
+The preflight-probe technique is documented from Austin Ginder's CaptainCore implementation.
+My CLI-only adaptation of the probe half is exercised with both controls; the HTTP half and
+the apply path are not.
 
 ## Use of AI Tools
 AI assistance: Yes

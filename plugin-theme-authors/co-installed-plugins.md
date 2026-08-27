@@ -153,10 +153,12 @@ Two things that job must do, both learned from the first full run of core's own
 [plugin-compatibility workflow](../method/ecosystem-compatibility-lane.md#alignment-with-trac-65920--and-what-it-structurally-cannot-cover)
 (2026-08-23, 200 plugins):
 
-- **Install the companion's own dependencies first.** 13 of that run's 200 plugins were
-  skipped outright for an unmet `Requires Plugins` header — all WooCommerce add-ons. If your
-  companion declares a dependency and you don't install it, the cell doesn't test a
-  companion, it tests nothing and says PASS.
+- **Install the companion's own dependencies first.** Plugins in that run declaring
+  `Requires Plugins` were skipped outright — four named WooCommerce extensions among them —
+  because nothing installed what they needed. If your companion declares a dependency and you
+  don't install it, the cell doesn't test a companion, it tests nothing and says PASS. Core's
+  workflow now reads the header with `get_plugin_data()` rather than grepping, so it applies
+  the same rules core does; worth copying if you roll your own.
 
   ```bash
   # if the companion declares one, install it before activating
@@ -169,6 +171,13 @@ Two things that job must do, both learned from the first full run of core's own
   WP-CLI loaded WordPress with it active. `wp eval 'echo "booted";'` after the install step
   costs a second and is the difference between a PASS that means something and one that
   means the row exists in `active_plugins`.
+
+- **Baseline after the companion is active and before yours is.** Once more than one plugin
+  is in play, a failure has more than one candidate owner. Request the front page and the
+  login screen with only the companion active, and clear `debug.log` at that point. Broken
+  there is the companion's doing — record it as skipped *against the companion* rather than
+  failing your plugin for someone else's bug. Core's workflow added exactly this guard, plus
+  an "Also active" column so a failure can be read in context.
 
 > [!NOTE]
 > **Expect some noise.** Other plugins have their own deprecations and notices, and those will show

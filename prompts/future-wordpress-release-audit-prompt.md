@@ -213,9 +213,11 @@ review.
 - REPORT SKIPS BESIDE PASSES, NEVER FOLDED INTO THEM. Every count you report states passed / failed /
   SKIPPED / blocked separately, with the reason each skip skipped. A skip is an untested unit, and a
   skip class that correlates with anything (a vendor, a dependency header, a site mode, a licence) is
-  a blind spot to name, not rounding to absorb. Same run: 186 passed / 1 failed / 13 skipped, where
-  all 13 skips were one vendor's add-ons with an unmet `Requires Plugins` header — "186 passed" alone
-  would have read as a clean ecosystem.
+  a blind spot to name, not rounding to absorb. Attach the reason to EACH skip, never to the count:
+  the run above read 186 passed / 1 failed / 13 skipped with "one vendor's add-ons, unmet Requires
+  Plugins" written beside the 13, and when the fix landed it named four such plugins — leaving nine
+  skips whose cause nobody had recorded. "186 passed" alone would have read as a clean ecosystem;
+  "13 skipped, one cause" read as a solved problem. Both hid units.
 </method_rules>
 
 <threat_model_gate>
