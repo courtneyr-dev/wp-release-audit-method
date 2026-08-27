@@ -1,0 +1,17 @@
+{
+ "body": [
+  {
+   "id": 204,
+   "slug": "dupeco-bot",
+   "name": "DupeCo",
+   "link": "https://profiles.wordpress.org/dupeco-bot/"
+  },
+  {
+   "id": 205,
+   "slug": "dupeco-cloud-bot",
+   "name": "DupeCo Cloud",
+   "link": "https://profiles.wordpress.org/dupeco-cloud-bot/"
+  }
+ ],
+ "headers": {}
+}

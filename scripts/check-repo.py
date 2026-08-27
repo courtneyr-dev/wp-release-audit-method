@@ -474,6 +474,31 @@ def check_upstream_watch():
     report("upstream-watch controls", bad)
 
 
+# ── 12c. Hosting-test participation controls ─────────────────────────────────
+def check_hosting_participation():
+    """The participation collector's twelve scenario classes, offline.
+
+    Same standard as the other detectors, with one extra reason to be strict:
+    this collector classifies OTHER organizations' public participation, so a
+    miscalibrated verdict here is a false claim about somebody else's testing.
+    Controls cover exact-target, host-only, partial, stale, no-match, ambiguous
+    aliases, shared-login capping, failed-run separation, unmapped targets,
+    pagination, schema drift, and network failure — all against fixtures.
+    """
+    script = ROOT / "scripts" / "hosting-test-participation.py"
+    if not script.exists():
+        SKIPPED.append("hosting-participation (no script)")
+        return
+    r = subprocess.run([sys.executable, str(script), "--control"],
+                       capture_output=True, text=True)
+    bad = []
+    if r.returncode != 0:
+        bad = [l.strip() for l in (r.stdout + r.stderr).splitlines() if l.strip()]
+        if not bad:
+            bad = [f"exit {r.returncode}"]
+    report("hosting-test participation controls", bad)
+
+
 # ── 13. Environment drivers honour the driver contract ───────────────────────
 def check_driver_conformance():
     """Every driver, against the contract in scripts/env/README.md.
@@ -507,6 +532,7 @@ def main():
     check_runroot_paths()
     check_ecosystem_signals()
     check_upstream_watch()
+    check_hosting_participation()
     check_driver_conformance()
 
     print()

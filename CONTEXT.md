@@ -82,6 +82,19 @@ _Avoid_: latest, the beta
 A canonical body of imported test content (theme-test-data, a11y-theme-unit-test).
 _Avoid_: demo content, sample data
 
+**Fleet variant**:
+A materially distinct hosting product, tier, or configuration a provider offers (shared
+basic, managed WordPress, VPS…). Never the WordPress build under test — that is the
+target. The two axes stay separate in every table.
+_Avoid_: environment (ambiguous with the driver's), plan (billing term)
+
+**Participation status**:
+The classification of a host's public distributed-test evidence for one fleet variant
+(`VERIFIED_TARGET_VARIANT` … `NOT_APPLICABLE`), always separate from the run's test
+outcome (`PASSED`/`FAILED`/`ERRORED`/`NO_RESULT`/`INCONCLUSIVE`). Participating is not
+passing; the vocabulary lives in `scripts/hosting-test-participation.py`.
+_Avoid_: coverage (implies more than the evidence supports), tested (conflates the axes)
+
 **Ledger**:
 An append-only dated record that gives state provenance — what changed, when, from what to
 what.

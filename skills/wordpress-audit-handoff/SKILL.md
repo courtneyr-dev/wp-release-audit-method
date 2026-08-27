@@ -122,7 +122,40 @@ gap, not a pass.
 > which makes the remedy a known-good config rollout rather than new engineering. Say that
 > explicitly; it changes how the work gets prioritized.
 
-### 4. Findings, in three tiers
+### 4. Distributed core test participation
+
+Whether this fleet's infrastructure publicly runs WordPress core's PHPUnit suite —
+[the dashboard](https://make.wordpress.org/hosting/test-results/) every SRE can check and
+most briefs never cite. Generate the table with the collector
+(`python3 scripts/hosting-test-participation.py --host … --variants … --revision … --format markdown`;
+method and classifications: [the participation lane](../../fleet-operators/README.md#9-distributed-core-test-participation--public-evidence-scoped-honestly)),
+then paste it with its retrieval date and replay command:
+
+| Host | Fleet variant | Reporter | Target evidence | Freshness | Outcome | Participation | Source | Gap / next action |
+|---|---|---|---|---|---|---|---|---|
+| <host> | <tier> | <account, linked> | <rN or none> | <last observed rN> | <PASSED/FAILED/ERRORED/NO_RESULT/INCONCLUSIVE> | <classification> | <dashboard link> | <what closes the gap> |
+
+For a host employee, follow it with the denominator — variants declared / exact-target /
+current-only / host-only / no public match / blocked-or-ambiguous. For a hosted-server
+auditor, scope the row to the tested tier and say the rest of the host's fleet is outside
+this document's evidence.
+
+Reading rules, stated in the brief so the recipient inherits them: participation is not
+passing (outcome is its own column); a passing core PHPUnit run is not release readiness —
+it substitutes for none of the probe, ladder, compat, browser, or monitoring gates;
+`NO_PUBLIC_MATCH` is absence of public evidence at the retrieval time, not proof of
+nonparticipation; and one account's results cover the infrastructure that ran them, not
+every tier the host sells. **Uncovered declared variants go into the fleet-variance
+matrix above as untested rows, and — where the release warrants it — into the pre-GA
+gates below.** Missing public evidence is never an automatic `HOLD`: the author decides,
+per variant, whether it's an accepted limitation (say so in the brief), a numbered gate
+(with owner and date), or a reason to hold — and states what would move the posture,
+e.g. "moves to READY when shared-tier evidence exists at the target revision, or the
+tier's variance rows are accepted as a limitation." A stale or absent host gets
+[the participation request](../../templates/participation-request-messages.md), sent by
+the operator.
+
+### 5. Findings, in three tiers
 
 Label every finding. The tiers exist so nothing gets mistaken for cleared:
 
@@ -140,7 +173,7 @@ For each CONFIRMED finding, add the two lines SREs need and testers usually omit
 - **Is this a WordPress bug or our config?** Route accordingly. A core bug goes upstream to Trac and
   you carry a mitigation; a config gap is yours to fix and there's no upstream to wait for.
 
-### 5. Where to continue testing
+### 6. Where to continue testing
 
 The handoff is not the end of testing — it's the point where testing moves to people with a fleet.
 Tell them where to look next, split by discipline.
@@ -184,7 +217,7 @@ Point them at:
 - **Route security findings privately.** Never a public ticket, never this document. See the
   scrubbing rule at the bottom.
 
-### 6. Pre-GA gates
+### 7. Pre-GA gates
 
 Numbered, each with an owner and a date, each tied to the release calendar. Typical gate classes:
 
@@ -198,7 +231,7 @@ Numbered, each with an owner and a date, each tied to the release calendar. Typi
 - **Support-KB articles** for behavior that changes visibly for customers, especially where the
   change is browser-dependent and support will see it as "works for me."
 
-### 7. Monitoring, rollback, support
+### 8. Monitoring, rollback, support
 
 - What alerts change meaning after this release, and what to re-baseline before rollout.
 - What rollback looks like — and be honest when there isn't one. There is no supported downgrade
@@ -251,5 +284,6 @@ claims. Your test box may satisfy gates that most of the fleet does not.
 
 The recipient can act without asking you a follow-up question: Mode A has a fix per finding and its
 authoritative source; Mode B has a posture with movement conditions, a blast radius per finding, a
-tier-by-tier variance picture that marks untested tiers as gaps, numbered gates with owners and
-dates, and a named next step for performance and security testing.
+tier-by-tier variance picture that marks untested tiers as gaps, a distributed-test participation
+table with a per-variant classification (or an exact blocker) and its retrieval date, numbered
+gates with owners and dates, and a named next step for performance and security testing.

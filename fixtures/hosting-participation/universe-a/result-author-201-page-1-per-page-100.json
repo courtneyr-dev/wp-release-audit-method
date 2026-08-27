@@ -1,0 +1,49 @@
+{
+ "body": [
+  {
+   "id": 9001,
+   "parent": 190002,
+   "date": "2026-08-27T10:00:00",
+   "slug": "hostco-shared-bot-r90002-9001",
+   "title": {
+    "rendered": "hostco-shared-bot &#8211; r90002"
+   },
+   "link": "https://make.wordpress.org/hosting/test-results/r90002/hostco-shared-bot-r90002-9001/",
+   "php-version": [
+    290
+   ],
+   "db-version": [
+    468
+   ],
+   "report-result": [
+    288
+   ],
+   "class_list": [
+    "author-hostco-shared-bot"
+   ]
+  },
+  {
+   "id": 9002,
+   "parent": 190001,
+   "date": "2026-08-26T10:00:00",
+   "slug": "hostco-shared-bot-r90001-9002",
+   "title": {
+    "rendered": "hostco-shared-bot &#8211; r90001"
+   },
+   "link": "https://make.wordpress.org/hosting/test-results/r90001/hostco-shared-bot-r90001-9002/",
+   "php-version": [
+    290
+   ],
+   "db-version": [
+    468
+   ],
+   "report-result": [
+    285
+   ],
+   "class_list": [
+    "author-hostco-shared-bot"
+   ]
+  }
+ ],
+ "headers": {}
+}

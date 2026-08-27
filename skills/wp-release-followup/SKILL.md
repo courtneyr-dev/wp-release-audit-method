@@ -1,6 +1,6 @@
 ---
 name: wp-release-followup
-description: Follow up after a WordPress release party — recheck filed tickets, retest what was resolved, run the full Phase 2 chain audit, and draft (never submit) new issues, Trac tickets, or security reports. Trigger on "after the release party", "check my filed tickets", "what got fixed since last release", "run the full audit", "wp release followup", or "log the new issues".
+description: Follow up after a WordPress release party — recheck filed tickets, retest what was resolved, run the full Phase 2 chain audit, check the fleet's distributed hosting-test participation, and draft (never submit) new issues, Trac tickets, or security reports. Trigger on "after the release party", "check my filed tickets", "what got fixed since last release", "run the full audit", "wp release followup", "check host test participation", or "log the new issues".
 ---
 
 # wp-release-followup
@@ -93,6 +93,26 @@ And the sixth this loop added: **refuted claims are assets.** Which is most of w
 
 ---
 
+## 0. Establish the host context
+
+One question, asked once, scoping every hosting-related claim downstream. Which is the
+operator?
+
+| Context | Meaning | What to ask for |
+|---|---|---|
+| `host_employee` | Works for (or is authorized by) a hosting company | The **canonical fleet-variant inventory** — every materially distinct product/tier — and any known reporter-account aliases |
+| `hosted_server_auditor` | Customer, agency, or consultant testing a server a web host runs | The provider's name, and the tier/product actually being tested, **if known** |
+| `not_hosted` | Self-hosted, bare metal, own infrastructure | Nothing — participation checks read `NOT_APPLICABLE` |
+| `unknown` | Can't or won't say | Proceed; hosting-scoped sections read `BLOCKED(host-context)` rather than guessed |
+
+Ask only for what can't be established safely: provider name, product/tier, whether the
+operator represents the host, and (employees only) the variant inventory and aliases. A
+**fleet variant** is a hosting product or tier — never the WordPress build under test;
+keep the two axes separate in every table. Never infer that an auditor can see the host's
+full fleet, and never treat a domain, reverse-DNS result, IP owner, control-panel brand,
+or similar-looking account name as confirmed host identity — those are candidate signals
+the operator must confirm. Method: [the participation lane](../../fleet-operators/README.md#9-distributed-core-test-participation--public-evidence-scoped-honestly).
+
 ## 1. Did previously filed issues get resolved?
 
 Read `pilots/filed-issues-register.csv` (create it if missing — columns: `filed_id,date_filed,system,url,title,our_verdict_at_filing,status_now,retested_build,retest_verdict,notes`). Seed it from the vault's existing drafts and submissions under `WordPress 7.1/testing/`.
@@ -135,7 +155,27 @@ PHP is an axis, not a chain — multiply only the seven chains listed in `pilots
 
 Sweep the remaining tiers too: sweep-matrix T2/T3 and upgrade-ladder T2/T3, including the WP-CLI-updater lane.
 
-**Import fleet probe results if any exist.** The ecosystem cell block can only build cells for plugins you can obtain — premium plugins read `BLOCKED(premium-license)`, and that block is where the 7.1 outage lived. A fleet operator running a [preflight core probe](../../method/preflight-core-probe.md) in `--probe-only` mode across their sites against an RC produces exactly the evidence those cells can't: real fatals, on real co-installed plugin sets, with a denominator. Ask for it, in the [ecosystem-signals](../../method/ecosystem-signals.md) sweep, before concluding that a silent ecosystem lane means a clean one. Treat an imported result as an external report — it goes to step 2's retest discipline and gets a `CONFIRMED`/`INCONCLUSIVE` verdict here, not a free pass — and route what survives to the plugin's own tracker and [Make/Test](https://make.wordpress.org/test/) in step 4, not only to Trac.
+**Import fleet probe results if any exist.** The ecosystem cell block can only build cells for plugins you can obtain — premium plugins read `BLOCKED(premium-license)`, and that block is where the 7.1 outage lived. A fleet operator running a [preflight core probe](../../method/preflight-core-probe.md) in `--probe-only` mode across their sites against an RC produces exactly the evidence those cells can't: real fatals, on real co-installed plugin sets, with a denominator. Ask for it, in the [ecosystem-signals](../../method/ecosystem-signals.md) sweep, before concluding that a silent ecosystem lane means a clean one. Treat an imported result as an external report — it goes to step 2's retest discipline and gets a `CONFIRMED`/`INCONCLUSIVE` verdict here, not a free pass — and route what survives to the plugin's own tracker and [Make/Test](https://make.wordpress.org/test/) in step 4, not only to Trac. When your own test cleared a plugin or theme someone else maintains and their "Tested up to" still trails the release, hand the operator [the tested-up-to request message](../../templates/participation-request-messages.md) to send.
+
+**Run the hosting-test participation check before calling the fleet or ecosystem lane clean** — for `host_employee` and `hosted_server_auditor` contexts from §0 (skip as `NOT_APPLICABLE` for `not_hosted`):
+
+```bash
+python3 scripts/hosting-test-participation.py --host "<PROVIDER>" \
+  --variants <fleet-variants.csv or --variant/--reporter for one tier> \
+  --revision <develop-SVN revision of the target, if mapped> \
+  --format markdown --evidence "$WP_AUDIT_ROOT/participation"
+```
+
+The output is external evidence under the same discipline as the probe imports: a
+`FAILED`/`ERRORED` outcome on a verified reporter goes to step 2's retest scope, and a
+passing run is a participation fact, **never** a substitute for the preflight probe, the
+upgrade ladder, the plugin-compat sweep, browser checks, or production monitoring.
+Variants reading `NO_PUBLIC_MATCH`, `STALE_REGISTRATION`, `AMBIGUOUS_MATCH`, or `BLOCKED`
+go into the run's blockers/evidence-gaps list with the exact replay command the collector
+prints — and `NO_PUBLIC_MATCH` is an absence of public evidence, not proof the host
+doesn't test. Unattributable-but-current hosts read `VERIFIED_CURRENT_HOST_ONLY`; the fix
+is per-variant reporter accounts, and [the participation request message](../../templates/participation-request-messages.md)
+is the ask. Classifications, freshness, and ceilings: [the participation lane](../../fleet-operators/README.md#9-distributed-core-test-participation--public-evidence-scoped-honestly).
 
 ## 4. Draft new issues, tickets, and security reports
 
@@ -170,4 +210,4 @@ This is the deep end of the same loop the lighter [retro](../../method/retro.md)
 
 ## Done when
 
-Every register row has a current status and a retest verdict or exact blocker; every selected chain has an executed verdict or blocker; drafts exist for each confirmed defect with sensitive material separated; the learning registers are updated; and the next build has an exact rerun recipe.
+Every register row has a current status and a retest verdict or exact blocker; every selected chain has an executed verdict or blocker; the host context is recorded and, when hosted, every declared fleet variant has a participation classification or an exact blocker; drafts exist for each confirmed defect with sensitive material separated; the learning registers are updated; and the next build has an exact rerun recipe.

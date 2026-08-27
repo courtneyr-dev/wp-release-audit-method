@@ -90,6 +90,25 @@ Use the repository that owns the relevant artifact. WP-CLI is maintained in the 
 
 Scope these to the feature being audited. Plugin/theme directory material does not prove Core behavior, and a Meta ticket does not prove a change shipped in a Core package.
 
+### Distributed hosting test results
+
+- Host Test Results dashboard: `https://make.wordpress.org/hosting/test-results/`
+- Getting started (how a host joins): `https://make.wordpress.org/hosting/test-results-getting-started/`
+- Reporter (the dashboard's plugin): `https://github.com/WordPress/phpunit-test-reporter`
+- Runner (what hosts execute): `https://github.com/WordPress/phpunit-test-runner`
+
+Official evidence that a **reporter account** ran core's PHPUnit suite at a **develop-SVN
+revision** on **some infrastructure** (PHP and database recorded), with a
+passed/failed/errored status. It proves participation and that run's outcome — never
+plugin compatibility, upgrade safety, fleet-wide coverage, or attribution to a specific
+hosting tier (the public data carries no environment label). The dashboard's own
+freshness split is the 25 most-recent revisions. Read it with
+`scripts/hosting-test-participation.py` (read-only, evidence-preserving); classifications
+and reasoning-error guards live in
+[the participation lane](../fleet-operators/README.md#9-distributed-core-test-participation--public-evidence-scoped-honestly).
+Both repositories are watched for drift in [`upstream-watch.csv`](upstream-watch.csv)
+because the collector is coupled to the reporter's public data model.
+
 ## Tier 2: official release, team, documentation, and education evidence
 
 ### Make WordPress team register

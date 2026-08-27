@@ -1,0 +1,4 @@
+variant_id,description,reporter_login,mapping_confirmed,notes
+shared-basic,"Shared hosting, basic tier",hostco-shared-bot,yes,host-declared
+managed-wp,Managed WordPress tier,hostco-managed-bot,yes,host-declared
+vps,Self-managed VPS product,,,no reporter declared

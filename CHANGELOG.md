@@ -5,6 +5,51 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — distributed hosting-test participation as fleet evidence (2026-08-27)
+
+The public dashboard at make.wordpress.org/hosting/test-results/ — hosts running core's
+PHPUnit suite on their own infrastructure and publishing per-revision results — entered
+the method as a read-only evidence lane, with the classification honesty the rest of the
+repo demands.
+
+- **One collector, REST-only.** `scripts/hosting-test-participation.py` reads the core
+  `wp/v2` surface the live deployment exposes (verified live 2026-08-27: result posts,
+  revision containers `rNNNNN`, the `php-version`/`db-version`/`report-result`
+  taxonomies, public user identities; the plugin's own namespace is POST-only and never
+  touched). No HTML parsing, no credentials, evidence preserved with URL + sha256 +
+  retrieval time + replay command. Fails closed on schema drift, exit 3.
+- **Two operator positions, two ceilings.** A host employee brings the canonical
+  fleet-variant inventory and gets a denominator (declared / exact-target / current-only /
+  host-only / no-match / blocked-ambiguous). A customer or consultant auditing one hosted
+  server gets conclusions scoped to their tier plus host-level evidence, stated as such.
+- **The vocabulary refuses the classic lies.** Participation
+  (`VERIFIED_TARGET_VARIANT`…`NOT_APPLICABLE`) is separate from outcome
+  (`PASSED`…`INCONCLUSIVE`); a six-level evidence hierarchy is recorded per observation
+  and never silently promoted. The load-bearing upstream fact: **public results carry no
+  environment label** (optional in the reporter at `fa1fa7b0`, never sent by the stock
+  runner at `64e9da98`, unexposed via REST) — so one account mapped to several variants
+  caps at `VERIFIED_CURRENT_HOST_ONLY`, and per-variant reporter accounts are the ask.
+  Freshness mirrors the dashboard's own 25-most-recent-revisions split. Unmapped targets
+  read `INCONCLUSIVE(target-mapping)` — reporters test develop-SVN trunk revisions, which
+  are adjacent to, not identical with, a release package.
+- **Wired where decisions happen.** `wp-release-followup` gains §0 (host context:
+  employee / hosted auditor / not hosted / unknown) and a §3 gate — the check runs before
+  the fleet or ecosystem lane is called clean, imports as external evidence under the
+  retest discipline, and never substitutes for the probe, ladder, compat sweep, browser
+  checks, or monitoring. Mode B gains §4, a participation table with per-variant
+  classifications; uncovered variants land in the variance matrix and (author's call,
+  never automatic) the pre-GA gates. The fleet brief template gains §3. Twelve offline
+  control scenarios run in `check-repo.py`; the live surface was exercised read-only
+  (godaddybot at r63366: five PHP rows, all passed, honestly capped at host-only).
+- **Outreach stays draft-never-submit.** `templates/participation-request-messages.md`:
+  a host-participation request (with the per-product-account ask) and a
+  plugin/theme "Tested up to" bump request for maintainers of code you tested but don't
+  own — both sent by the operator, never by tooling.
+- **Sources and licenses.** Both upstream repos entered `official-sources.md` and the
+  upstream-watch register (reporter `fa1fa7b0`, **GPL-3.0 — one-way incompatible with
+  this repo's GPL-2.0, so interoperability only, nothing adapted**; runner `64e9da98`,
+  GPL-2.0-or-later). CONTEXT.md defines **fleet variant** and **participation status**.
+
 ### Changed — the "Tested up to" bump is now the deliverable, and it names every copy (2026-08-27)
 
 The plugin-author guide treated the bump as a caution — nine boxes about when *not* to claim it —
