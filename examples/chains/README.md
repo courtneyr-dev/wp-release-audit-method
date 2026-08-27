@@ -11,7 +11,8 @@ The `C-` numbers come from the chain-seed corpus in
 [the chain-generation prompt](../../prompts/codex-feature-chain-test-generation-prompt.md)
 (C-01 through C-10, all 7.1-specific), not from this directory — see
 [registers.md](../../method/registers.md). Three seeds were built into worked examples
-(C-02, C-03, C-04, plus the revised chain X-PERS-03r). **C-01** (media validation order ×
+([C-02](C-02/), [C-03](C-03/), [C-04](C-04/), plus the revised chain
+[X-PERS-03r](X-PERS-03r/)); [report.md](report.md) is the chain-run report they fed. **C-01** (media validation order ×
 site mode × transport) was never built: its confirmed fragment (FM-04, the REST url-import
 downloading the full file before the multisite size rejection) is blocked on owner approval
 to comment on the already-reopened Trac #65517, and the full chain needs the multisite

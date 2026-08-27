@@ -86,13 +86,14 @@ You are **not** expected to read WordPress core code, write PHP, or know what a 
 | | |
 |---|---|
 | **Plugin/theme authors** | [Testing your own plugin or theme](plugin-theme-authors/) — including the ["Tested up to" bump](plugin-theme-authors/#the-tested-up-to-bump) |
+| **Fleet operators & hosts** | [Deciding whether a release ships to a fleet](fleet-operators/) — inventory, probe, runbook, and [whether your host publicly tests WordPress](fleet-operators/README.md#9-distributed-core-test-participation--public-evidence-scoped-honestly) · [the fill-in brief](templates/fleet-release-readiness-brief.md) · [the SRE version](skills/wordpress-audit-handoff/SKILL.md#mode-b--sre-fleet-brief) |
 | **Get going** | [Before you start](#before-you-start) · [Check the build](#step-1-check-the-build-60-seconds) · [Get a test site](#step-2-get-a-test-site) · [The debugging toolkit](#the-debugging-toolkit-works-with-any-option) · [Run the suites](#step-3-run-the-test-suites) · [Preflight](#step-4-check-what-your-setup-can-detect) |
 | **The main event** | [A release party in three acts](#a-release-party-in-three-acts) |
 | **Accessibility** | [Baked in throughout](accessibility/) — automated, keyboard, screen reader, and the calibration rule |
 | **Internationalization** | [i18n and RTL](i18n/) — ~200 locales, and the class of bug English-only testing cannot see |
 | **Get it right** | [Five ways your test can lie to you](#five-ways-your-test-can-lie-to-you) · [How to report](#how-to-report-what-you-find) · [Official sources](#where-official-information-lives) |
 | **Tooling** | [AI assistants](#using-ai-assistants) · [Tools and integrations](#tools-and-integrations) |
-| **Reference** | [What's in here](#whats-in-this-repository) · [Safety](#safety-and-scope) · [Known gaps](#known-gaps) |
+| **Reference** | [What's in here](#whats-in-this-repository) · [The glossary](CONTEXT.md) — every term, used exactly · [Changelog](CHANGELOG.md) · [Safety](#safety-and-scope) · [Known gaps](#known-gaps) |
 
 ---
 
@@ -1232,8 +1233,10 @@ lands.
 ├── skills/           the three acts, as AI assistant skills (optional)
 ├── playbooks/        longer runbooks: security, performance, content, release day
 ├── examples/         four worked investigations, with evidence and cleanup
+├── templates/        fill-in artifacts: the fleet brief, outreach messages, run retros
 ├── prompts/          prompts for AI-assisted testing
-└── method/           the reasoning behind all of it
+├── method/           the reasoning behind all of it
+└── CHANGELOG.md      what changed in the method and toolkit, dated
 ```
 
 ### If you want to go further
@@ -1284,6 +1287,13 @@ Stated plainly so you don't mistake them for tested ground:
 - The `cli` driver has not been exercised over SSH against a `wp @alias`. Local paths are
   tested; a remote target is written to fail safely (it drops `hostfs` and `shell` rather
   than guessing) but that path is unproven.
+- The [hosting-test participation lane](fleet-operators/README.md#9-distributed-core-test-participation--public-evidence-scoped-honestly)
+  cannot map a release *package* (an RC zip) to a reporter revision on its own — reporters
+  test develop-SVN trunk revisions, so package-level target evidence is operator-supplied or
+  honestly `INCONCLUSIVE(target-mapping)`. And public results carry no environment label, so
+  per-tier attribution exists only where a host runs per-tier reporter accounts; everything
+  else caps at host-level evidence. Its twelve control scenarios are fixture-exercised; the
+  live surface has been read once (2026-08-27), not across releases.
 
 ### Wanted: someone with Lando
 

@@ -1,0 +1,3 @@
+variant_id,description,reporter_login,mapping_confirmed,notes
+shared-basic,"Shared hosting, basic tier",hostco-shared-bot,yes,one account for two tiers
+shared-performance,"Shared hosting, performance tier",hostco-shared-bot,yes,one account for two tiers

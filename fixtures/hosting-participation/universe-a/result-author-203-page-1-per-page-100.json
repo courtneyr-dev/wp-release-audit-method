@@ -1,0 +1,27 @@
+{
+ "body": [
+  {
+   "id": 9020,
+   "parent": 189950,
+   "date": "2026-06-01T10:00:00",
+   "slug": "staleco-bot-r89950-9020",
+   "title": {
+    "rendered": "staleco-bot &#8211; r89950"
+   },
+   "link": "https://make.wordpress.org/hosting/test-results/r89950/staleco-bot-r89950-9020/",
+   "php-version": [
+    292
+   ],
+   "db-version": [
+    468
+   ],
+   "report-result": [
+    285
+   ],
+   "class_list": [
+    "author-staleco-bot"
+   ]
+  }
+ ],
+ "headers": {}
+}

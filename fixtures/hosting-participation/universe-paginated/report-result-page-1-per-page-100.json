@@ -1,0 +1,20 @@
+{
+ "body": [
+  {
+   "id": 285,
+   "slug": "passed",
+   "name": "Passed"
+  },
+  {
+   "id": 288,
+   "slug": "failed",
+   "name": "Failed"
+  },
+  {
+   "id": 308,
+   "slug": "errored",
+   "name": "Errored"
+  }
+ ],
+ "headers": {}
+}

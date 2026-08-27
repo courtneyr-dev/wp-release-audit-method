@@ -221,10 +221,106 @@ change anything I care about," because it deliberately applies nothing and asser
 `db_version` held. Data-forward promotion from a staging clone remains unsolved here. What
 changed is that the most expensive question no longer requires the clone.
 
+## 9. Distributed core test participation — public evidence, scoped honestly
+
+WordPress runs a program most fleet decisions never consult: hosts execute core's own
+PHPUnit suite on their real infrastructure ([WordPress/phpunit-test-runner](https://github.com/WordPress/phpunit-test-runner))
+and publish results per SVN revision ([WordPress/phpunit-test-reporter](https://github.com/WordPress/phpunit-test-reporter))
+at [Host Test Results](https://make.wordpress.org/hosting/test-results/). For the person
+choosing a host — or the host's own SRE writing a readiness brief — that page is public,
+current, per-revision evidence of whether the infrastructure under your sites is exercised
+against WordPress before release day. [Getting Started](https://make.wordpress.org/hosting/test-results-getting-started/)
+is how a host joins.
+
+This repo reads that evidence with one collector:
+
+```bash
+# a customer or consultant auditing the one tier they're on
+python3 scripts/hosting-test-participation.py --host "Example Hosting" \
+  --reporter examplebot --revision 63366 --format markdown --evidence "$WP_AUDIT_ROOT/participation"
+
+# a host employee, with the canonical fleet-variant inventory
+python3 scripts/hosting-test-participation.py --host "Example Hosting" \
+  --variants fleet-variants.csv --revision 63366 --format markdown
+
+python3 scripts/hosting-test-participation.py --find "example"   # candidate discovery only
+python3 scripts/hosting-test-participation.py --control          # offline self-test
+```
+
+It is read-only by construction: it speaks to the core `wp/v2` REST surface the live
+deployment already exposes publicly (verified 2026-08-27), never the authenticated
+submission endpoint, and it preserves every raw response with URL, retrieval time, and
+content hash in the evidence directory, with an exact replay command.
+
+**The two operator positions get different ceilings, on purpose.**
+
+- **A host employee** supplies the canonical fleet-variant inventory — every materially
+  distinct product or tier (shared basic, managed WordPress, VPS…) — and the collector
+  shows the denominator: variants declared, variants with exact-target evidence, with
+  current-but-not-target evidence, with host-only evidence, with no public match, and
+  blocked or ambiguous. A fleet variant is a hosting product, **not** the WordPress build
+  under test; the two axes stay separate everywhere.
+- **A customer, agency, or consultant** auditing one hosted server scopes the conclusion
+  to the tier they are actually on plus host-level public evidence. The rest of the host's
+  fleet is outside their evidence, and the output says so rather than letting a
+  single-tier result imply fleet coverage.
+
+**What the public data can and cannot attribute.** A result carries the reporter account,
+the SVN revision (the parent post `rNNNNN`, linked to the changeset), PHP version,
+database string, and a Passed/Failed/Errored status. It carries **no environment label**:
+the reporter accepts an optional `env['label']` (`src/class-restapi.php:223` at
+`fa1fa7b0`), the stock runner never sends one (`get_env_details()` in `functions.php`
+produces no `label` key at `64e9da98`), and the label meta is not exposed on the
+structured read surface even when present. So the only defensible public mapping from
+results to a hosting product is **a separate reporter account per product** — which is
+also the ask in [the participation request message](../templates/participation-request-messages.md).
+One account mapped to several declared variants caps at `VERIFIED_CURRENT_HOST_ONLY`;
+the collector refuses to promote it.
+
+**Freshness is the dashboard's own rule.** A reporter is active iff it has a report on
+one of the **25 most-recent revisions** (`src/class-display.php:227` at `fa1fa7b0`); the
+public page renders everyone else under *"Registered, but no reports in >25 Revisions."*
+The collector's `--window` defaults to the same 25 and measures the same way.
+
+**Target mapping is where honest audits go to die, so it's explicit.** Reporters test
+develop-SVN revisions — overwhelmingly trunk. A release package (say, 7.2-RC1) is built
+from a branch; a same-week trunk revision is *adjacent* evidence, not the RC. The
+collector takes the target as `--revision N` and matches exactly; given only a version
+name, it records `INCONCLUSIVE(target-mapping)` instead of inventing coverage. Each
+revision post's title is the commit message, so you can verify what a revision actually
+was before treating a numeric match as meaningful.
+
+**Six ways to fool yourself with this page**, all refused by the classification model:
+
+1. **Absence of evidence** — `NO_PUBLIC_MATCH` means no defensible public match at
+   retrieval time, not that the host doesn't test privately or report under another name.
+2. **Coverage generalization** — one reporter result covers the infrastructure that ran
+   it, not every tier the host sells.
+3. **Outcome conflation** — participating is not passing. Participation status and test
+   outcome (`PASSED`/`FAILED`/`ERRORED`/`NO_RESULT`/`INCONCLUSIVE`) are separate fields,
+   and a verified reporter with a failing run is a *finding*, not a checkmark.
+4. **Test-scope conflation** — a passing core PHPUnit run proves core's suite passed on
+   that stack. It is not plugin compatibility, not upgrade safety, not browser behavior,
+   and not a substitute for the [preflight probe](#4-probe-before-you-apply), the upgrade
+   ladder, or monitoring.
+5. **Identity confirmation bias** — a bot named like your host is a *candidate*
+   (`--find` lists them as `AMBIGUOUS_MATCH`), never an automatic match. Domains, reverse
+   DNS, and control-panel branding suggest; only the operator's confirmation attributes.
+6. **Stale-evidence bias** — historical participation (`STALE_REGISTRATION`) establishes
+   that the host once ran the suite, nothing about the release at hand.
+
+If the answer is "not participating" or "stale," that is itself an actionable output:
+[`templates/participation-request-messages.md`](../templates/participation-request-messages.md)
+carries the message to send. Upstream facts above are pinned to
+phpunit-test-reporter `fa1fa7b0` (GPL-3.0 — read as an external system; nothing adapted
+into this GPL-2.0 repo) and phpunit-test-runner `64e9da98` (GPL-2.0-or-later), both
+watched for drift in [`sources/upstream-watch.csv`](../sources/upstream-watch.csv).
+
 ## Related
 
 [Preflight core probe](../method/preflight-core-probe.md) ·
 [Fleet release-readiness brief template](../templates/fleet-release-readiness-brief.md) ·
+[Participation request messages](../templates/participation-request-messages.md) ·
 [`wordpress-audit-handoff` Mode B](../skills/wordpress-audit-handoff/SKILL.md#mode-b--sre-fleet-brief) ·
 [Ecosystem compatibility lane](../method/ecosystem-compatibility-lane.md) ·
 [Rollback](../method/rollback.md) ·

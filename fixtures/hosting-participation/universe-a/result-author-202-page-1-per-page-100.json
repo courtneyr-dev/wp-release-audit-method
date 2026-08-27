@@ -1,0 +1,49 @@
+{
+ "body": [
+  {
+   "id": 9010,
+   "parent": 190000,
+   "date": "2026-08-25T10:00:00",
+   "slug": "hostco-managed-bot-r90000-9010",
+   "title": {
+    "rendered": "hostco-managed-bot &#8211; r90000"
+   },
+   "link": "https://make.wordpress.org/hosting/test-results/r90000/hostco-managed-bot-r90000-9010/",
+   "php-version": [
+    291
+   ],
+   "db-version": [
+    469
+   ],
+   "report-result": [
+    285
+   ],
+   "class_list": [
+    "author-hostco-managed-bot"
+   ]
+  },
+  {
+   "id": 9011,
+   "parent": 189999,
+   "date": "2026-08-24T10:00:00",
+   "slug": "hostco-managed-bot-r89999-9011",
+   "title": {
+    "rendered": "hostco-managed-bot &#8211; r89999"
+   },
+   "link": "https://make.wordpress.org/hosting/test-results/r89999/hostco-managed-bot-r89999-9011/",
+   "php-version": [
+    291
+   ],
+   "db-version": [
+    469
+   ],
+   "report-result": [
+    285
+   ],
+   "class_list": [
+    "author-hostco-managed-bot"
+   ]
+  }
+ ],
+ "headers": {}
+}
