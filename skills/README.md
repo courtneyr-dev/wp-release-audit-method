@@ -50,8 +50,10 @@ Trigger: *"release party"*, *"run the release day sweep"*, *"test the RC and pos
 
 ### [`wp-release-followup`](wp-release-followup/) — after
 
-Depth. Four jobs in order, each gating the next: check whether previously filed issues got
-resolved, retest anything newly fixed, run the full chain audit, and **draft** new tickets.
+Depth. Establishes the host context (employee, hosted auditor, not hosted), then four jobs
+in order, each gating the next: check whether previously filed issues got resolved, retest
+anything newly fixed, run the full chain audit — including the distributed hosting-test
+participation check before the fleet lane is called clean — and **draft** new tickets.
 
 It drafts and never submits. Nothing gets filed without your explicit approval, and all
 external access stays read-only.

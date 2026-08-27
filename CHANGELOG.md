@@ -5,6 +5,30 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Changed — a documentation audit made the invisible lanes findable (2026-08-27)
+
+A repository-wide documentation pass (88 pages inventoried, classified against the repo's
+own type system, gap-checked per audience) found the structure sound and the navigation
+lying by omission. Fixed in place, nothing moved or deleted:
+
+- **Fleet operators, hosts, and SREs had no row in the README contents table** — the lane
+  serving four of this repo's eight audiences was reachable only through a code-block
+  directory tree. It has a row now, pointing at the lane, the participation check, the
+  fill-in brief, and Mode B.
+- **`CONTEXT.md` and `CHANGELOG.md` were orphans** — zero inbound links anywhere. The
+  glossary that declares "these terms are used exactly, everywhere" was itself unfindable.
+  Both are linked from the README reference row; CONTRIBUTING now points writers at the
+  glossary before their first PR.
+- The chains index named its four worked examples without linking them, and the chain-run
+  report had no inbound link; `templates/` and the changelog were missing from the
+  repository tree; the followup skill's "four jobs" line predated §0.
+- Known gaps gained the participation lane's honest limits: package→revision target mapping
+  is operator-supplied, per-tier attribution needs per-tier reporter accounts, and the
+  collector's controls are fixture-exercised with one live read (2026-08-27).
+- Claims spot-checked against reality: the CI drop-in install URLs serve the merged
+  content (200, `DOTORG_SLUG` present), and every command quoted in the new lane docs was
+  executed this session.
+
 ### Added — distributed hosting-test participation as fleet evidence (2026-08-27)
 
 The public dashboard at make.wordpress.org/hosting/test-results/ — hosts running core's

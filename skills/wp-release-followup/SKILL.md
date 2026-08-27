@@ -5,7 +5,8 @@ description: Follow up after a WordPress release party — recheck filed tickets
 
 # wp-release-followup
 
-Phase 2. Depth, after the party. Four jobs in order — each gates the next.
+Phase 2. Depth, after the party. §0 pins the host context, then four jobs in order — each
+gates the next.
 
 **Nothing is filed without the operator's explicit approval.** Draft issues, tickets, and security reports; never open, comment, or submit. External WordPress.org, Trac, and GitHub access stays read-only.
 
