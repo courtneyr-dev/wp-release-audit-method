@@ -77,8 +77,9 @@ You are **not** expected to read WordPress core code, write PHP, or know what a 
 
 > [!TIP]
 > **Ship a plugin or theme?** Go to [`plugin-theme-authors/`](plugin-theme-authors/) instead — the same method
-> narrowed to your own code, plus what to verify before you bump **"Tested up to"** and what the
-> plugin directory expects.
+> narrowed to your own code, plus the **"Tested up to"** bump: what to verify before you claim it,
+> and every copy of the field to change — your Git repo *and* wordpress.org — so the testing you
+> did is actually visible to users.
 
 ## Contents
 

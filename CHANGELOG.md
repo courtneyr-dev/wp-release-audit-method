@@ -5,6 +5,27 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Changed — the "Tested up to" bump is now the deliverable, and it names every copy (2026-08-27)
+
+The plugin-author guide treated the bump as a caution — nine boxes about when *not* to claim it —
+and said nothing about where the claim lives. Both halves are now explicit.
+
+- **The push.** Testing without bumping is named as the mirror failure of bumping without
+  testing: every check in the guide produces one machine-read output, and if the field doesn't
+  move, users still see "Untested with your version of WordPress" for work that was done. Act
+  III, the "Why bother" section, and both release checklists now say the audit isn't finished
+  until the field changes.
+- **Every copy.** New section: the field lives in the Git repo's `readme.txt`, SVN
+  `trunk/readme.txt`, SVN `tags/<stable>/readme.txt` (the only one the directory parses once a
+  Stable Tag resolves — [per the handbook](https://developer.wordpress.org/plugins/wordpress-org/how-your-readme-txt-works/#how-the-readme-is-parsed),
+  "nothing in trunk will be read any further"), `style.css` for themes, and any README badge.
+  Bump mechanics per shipping route, including `10up/action-wordpress-plugin-asset-update` for
+  readme-only bumps from GitHub.
+- **CI catches the drift.** `plugin-check.yml` gains a step that compares the repo's
+  `Tested up to` against what wordpress.org serves for your slug (set `DOTORG_SLUG`; empty
+  skips). Warns, never fails — the usual cause is a hand bump in SVN never committed to Git,
+  which the next deploy silently reverts on .org.
+
 ### Changed — the #65920 dependency gap closed, and our account of the skips was wrong (2026-08-24)
 
 `67005f527b` on [PR #13198](https://github.com/WordPress/wordpress-develop/pull/13198) installs
