@@ -1,3 +1,5 @@
+
+
 # Testing WordPress releases
 
 *How to test a WordPress Beta or RC so that your "it works!" means something, and your "it's
@@ -650,7 +652,7 @@ on the old database version, quietly broken. You cannot catch that without a fix
 
 **3. Seed real content.**
 
-Import all three canonical corpora into every fixture. They complement rather than duplicate each
+Import both canonical corpora into every fixture. They complement rather than duplicate each
 other, and the importer deduplicates the overlap:
 
 ```bash
