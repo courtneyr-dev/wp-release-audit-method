@@ -253,18 +253,47 @@ premium and was never installed.
 
 ### Still unexercised
 
-- **The HTTP half, and this is now the priority rather than a nicety.** The original probes
-  over its hosts' on-server loopback and checks the `X-Core-Preview-Version` header; this
-  adaptation is WP-CLI only. That was written up as a coverage gap. It is worse than that:
-  because WP-CLI's scoping artifact can fatal a plugin that HTTP serves fine, a CLI-only probe
-  can report `probe=FATAL` on a site the release does not break. **`scripts/core-preflight-probe.sh`
-  therefore has a known false-positive class**, documented in its header, and its exit 3 means
-  "fataled under WP-CLI" rather than "this release breaks this site." Adding the HTTP check —
-  and demoting a CLI-only fatal to a note, as core's workflow now does — is the next piece of
-  work on this page, and until it lands the script's verdicts need confirming by hand.
 - **The `db_version` mismatch branch**, per above.
 - **The apply path, the backup, and the auto-restore.** Out of scope by design.
 - **A real fleet.** One fixture is not a census.
+
+### The HTTP half, and a third control — 2026-09-01
+
+The gap this section previously listed as its priority is closed. The probe now writes a
+token-gated bootstrap into the fixture's web root, requests it through the real web stack, and
+checks the response three ways: body grepped for a fatal, status in `200|301|302`, and the
+`X-Core-Preview-Version` header equal to the target.
+
+**HTTP is now authoritative and a CLI-only fatal downgrades to a NOTE.** That is the direct
+fix for the false-positive class that made `eps-301-redirects` look like a real 7.1 fatal.
+
+A **third control** encodes it, and it is the one worth having:
+[`fx-filescope-global`](../fixtures/plugins/) assigns an object at file scope and reads it back
+through `global` on `init` — healthy over HTTP, fatal under WP-CLI, exactly the shape that
+fooled core's workflow.
+
+| Control | Expectation | Result |
+|---|---|---|
+| **1 · positive** — consumer + closure registrar | must FAIL | `http_status=500`, `probe=FATAL reason=HTTP: body contains a PHP fatal` |
+| **2 · negative** — consumer only | must be clean | `http_status=200`, `probe=clean` |
+| **3 · CLI-only fatal** — file-scope global | must be **clean, with a note** | `http_status=200`, `probe=clean`, three `probe=NOTE` lines naming the scoping artifact |
+
+Adopted from upstream in the same pass ([review log](../sources/upstream-techniques.md)), all
+from Ginder's own fixes between 2026-08-24 and 2026-08-29: **stdout-only state reads** (our
+`run_wp` merged stderr into every captured value, so a deprecation notice could land inside
+`$LIVE_VERSION` — his "false fails from WP-CLI noise"), a **tightened fatal pattern** (the old
+`/(Fatal error|Parse error|Uncaught )/i` matches any page that merely mentions those words),
+`ob_get_level()` drain loops plus removing `wp_ob_end_flush_all` so a `THROW:` isn't buried
+under flushed HTML, and a **broadened `wp-settings` require regex** covering the `__DIR__` and
+`dirname(__FILE__)` forms our narrow copy would have missed.
+
+**And one defect of our own, found by a control failing.** The boot file is written from the
+host and read by the container; on a mounted volume that propagation is not instant, so an
+immediate request can 404 on a file that exists. The first run of control 3 passed and the
+second failed with `HTTP 404` — same fixture, different answer. The probe now retries for up to
+12 seconds and, if the file is never served, **exits 1 as an error rather than reporting a
+fatal**: the probe failing to run is not the target failing. Same distinction the damaged-sideload
+gate makes.
 
 ### What the run cost, and what it caught on the way
 

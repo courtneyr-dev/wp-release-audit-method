@@ -5,6 +5,34 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — the probe's HTTP half, a third control, and four upstream fixes (2026-09-01)
+
+Worked from issue #8, the upstream watch's first real cycle. Seven CaptainCore commits since
+the 2026-08-23 baseline, all on `update-core`.
+
+- **HTTP decides now.** `core-preflight-probe.sh` writes a token-gated bootstrap into the
+  fixture's web root, requests it through the real web stack, and checks body, status and the
+  `X-Core-Preview-Version` header. **A CLI-only fatal downgrades to a NOTE** — the direct fix
+  for the false-positive class that made `eps-301-redirects` look like a real 7.1 fatal.
+- **A third control guards exactly that.** `fixtures/plugins/fx-filescope-global.php` is
+  healthy over HTTP and fatal under WP-CLI. The probe must call it **clean with a note**. All
+  three controls pass, each for the right reason: positive → `http_status=500` with a real
+  fatal in the body; negative → 200 clean; third → 200 clean plus three `probe=NOTE` lines.
+- **Two live bugs in our copy, found by reading Ginder's fixes.** `run_wp` merged stderr into
+  every captured value, so a deprecation notice could land inside `$LIVE_VERSION` — his "false
+  fails from WP-CLI noise." And our fatal pattern matched any page merely *mentioning*
+  "Fatal error", so a post about debugging read as one. Both fixed, plus a broadened
+  `wp-settings` require regex and memory-exhaustion treated as a harness fault.
+- **A race of our own, found by a control failing.** The boot file is written from the host and
+  read by the container; on a mounted volume that isn't instant, so an immediate request can
+  404 on a file that exists. Control 3 passed once and failed once on an unchanged fixture. The
+  probe now retries up to 12s and **exits 1 as an error** if the file is never served — the
+  probe failing to run is not the target failing.
+
+Baseline moved for `CC-REMOTE-SCRIPTS` only. `--update` moves every drifted row by default,
+which would have recorded a review of `WPNEXT-TEST` and `PTR-RUNNER` that nobody did; those two
+stay where they are and issue #8 stays open for them.
+
 ### Fixed — "activation is not a boot" shipped with a refuted receipt, and our own probe has the same defect (2026-08-24)
 
 Adam Silverstein retracted the `eps-301-redirects` finding on
