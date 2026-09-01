@@ -37,19 +37,17 @@
 #   4  control miscalibrated — the run is invalid, do not report its verdict
 #   1  error (bad arguments, download failed, fixture not a WordPress root)
 #
-# KNOWN FALSE POSITIVE — read before trusting exit 3 (added 2026-08-24).
-# This probe boots the target through WP-CLI, and WP-CLI requires wp-settings.php from inside
-# WP_CLI\Runner->load_wordpress(). PHP executes an included file in the INCLUDING scope, so a
-# plugin's file-scope `$Var = new Thing()` becomes a local of that method instead of a global.
-# A plugin that later does `global $Var` gets null and may fatal on it — under WP-CLI only.
-# The same site over HTTP is fine. This is not hypothetical: it is what made
+# HTTP DECIDES; the CLI boot is a second opinion (2026-09-01).
+# WP-CLI requires wp-settings.php from inside WP_CLI\Runner->load_wordpress(), and PHP executes
+# an included file in the INCLUDING scope — so a plugin's file-scope `$Var = new Thing()` becomes
+# a local of that method instead of a global, and code reading it back with `global $Var` gets
+# null. That fatals under WP-CLI on a site HTTP serves perfectly. It is what made
 # `eps-301-redirects` look like a real 7.1 fatal in core's own plugin-compatibility workflow
 # until someone installed the plugin by hand and found the site healthy.
 #
-# So: a FATAL from this probe is a lead, not a verdict. Confirm it with an HTTP request before
-# reporting it as a release finding. Until this script grows an HTTP check (it has none —
-# that half of Ginder's original is not implemented here), exit 3 means "the target fataled
-# under WP-CLI," which is a strictly larger set than "the target breaks this site."
+# So the HTTP probe is authoritative and a CLI-only fatal downgrades to a NOTE. Exit 3 means the
+# target broke an actual request. If no home URL exists, no HTTP probe runs and a CLI fatal is
+# reported as a fatal, with that stated in the output.
 #
 # What a clean probe does NOT prove, restated here because the exit code is easy to
 # over-read: it boots the front end only, `db_version` unchanged means core migration did
@@ -88,7 +86,17 @@ for f in wp-config.php wp-includes wp-admin wp-content; do
     echo "core-preflight-probe: ${FIXTURE} is not a WordPress root (no ${f})" >&2; exit 1; }
 done
 
-run_wp() { $WP "$@" 2>&1; }
+# Two callers, deliberately different. State reads must not absorb WP-CLI's stderr —
+# a deprecation notice landing inside $LIVE_VERSION turns a comparison into nonsense, which
+# is the "false fails from WP-CLI noise" class Ginder fixed upstream in 6d8feb90. Probe runs
+# DO want stderr, because that is where probe-render.php writes FATAL:/THROW:.
+run_wp()  { $WP "$@" 2>&1; }
+wp_value() { $WP "$@" 2>/dev/null | tr -d '\r' | awk 'NF { line=$0 } END { printf "%s", line }'; }
+
+# Tightened 2026-09-01 from upstream. The old pattern was /(Fatal error|Parse error|Uncaught )/i,
+# which matches any page that merely mentions those words — a post about debugging, a plugin's
+# own error-log viewer. This requires the real shape.
+PHP_FATAL_GREP='(<b>)?(Fatal error|Parse error)(</b>)?:|Uncaught (Error|TypeError|Exception|ErrorException|ArgumentCountError|ValueError|InvalidArgumentException|RuntimeException|DivisionByZeroError|AssertionError|PDOException)\b'
 
 # Only ever removes the preview tree this script creates, by exact name, never a symlink.
 cleanup_preview() {
@@ -102,17 +110,21 @@ cleanup_preview() {
   [ -d "$p" ] && rm -rf -- "$p"
   return 0
 }
-trap cleanup_preview EXIT
+BOOT_FILE=""
+cleanup_all() { cleanup_preview; cleanup_boot_file 2>/dev/null || true; }
+trap cleanup_all EXIT
 
 echo "== fixture state before the probe"
-LIVE_VERSION="$(run_wp core version --skip-plugins --skip-themes | tr -d '\r')"
-DB_BEFORE="$(run_wp option get db_version --skip-plugins --skip-themes | tr -d '\r')"
-ABSPATH="$(run_wp eval 'echo untrailingslashit( ABSPATH );' --skip-plugins --skip-themes | tr -d '\r')"
+LIVE_VERSION="$(wp_value core version --skip-plugins --skip-themes)"
+DB_BEFORE="$(wp_value option get db_version --skip-plugins --skip-themes)"
+ABSPATH="$(wp_value eval 'echo untrailingslashit( ABSPATH );' --skip-plugins --skip-themes)"
 ACTIVE="$(run_wp plugin list --status=active --field=name --skip-plugins --skip-themes | tr -d '\r' | paste -sd, -)"
+SITE_URL="$(wp_value option get home --skip-plugins --skip-themes)"
 echo "live_version=${LIVE_VERSION}"
 echo "db_version=${DB_BEFORE}"
 echo "abspath=${ABSPATH}"
 echo "active_plugins=${ACTIVE:-<none>}"
+echo "site_url=${SITE_URL:-<none>}"
 echo "target=${TARGET}"
 
 # Paths as WordPress sees them, which is not the same as paths as we see them when the
@@ -175,8 +187,11 @@ fixture, preview, content_dir = sys.argv[1], sys.argv[2], sys.argv[3]
 src = open(f"{fixture}/wp-config.php", encoding="utf-8", errors="surrogateescape").read()
 # Defer wp-settings so our wrapper can define constants first, and make sure a page cache
 # cannot serve the OLD core's HTML and be read as the new core booting cleanly.
-src = re.sub(r"require(?:_once)?\s+ABSPATH\s*\.\s*['\"]wp-settings\.php['\"]\s*;",
-             "/* wp-settings deferred by core-preflight-probe */", src, count=1)
+src = re.sub(
+    r"require(?:_once)?\s*\(?\s*(?:ABSPATH\s*\.\s*['\"]wp-settings\.php['\"]"
+    r"|dirname\s*\(\s*__FILE__\s*\)\s*\.\s*['\"]/wp-settings\.php['\"]"
+    r"|__DIR__\s*\.\s*['\"]/wp-settings\.php['\"])\s*\)?\s*;",
+    "/* wp-settings deferred by core-preflight-probe */", src)
 src = re.sub(r"^[ \t]*define\(\s*['\"]WP_CACHE['\"].+$",
              "/* WP_CACHE stripped by core-preflight-probe */", src, flags=re.M)
 open(f"{preview}/wp-config.php.live.php", "w", encoding="utf-8", errors="surrogateescape").write(src)
@@ -212,6 +227,9 @@ $_GET  = array();
 $_POST = array();
 remove_action( 'template_redirect', 'redirect_canonical' );
 add_filter( 'redirect_canonical', '__return_false', 99 );
+// WP's shutdown flushes leftover buffers and dumps the page after a caught throwable,
+// burying THROW: under HTML in the excerpt the caller greps.
+remove_action( 'shutdown', 'wp_ob_end_flush_all', 1 );
 if ( ! defined( 'WP_USE_THEMES' ) ) {
 	define( 'WP_USE_THEMES', true );
 }
@@ -221,12 +239,16 @@ try {
 	$wp->main( '' );
 	require ABSPATH . WPINC . '/template-loader.php';
 } catch ( Throwable $t ) {
-	ob_end_clean();
+	while ( ob_get_level() > 0 ) { ob_end_clean(); }
 	fwrite( STDERR, 'THROW: ' . $t->getMessage() . ' in ' . $t->getFile() . ':' . $t->getLine() . "\n" );
 	exit( 2 );
 }
-$html  = ob_get_clean();
-$fatal = preg_match( '/(Fatal error|Parse error|Uncaught )/i', $html ) ? 1 : 0;
+$html = ob_get_clean();
+while ( ob_get_level() > 0 ) { ob_end_clean(); }
+$fatal = preg_match(
+	'/(?:<b>)?(?:Fatal error|Parse error)(?:<\/b>)?:|Uncaught (?:Error|TypeError|Exception|ErrorException|ArgumentCountError|ValueError|InvalidArgumentException|RuntimeException|DivisionByZeroError|AssertionError|PDOException)\b/',
+	$html
+) ? 1 : 0;
 printf(
 	"path=%s bytes=%d is_404=%s fatal_in_html=%d wp_version=%s\n",
 	$path, strlen( $html ), is_404() ? '1' : '0', $fatal, $GLOBALS['wp_version']
@@ -269,15 +291,116 @@ if [ $PROBE_FATAL -eq 0 ]; then
   fi
 fi
 
+# ── HTTP probe ────────────────────────────────────────────────────────────────
+# The reason this exists, and why a CLI-only fatal is no longer a verdict:
+# WP-CLI requires wp-settings.php from inside WP_CLI\Runner->load_wordpress(), and PHP runs an
+# included file in the INCLUDING scope. A plugin's file-scope `$Var = new Thing()` is therefore
+# a local of that method, not a global, and code reading it back with `global $Var` gets null.
+# That fatals under WP-CLI on a site HTTP serves perfectly. It is exactly what made
+# eps-301-redirects look like a real 7.1 fatal in core's own workflow until someone installed
+# it by hand. So: HTTP decides. CLI is a second opinion.
+HTTP_STATUS=""
+HTTP_FATAL=""
+HTTP_BOOT_VERSION=""
+
+cleanup_boot_file() {
+  [ -n "$BOOT_FILE" ] || return 0
+  case "$BOOT_FILE" in
+    core-preview-boot-*.php) ;;
+    *) echo "core-preflight-probe: refusing to remove unexpected boot file: $BOOT_FILE" >&2; return 1 ;;
+  esac
+  local p="${FIXTURE}/${BOOT_FILE}"
+  [ -L "$p" ] && return 1
+  # marker check, so we never delete a file we did not write
+  [ -f "$p" ] && grep -q 'X-Core-Preview-Boot' "$p" && rm -f -- "$p"
+  return 0
+}
+
+if [ -z "$SITE_URL" ]; then
+  echo
+  echo "== HTTP probe: SKIPPED (no home URL)"
+else
+  echo
+  echo "== HTTP probe: serve / from ${TARGET_VERSION} through the real web stack"
+  TOKEN="$(head -c 16 /dev/urandom | od -An -tx1 | tr -d ' \n')"
+  BOOT_FILE="core-preview-boot-$(head -c 4 /dev/urandom | od -An -tx1 | tr -d ' \n').php"
+  cat > "${FIXTURE}/${BOOT_FILE}" <<PHP
+<?php
+\$expected = '${TOKEN}';
+\$given    = isset( \$_SERVER['HTTP_X_CORE_PREVIEW'] ) ? \$_SERVER['HTTP_X_CORE_PREVIEW'] : '';
+if ( ! is_string( \$given ) || \$given === '' || ! hash_equals( \$expected, \$given ) ) {
+	header( 'HTTP/1.1 404 Not Found' );
+	echo 'not found';
+	exit;
+}
+\$_SERVER['REQUEST_URI'] = '/';
+\$_SERVER['SCRIPT_NAME'] = '/index.php';
+\$_SERVER['PHP_SELF']    = '/index.php';
+\$_GET = array();
+include '${PREVIEW_WP}/wp-includes/version.php';
+header( 'X-Robots-Tag: noindex, nofollow' );
+header( 'Cache-Control: private, no-store, no-cache, must-revalidate' );
+header( 'X-Core-Preview-Boot: 1' );
+header( 'X-Core-Preview-Version: ' . \$wp_version );
+define( 'WP_USE_THEMES', true );
+require '${PREVIEW_WP}/wp-blog-header.php';
+PHP
+  chmod 644 "${FIXTURE}/${BOOT_FILE}"
+
+  BODY_FILE="$(mktemp)"
+  HDR_FILE="$(mktemp)"
+
+  # The boot file is written from HERE; the web server reads it from THERE. On a container
+  # with a mounted volume (ddev/colima, lando) propagation is not instant, so an immediate
+  # request can 404 on a file that exists. That is the probe failing to run, NOT the target
+  # failing — reporting it as a fatal would be a harness fault wearing a verdict's clothes,
+  # which is the same mistake the damaged-sideload gate above exists to prevent.
+  HTTP_ATTEMPTS=0
+  while [ $HTTP_ATTEMPTS -lt 12 ]; do
+    HTTP_STATUS="$(curl -ksS --max-time 60 -o "$BODY_FILE" -D "$HDR_FILE" -w '%{http_code}' \
+      -H "X-Core-Preview: ${TOKEN}" -H 'Cache-Control: no-cache' \
+      "${SITE_URL}/${BOOT_FILE}?path=/" 2>/dev/null || echo 000)"
+    # 404 here means the server cannot see the file yet: the token gate answers 404 too, but
+    # only for a request without the token, and this one carries it.
+    [ "$HTTP_STATUS" != "404" ] && break
+    HTTP_ATTEMPTS=$((HTTP_ATTEMPTS + 1))
+    sleep 1
+  done
+  [ $HTTP_ATTEMPTS -gt 0 ] && echo "http_waited_for_mount=${HTTP_ATTEMPTS}s"
+
+  HTTP_BOOT_VERSION="$(awk -F': ' 'tolower($1)=="x-core-preview-version" {gsub("\r","",$2); print $2}' "$HDR_FILE")"
+  echo "http_status=${HTTP_STATUS}"
+  echo "http_booted_version=${HTTP_BOOT_VERSION:-<none>}"
+  echo "http_bytes=$(wc -c <"$BODY_FILE" | tr -d ' ')"
+
+  if [ "$HTTP_STATUS" = "404" ] || [ "$HTTP_STATUS" = "000" ]; then
+    rm -f -- "$BODY_FILE" "$HDR_FILE"; cleanup_boot_file
+    echo "core-preflight-probe: the boot file was never served (HTTP ${HTTP_STATUS} after" >&2
+    echo "  ${HTTP_ATTEMPTS}s). The probe did not run; this is an error, not a result." >&2
+    exit 1
+  fi
+
+  if grep -qE "$PHP_FATAL_GREP" "$BODY_FILE"; then
+    HTTP_FATAL="body contains a PHP fatal"
+  elif [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "301" ] && [ "$HTTP_STATUS" != "302" ]; then
+    HTTP_FATAL="HTTP ${HTTP_STATUS}"
+  elif [ -n "$HTTP_BOOT_VERSION" ] && [ "$HTTP_BOOT_VERSION" != "$TARGET_VERSION" ]; then
+    HTTP_FATAL="booted ${HTTP_BOOT_VERSION}, expected ${TARGET_VERSION}"
+  fi
+  rm -f -- "$BODY_FILE" "$HDR_FILE"
+  cleanup_boot_file
+  [ -n "$HTTP_FATAL" ] && echo "http_probe=FATAL reason=${HTTP_FATAL}" || echo "http_probe=clean"
+fi
+
 echo
 echo "== invariant: the probe changed nothing"
-DB_AFTER="$(run_wp option get db_version --skip-plugins --skip-themes | tr -d '\r')"
+DB_AFTER="$(wp_value option get db_version --skip-plugins --skip-themes)"
 echo "db_version_before=${DB_BEFORE} db_version_after=${DB_AFTER}"
 if [ "$DB_BEFORE" != "$DB_AFTER" ]; then
   echo "core-preflight-probe: PROBE MUTATED db_version — invalid run" >&2
   exit 4
 fi
-LIVE_AFTER="$(run_wp core version --skip-plugins --skip-themes | tr -d '\r')"
+LIVE_AFTER="$(wp_value core version --skip-plugins --skip-themes)"
 echo "live_version_before=${LIVE_VERSION} live_version_after=${LIVE_AFTER}"
 if [ "$LIVE_VERSION" != "$LIVE_AFTER" ]; then
   echo "core-preflight-probe: LIVE CORE VERSION CHANGED — invalid run" >&2
@@ -285,13 +408,25 @@ if [ "$LIVE_VERSION" != "$LIVE_AFTER" ]; then
 fi
 
 echo
-if [ $PROBE_FATAL -eq 1 ]; then
-  echo "probe=FATAL reason=${PROBE_REASON}"
-  echo "probe=NOTE  a WP-CLI-only fatal can be the wp-settings-in-a-method scoping artifact;"
-  echo "probe=NOTE  confirm with an HTTP request before reporting this as a release finding"
+# HTTP decides. A CLI fatal with a clean HTTP probe is the scoping artifact far more often
+# than it is a release finding, so it downgrades to a note rather than failing the run.
+VERDICT_FATAL=0
+if [ -n "$HTTP_FATAL" ]; then
+  VERDICT_FATAL=1
+  echo "probe=FATAL reason=HTTP: ${HTTP_FATAL}"
+  [ $PROBE_FATAL -eq 1 ] && echo "probe=ALSO  CLI: ${PROBE_REASON}"
+elif [ $PROBE_FATAL -eq 1 ] && [ -n "$SITE_URL" ]; then
+  echo "probe=clean target=${TARGET_VERSION} (HTTP served ${HTTP_STATUS})"
+  echo "probe=NOTE  the CLI boot fataled: ${PROBE_REASON}"
+  echo "probe=NOTE  HTTP is clean, so this is most likely WP-CLI's wp-settings-in-a-method"
+  echo "probe=NOTE  scoping artifact, not a release finding. Worth a look, not a failure."
+elif [ $PROBE_FATAL -eq 1 ]; then
+  VERDICT_FATAL=1
+  echo "probe=FATAL reason=CLI: ${PROBE_REASON} (no HTTP probe ran to confirm)"
 else
   echo "probe=clean target=${TARGET_VERSION}"
 fi
+PROBE_FATAL=$VERDICT_FATAL
 
 case "$CONTROL" in
   positive)

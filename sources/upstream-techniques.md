@@ -178,6 +178,37 @@ triggers*, *a WordPress site is PHP plus assets* — and then detect its violati
 not dangerous sinks) arrived at independently by someone doing incident response on a fleet.
 Where two practices converge from different directions, the rule is usually load-bearing.
 
+## Review log — CaptainCore `lib/remote-scripts`, second cycle, 2026-09-01
+
+Raised by [the watch](../.github/workflows/upstream-watch.yml) as issue #8. Seven commits
+since the 2026-08-23 baseline, all on `update-core`. Read the combined diff (541 lines)
+rather than the commits individually.
+
+**Four adopted into [`core-preflight-probe.sh`](../scripts/core-preflight-probe.sh), and two
+of them were live bugs in our copy:**
+
+| Upstream | What it fixes here |
+|---|---|
+| `6d8feb90` *false fails from WP-CLI noise* | Our `run_wp` merged stderr into **every** captured value, so a deprecation notice could land inside `$LIVE_VERSION` or `$DB_BEFORE` and turn a comparison into nonsense. Split into `wp_value` (stdout only, last non-empty line) for state reads and `run_wp` for probe runs, which genuinely want stderr |
+| `3ea666c8` / `5a06d218` *keeps THROW lines, false HTML fatals* | Our fatal pattern was `/(Fatal error\|Parse error\|Uncaught )/i` — it matches any page that merely **mentions** those words, so a post about debugging reads as a fatal. Tightened to the real shape. Also drains `ob_get_level()` and removes `wp_ob_end_flush_all`, so a `THROW:` isn't buried under flushed HTML |
+| broadened `wp-settings` regex | Ours matched only `require ABSPATH . 'wp-settings.php'`. A `wp-config.php` using the `__DIR__` or `dirname(__FILE__)` form would keep its require and load core twice |
+| memory-exhaustion detection | Distinguishes "the runner ran out of memory" from "the target fatals" — a harness fault, not a result |
+
+**Not adopted:** `bd7ae051` (stores runs on CaptainCore's Manager), `9b3dad05` (WP Freighter
+tenants), `df28e923`'s SSH-loopback specifics, `c60f505e` (`--version=next` picks RC → beta →
+nightly; [`check-latest-release.sh`](../scripts/check-latest-release.sh) already answers that
+question with its own cycle check). Checked and cleared.
+
+**What the cycle bought beyond the fixes:** the HTTP half of the probe now exists, a
+[third control](../fixtures/plugins/) guards the WP-CLI scoping artifact, and a control
+failure exposed a race of our own — see
+[the probe page](../method/preflight-core-probe.md#the-http-half-and-a-third-control--2026-09-01).
+
+**Still unreviewed, and the baselines deliberately left where they are:** `WPNEXT-TEST` (1
+commit) and `PTR-RUNNER` (2 commits). `--update` moves every drifted row by default, which
+would have recorded a review nobody did. Moved `CC-REMOTE-SCRIPTS` alone with `--id=`. Issue
+#8 stays open for the other two.
+
 ## Adding a row
 
 1. Verify the licence from the upstream's own LICENSE file. Check it against the table above.
