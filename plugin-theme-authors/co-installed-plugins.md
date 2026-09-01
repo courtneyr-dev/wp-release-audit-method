@@ -166,11 +166,13 @@ Two things that job must do, both learned from the first full run of core's own
   wp plugin install ${{ matrix.companion }} --activate --allow-root
   ```
 
-- **Boot WordPress after activating, not just activate.** That run's one real failure
-  (`eps-301-redirects` 2.85) installed and activated cleanly, then fatalled the moment
-  WP-CLI loaded WordPress with it active. `wp eval 'echo "booted";'` after the install step
-  costs a second and is the difference between a PASS that means something and one that
-  means the row exists in `active_plugins`.
+- **Request a page after activating, don't just activate — and don't settle for `wp eval`.**
+  Activation proves the row exists in `active_plugins`, nothing more. But make the check an
+  HTTP request: WP-CLI loads `wp-settings.php` from inside a method, so a plugin's file-scope
+  variables aren't globals under WP-CLI and code reading them back can fatal there while the
+  real site is fine. Core's workflow spent a round mistaking exactly that for a plugin bug.
+  Fetch `/` and `wp-login.php` and require 200; keep `wp eval 'echo "booted";'` if you like,
+  but treat a CLI-only fatal as something to investigate, not a failing build.
 
 - **Baseline after the companion is active and before yours is.** Once more than one plugin
   is in play, a failure has more than one candidate owner. Request the front page and the

@@ -37,6 +37,20 @@
 #   4  control miscalibrated — the run is invalid, do not report its verdict
 #   1  error (bad arguments, download failed, fixture not a WordPress root)
 #
+# KNOWN FALSE POSITIVE — read before trusting exit 3 (added 2026-08-24).
+# This probe boots the target through WP-CLI, and WP-CLI requires wp-settings.php from inside
+# WP_CLI\Runner->load_wordpress(). PHP executes an included file in the INCLUDING scope, so a
+# plugin's file-scope `$Var = new Thing()` becomes a local of that method instead of a global.
+# A plugin that later does `global $Var` gets null and may fatal on it — under WP-CLI only.
+# The same site over HTTP is fine. This is not hypothetical: it is what made
+# `eps-301-redirects` look like a real 7.1 fatal in core's own plugin-compatibility workflow
+# until someone installed the plugin by hand and found the site healthy.
+#
+# So: a FATAL from this probe is a lead, not a verdict. Confirm it with an HTTP request before
+# reporting it as a release finding. Until this script grows an HTTP check (it has none —
+# that half of Ginder's original is not implemented here), exit 3 means "the target fataled
+# under WP-CLI," which is a strictly larger set than "the target breaks this site."
+#
 # What a clean probe does NOT prove, restated here because the exit code is easy to
 # over-read: it boots the front end only, `db_version` unchanged means core migration did
 # not run rather than "nothing wrote to the database", and a plugin that only fatals in
@@ -273,6 +287,8 @@ fi
 echo
 if [ $PROBE_FATAL -eq 1 ]; then
   echo "probe=FATAL reason=${PROBE_REASON}"
+  echo "probe=NOTE  a WP-CLI-only fatal can be the wp-settings-in-a-method scoping artifact;"
+  echo "probe=NOTE  confirm with an HTTP request before reporting this as a release finding"
 else
   echo "probe=clean target=${TARGET_VERSION}"
 fi

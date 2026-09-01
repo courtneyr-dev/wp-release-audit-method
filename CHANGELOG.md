@@ -5,6 +5,43 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Fixed — "activation is not a boot" shipped with a refuted receipt, and our own probe has the same defect (2026-08-24)
+
+Adam Silverstein retracted the `eps-301-redirects` finding on
+[PR #13198](https://github.com/WordPress/wordpress-develop/pull/13198). Installed by hand
+through wp-admin the plugin is **healthy** — front page 200, `wp-login.php` 200, `/wp-admin/`
+302, no `debug.log` at all. Only the WP-CLI boot failed.
+
+**The mechanism is WP-CLI's, not WordPress's.** WP-CLI requires `wp-settings.php` from inside
+`WP_CLI\Runner->load_wordpress()`, and PHP executes an included file in the *including* scope.
+A plugin's file-scope `$Var = new Thing()` therefore becomes a local of that method rather
+than a global, and code reading it back with `global $Var` on `init` gets null.
+`eps-301-redirects` then calls a method on the null. It only fires when `permalink_structure`
+is empty — which is exactly what a fresh `wp core install` leaves behind, so CI hits it and
+real sites don't. **Verified here independently in plain PHP, no WordPress involved:** a file
+included at global scope creates globals, the same file included inside a method does not.
+
+- **The rule survives in corrected and sharper form.** Activation is still not a boot — but
+  the boot must be an **HTTP request**, not `wp eval`. A CLI-only fatal is a *note*, not a
+  failure, and the CLI boot runs last so its fatal can't also poison a `debug.log` assertion.
+  Corrected in the learning loop's accepted controls, the ecosystem lane, both prompt fences,
+  the plugin-author CI drop-in, and `fleet-operators` §4.
+- **`scripts/core-preflight-probe.sh` has this exact false-positive class**, and it was merged
+  to main earlier today. It boots the target through `wp eval` and has no HTTP check, so its
+  `exit 3` means "fataled under WP-CLI" — a strictly larger set than "this release breaks this
+  site." Documented in the script header and in its output; adding the HTTP half is now the
+  priority on that page rather than a nicety. Its two controls still pass, but only because the
+  fixture plugins happen not to use file-scope globals.
+- **What the 200-plugin run actually demonstrated is smaller than reported.** Its one failure
+  was this, and it wasn't real — so zero confirmed core-related plugin fatals out of 200, with
+  the `instagram-feed` sighting the only remaining candidate and unverified here. A workflow
+  that finds nothing is still worth having; one reported as finding something it didn't is
+  worse than one reporting nothing, which is why this correction matters more than the original
+  claim did.
+
+Kept rather than deleted, per *refuted claims are assets*. The draft comment is revised again
+and still unfiled.
+
 ### Changed — a documentation audit made the invisible lanes findable (2026-08-27)
 
 A repository-wide documentation pass (88 pages inventoried, classified against the repo's

@@ -203,13 +203,18 @@ review.
   is an INVALID batch, not a product failure — exclude it from all counts and record the diagnosis.
 - Do not claim a "reproduction" from a fixture whose deviation from expectation is undiagnosed.
   Diagnose invocation-vs-fixture before calling anything reproduced.
-- ACTIVATION IS NOT A BOOT. For any cell that installs a plugin or theme, "it activated" is not a
-  PASS. Activation runs a narrow path, often before the hooks, globals, and co-installed code the
-  real implementation assumes; a plugin can activate cleanly and fatal on the very next load. No
-  plugin/theme cell is clean until WordPress has been LOADED with it active and the load produced no
-  fatal (`wp eval 'echo 1;'` after `--activate` is the whole check). Receipt: in the first full
-  200-plugin run of the workflow proposed in Trac #65920 (2026-08-23), the single real failure
-  activated cleanly and then fatalled on `null` at load.
+- ACTIVATION IS NOT A BOOT — AND THE BOOT MUST BE AN HTTP REQUEST. For any cell that installs a
+  plugin or theme, "it activated" is not a PASS: activation runs a narrow path, often before the
+  hooks, globals, and co-installed code the real implementation assumes. No plugin/theme cell is
+  clean until an HTTP REQUEST has been served with it active (fetch `/` and `wp-login.php`, require
+  200). Do NOT use `wp eval` as the boot check. WP-CLI requires wp-settings.php from inside
+  WP_CLI\Runner->load_wordpress(), and PHP executes an included file in the including scope, so a
+  plugin's file-scope `$Var = new Thing()` is a local of that method rather than a global; code
+  reading it back with `global $Var` gets null and can fatal — under WP-CLI ONLY, on a site HTTP
+  serves fine. Run a CLI boot if you want, LAST, and record a CLI-only fatal as a NOTE, never a
+  failure. Receipt, and it is a refutation: core's own plugin-compatibility workflow reported
+  `eps-301-redirects` as a real 7.1 fatal on exactly this basis, and the plugin turned out to be
+  healthy (2026-08-23 claim, 2026-08-24 retraction).
 - REPORT SKIPS BESIDE PASSES, NEVER FOLDED INTO THEM. Every count you report states passed / failed /
   SKIPPED / blocked separately, with the reason each skip skipped. A skip is an untested unit, and a
   skip class that correlates with anything (a vendor, a dependency header, a site mode, a licence) is
