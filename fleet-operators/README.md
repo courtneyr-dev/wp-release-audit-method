@@ -110,10 +110,11 @@ Five things make it worth adopting even if you write your own:
   of those was fixed in the PR on 2026-08-24 and four named WooCommerce extensions now pass;
   the premium one is structural. A probe never enumerates plugins, so it has neither — it
   boots whatever is installed.
-- **It tests past activation, which is where that run found its one real fatal.**
-  `eps-301-redirects` 2.85 installs and activates cleanly, then fatals when WordPress is
-  actually loaded with it active. If your own update checks stop at "the plugin is active,"
-  they would have passed it too.
+- **It tests past activation — over HTTP, which is the part that matters.** Activation runs a
+  narrow path and proves little. But make the check an actual request, not `wp eval`: a
+  WP-CLI-only fatal is as likely to be a scoping artifact of how WP-CLI loads WordPress as a
+  real defect. Core's workflow learned this the expensive way and now records CLI fatals as
+  notes; see [the ecosystem lane](../method/ecosystem-compatibility-lane.md#activation-is-not-a-boot--but-boot-it-over-http).
 - **It reads the body, not the status code** — the same rule as §6, arrived at
   independently.
 

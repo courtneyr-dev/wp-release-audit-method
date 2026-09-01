@@ -222,6 +222,165 @@ Source: review comments on
 its repository guards loosened, since manual dispatch isn't available until the workflow
 exists on trunk. External report, independently reproduced by nobody here.
 
+## Activation is not a boot — but boot it over HTTP
+
+**This section shipped on 2026-08-23 with a receipt that was refuted on 2026-08-24. The
+correction is more useful than the original claim, so both are kept.**
+
+What was written here: `eps-301-redirects` 2.85 installs and activates cleanly, then fatals
+when WP-CLI loads WordPress with it active, therefore an activation-only check is not enough.
+
+What turned out to be true: the plugin is **healthy**. Installed by hand through wp-admin,
+nothing breaks — front page 200, `wp-login.php` 200, `/wp-admin/` 302, no `debug.log` written
+at all. The only thing that failed was the WP-CLI boot.
+
+**The mechanism, and it is not WordPress's.** WP-CLI requires `wp-settings.php` from inside
+`WP_CLI\Runner->load_wordpress()`. PHP executes an included file in the *including scope*, so
+a plugin's file-scope assignment becomes a local of that method instead of a global.
+`eps-301-redirects` does `$EPS_Redirects_Plugin = new EPS_Redirects_Plugin();` at file scope
+and reads it back with `global $EPS_Redirects_Plugin;` on `init`; under WP-CLI that is null,
+and the null then takes a method call. It only fires when `permalink_structure` is empty —
+which is exactly what a fresh `wp core install` leaves behind, so a CI fixture hits it and a
+real site almost never does.
+
+Verified here independently, without WordPress, because the claim is pure PHP scoping:
+
+```php
+include_once 'plugin.php';                          // at global scope  → global is VISIBLE
+(new Runner)->load_wordpress();                     // include inside a method → MISSING
+```
+
+### The rule that survives, in corrected form
+
+**Activation is still not a boot** — activation runs a narrow path, often before the hooks and
+globals a plugin's real code assumes. But the check has to be an **HTTP request**, not
+`wp eval`. A CLI-only fatal is a *note*, not a failure: it is at least as likely to be this
+scoping artifact as a real defect. Run the CLI boot **last**, after the HTTP checks, so its
+fatal doesn't also poison a `debug.log` assertion — which is what core's workflow now does.
+
+Anything that genuinely fatals on load still fails, because it fails the HTTP check first.
+
+### What this costs the lane, honestly
+
+The 200-plugin run's headline was *186 passed, 1 failed, 13 skipped*. The 1 failure was this,
+and it was not a real one. So that run found **zero** genuine core-related plugin fatals, and
+the `instagram-feed` sighting recorded above is now the only candidate — itself unverified
+here. A workflow that finds nothing is still worth having; a workflow reported as finding
+something it didn't is worse than one that reports nothing, which is why this correction
+matters more than the original claim did.
+
+## The co-installed cell block in the T1 sweep
+
+The sweep matrix carries an `ecosystem` cell block ([`pilots/release-day/sweep-matrix.csv`](../pilots/release-day/sweep-matrix.csv),
+entity `ecosystem`): a fixture with the top co-installed plugin pairs by real-world
+prevalence, upgraded across the release boundary, asserting **no new fatals in `debug.log`**
+and a front end and admin that still answer 200. Pair selection follows
+[`plugin-theme-authors/co-installed-plugins.md`](../plugin-theme-authors/co-installed-plugins.md)
+— category leaders (caching, SEO, forms, page builders, eCommerce) plus anything your own
+support channels name.
+
+Two honest limits, stated up front:
+
+- **Premium plugins cannot be fetched from the directory API.** WP Rocket — the very plugin
+  that motivated this lane — is premium. A tester who doesn't own a license cannot build the
+  cell; the cell reads `BLOCKED(premium-license)`, never `SKIP`. Supply the zip yourself if
+  you hold a license.
+- Pair cells still miss triples. The block buys breadth against the *common* failure (a
+  popular plugin's assumption breaking on upgrade with its usual companions active); the
+  probe above is what hunts the trigger ingredient.
+
+## A dependency's public tracker is a release-readiness input
+
+Six weeks of notice existed for the WP Rocket fatal, in public, with a proposed patch — and
+nobody testing the release consumed it. The learning-loop rule this adds
+([release-audit-learning-loop.md](release-audit-learning-loop.md)): **for every plugin in
+your fleet, search its public tracker for issues referencing the upcoming core version,
+before release day.** The checkable step:
+
+```bash
+# per plugin: does its tracker already know about this release?
+gh search issues --repo <owner>/<repo> "7.2" --state open --limit 20
+# for wordpress.org-hosted plugins: search the support forum for the version string
+```
+
+An open issue naming the next core version, filed by someone else, with a proposed fix, is
+the cheapest finding you will ever import. Read it before you build a single fixture.
+
+## Alignment with Trac #65920 — and what it structurally cannot cover
+
+Adam Silverstein opened [Trac #65920](https://core.trac.wordpress.org/ticket/65920)
+(2026-08-20, feature request, milestoned 7.2, backed by Jeffrey Paul): a GitHub Actions
+workflow auto-testing the **top 100 wordpress.org plugins** against unreleased builds —
+draft PR [WordPress/wordpress-develop#13198](https://github.com/WordPress/wordpress-develop/pull/13198).
+That workflow is the right infrastructure and this lane should defer to it for what it
+covers. **Silverstein himself notes it would not have caught this bug**: WP Rocket is
+premium, and the directory API the workflow draws from only covers free plugins.
+
+**It has since been run at full scale, and the numbers change what we can say about it.**
+On 2026-08-23 Silverstein posted results from a 200-plugin run on his own fork: **186
+passed, 1 failed, 13 skipped**, 4m32s across 8 shards. Two things in that line are worth
+more than the headline:
+
+- **It caught a real fatal, and caught it past the point most checks stop.**
+  `eps-301-redirects` 2.85 installs and activates cleanly, then fatals the moment WP-CLI
+  loads WordPress with the plugin active (`Call to a member function add_admin_message() on
+  null`). An activation-only check reports PASS on that plugin. See
+  [activation is not a boot](#activation-is-not-a-boot), below.
+- **The 13 skips are a blind spot, not noise** — and the skip line turned out to be looser
+  than it read. The summary reported *13 skipped (WooCommerce add-ons with an unmet
+  `Requires Plugins` header)*, which sounds like one clean cause. When the fix landed
+  (below), it named **four**: `woocommerce-payments`, `google-listings-and-ads`,
+  `woocommerce-paypal-payments`, `woocommerce-gateway-stripe`. **What the other nine were
+  skipped for is not stated anywhere in the thread.** Preserved as a conflict rather than
+  resolved to a number, per [validation and proof](validation-and-proof.md).
+
+  That gap is the *skips-beside-passes* rule proving itself twice over. The first reading
+  was that "186 passed" hides 13 untested units. The second is that a **reason attached to
+  a count rather than to each skip** is itself a place error hides: one plausible cause got
+  written next to thirteen units and only fit four of them.
+
+**The dependency gap was closed on 2026-08-24, in `67005f527b`** (in the PR; still
+unmerged). A plugin declaring `Requires Plugins` now gets its dependencies installed and
+activated before it is activated itself. Three details make it more than a convenience:
+
+- The header is read with `get_plugin_data()`, not a grep — so the workflow applies the same
+  rules core does when it decides whether a plugin's requirements are met.
+- Chains are followed one level at a time, and anything already installed is left alone,
+  which is what terminates a circular declaration rather than a cycle-detector.
+- **The misattribution guard is the part this lane should steal.** After the dependencies
+  are activated and *before* the plugin under test is, the front page and login screen are
+  requested on their own, and `debug.log` is cleared at that same point. A site already
+  broken there is the dependency's fault, so the plugin under test is recorded as skipped
+  *against the dependency* instead of failing for someone else's bug. The results table
+  gains an **"Also active"** column so a failure can be read in context.
+
+That guard is the answer to the objection every co-installed matrix runs into, including
+[the cell block above](#the-co-installed-cell-block-in-the-t1-sweep): once you stop testing
+one plugin at a time, a failure has more than one candidate owner. **Baseline the
+environment after the companions are active and before the subject is**, and the ambiguity
+mostly goes away — you get "broken before we touched it" as a distinct, recordable state
+rather than a mystery failure attributed to whatever was activated last. Cost: the job
+timeout went 30 → 45 minutes, because activating something the size of WooCommerce once per
+extension is not free.
+
+A second real plugin fatal surfaced in the same re-test: **`instagram-feed` 6.12.0 fatals on
+`wp_loaded` against 7.1** on a fresh database — `wp_get_image_editor( WP_Error )`, the same
+trace as an earlier sighting but reached directly rather than through cron, and the previous
+version of the script reports it identically. Two real fatals now, from a workflow whose
+whole premise was that this class is findable at scale before release day.
+
+Also settled by the same thread, and worth knowing before anyone proposes it as the
+alternative: **Tide is effectively unsupported.** Jeff Paul, who maintains it, says it has
+been "generally unsupported for years," that he has considered shutting it down, and that
+the PHP Compat Checker plugin is about the only consumer of its audit data. Treat it as a
+non-option unless somebody funds it.
+
+Source: review comments on
+[WordPress/wordpress-develop#13198](https://github.com/WordPress/wordpress-develop/pull/13198),
+2026-08-23. The workflow is proposed for 7.2 and **not merged**; the run was on a fork with
+its repository guards loosened, since manual dispatch isn't available until the workflow
+exists on trunk. External report, independently reproduced by nobody here.
+
 ## Activation is not a boot
 
 The `eps-301-redirects` result is the cheapest lesson in this document, and it generalizes

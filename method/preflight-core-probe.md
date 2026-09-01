@@ -109,11 +109,21 @@ Five moves. The order is the whole design — each step exists to make a later s
 
 ## The four ideas worth stealing even if you never run the script
 
-**Two boots are two denominators.** `wp eval` and an HTTP request are not the same test.
-CLI boot misses everything conditioned on the web-request path — `SERVER_SOFTWARE`,
-mu-plugins that early-return on `WP_CLI`, page caches, request-scoped hooks. Both passes are
-in the script because either alone is a smaller denominator than it looks, which is
-[law 3](release-audit-learning-loop.md) wearing operations clothing.
+**Two boots are two denominators — and neither contains the other.** `wp eval` and an HTTP
+request are not the same test. CLI boot misses everything conditioned on the web-request path
+— `SERVER_SOFTWARE`, mu-plugins that early-return on `WP_CLI`, page caches, request-scoped
+hooks. Both passes are in the original because either alone is a smaller denominator than it
+looks, which is [law 3](release-audit-learning-loop.md) wearing operations clothing.
+
+**Corrected 2026-08-24, and this is the sharper half.** CLI is not merely a *smaller*
+denominator. It manufactures failures HTTP never produces. WP-CLI requires `wp-settings.php`
+from inside `WP_CLI\Runner->load_wordpress()`, and PHP executes an included file in the
+including scope — so a plugin's file-scope `$Var = new Thing()` becomes a local of that method
+rather than a global, and a later `global $Var` gets null. Verified here in plain PHP, no
+WordPress involved. That is what made `eps-301-redirects` look like a real 7.1 fatal in core's
+plugin-compatibility workflow until somebody installed it by hand and found the site perfectly
+healthy. **A CLI-only fatal is a lead, not a verdict**; see
+[the ecosystem lane](ecosystem-compatibility-lane.md#activation-is-not-a-boot--but-boot-it-over-http).
 
 **Grep the body, not the status code.** The probe fails on
 `Fatal error|Parse error|Uncaught ` found *in the response*, independent of status. This is
@@ -243,10 +253,15 @@ premium and was never installed.
 
 ### Still unexercised
 
-- **The HTTP half.** The original probes over its hosts' on-server loopback and checks the
-  `X-Core-Preview-Version` header; this adaptation is WP-CLI only. Everything conditioned on
-  the web-request path is therefore untested here — which is the *two boots are two
-  denominators* rule applying to this page's own evidence.
+- **The HTTP half, and this is now the priority rather than a nicety.** The original probes
+  over its hosts' on-server loopback and checks the `X-Core-Preview-Version` header; this
+  adaptation is WP-CLI only. That was written up as a coverage gap. It is worse than that:
+  because WP-CLI's scoping artifact can fatal a plugin that HTTP serves fine, a CLI-only probe
+  can report `probe=FATAL` on a site the release does not break. **`scripts/core-preflight-probe.sh`
+  therefore has a known false-positive class**, documented in its header, and its exit 3 means
+  "fataled under WP-CLI" rather than "this release breaks this site." Adding the HTTP check —
+  and demoting a CLI-only fatal to a note, as core's workflow now does — is the next piece of
+  work on this page, and until it lands the script's verdicts need confirming by hand.
 - **The `db_version` mismatch branch**, per above.
 - **The apply path, the backup, and the auto-restore.** Out of scope by design.
 - **A real fleet.** One fixture is not a census.

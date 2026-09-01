@@ -17,13 +17,20 @@ Review, adjust, file manually, then log it in `pilots/filed-issues-register.csv`
 The 200-plugin run answers the question the ticket opened with, so most of this is about
 scope rather than whether to build it.
 
-**The load step is why the run found anything — worth naming in the scope so it doesn't get
-optimized away later.** `eps-301-redirects` 2.85 installs and activates cleanly and only
-fatals once WP-CLI actually loads WordPress with it active. If this check ever gets trimmed
-to install-and-activate for speed, it goes back to passing that plugin. Activation runs a
-narrow path, usually before the hooks and globals a plugin's real code assumes are there, so
-"activated" and "boots" are genuinely different results and this workflow is currently
-measuring the useful one.
+**The `eps-301-redirects` retraction and the fix for it both look right.** Demoting the
+WP-CLI boot to a note, running it last so its fatal can't poison the debug-log check, and
+letting the HTTP checks decide is the correct shape — a CLI-only fatal really can be the
+`wp-settings.php`-inside-a-method scoping artifact rather than anything a visitor could reach.
+Worth stating the reasoning in the workflow's own docs rather than only in this thread, since
+the next person to look at a red CLI step will otherwise reach the same wrong conclusion.
+
+Two things that seem worth keeping visible in the scope, since the retraction narrows what the
+run demonstrated: **activation is still not a boot** — an HTTP request with the plugin active
+is doing real work that `wp plugin activate` isn't — and the run's headline now reads as zero
+confirmed core-related fatals out of 200, with `instagram-feed` as the remaining candidate. A
+workflow that finds nothing is still worth having. It is just a different claim from the one
+the first summary supported, and the difference is worth being explicit about before anyone
+cites the run.
 
 **The dependency pre-install looks right, and the isolation guard is the good part.**
 Baselining the front page and login screen after the dependencies are active but before the
