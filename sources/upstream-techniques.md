@@ -209,6 +209,53 @@ commit) and `PTR-RUNNER` (2 commits). `--update` moves every drifted row by defa
 would have recorded a review nobody did. Moved `CC-REMOTE-SCRIPTS` alone with `--id=`. Issue
 #8 stays open for the other two.
 
+## Review log — wpnext-test and phpunit-test-runner, 2026-09-03
+
+The two rows PR #15 left alone, and the end of issue #8. Each was read from GitHub's
+compare view between baseline and HEAD, which lists every file that changed no matter how
+many commits carried it, and then the claims this repo pins to the old baseline were
+re-read at the new one. Cleared twice, with the receipts, because a "cleared" without them
+is the rubber stamp this register exists to prevent.
+
+**`WPNEXT-TEST`, `ace214d8` to `1ae2026c`, one commit.** Dependabot bumped
+`pantheon-systems/push-to-pantheon` from 0.9.2 to 0.9.3 in `deploy-to-pantheon.yml`. That
+workflow pushes the wpnext-test site to Pantheon and was never adapted here, since this repo
+has no site to push. The feed-scraping detector, the weekly Behat run, the
+standing-environment model and the blueprint loadout are untouched. `license.txt` is blob
+`ccdc449a` at both refs, so the GPL-2.0-or-later attribution this register corrected on
+2026-08-23 still reads straight from the file. Checked and cleared.
+
+**`PTR-RUNNER`, `64e9da98` to `c02dd6bf`, two commits, one change.** PR #338 added
+`.github/SECURITY.md`; the merge commit is the second SHA. The policy adapts the one the
+Hosting Team merged as [hosting-handbook#410](https://github.com/WordPress/hosting-handbook/pull/410)
+on 2026-08-26 and closes runner issue #322. An exploitable vulnerability in the runner
+scripts goes through the official WordPress channels rather than a public issue, "so hosts
+running the tooling are not exposed before a fix is available"; an insecure default that is
+not exploitable goes to the public tracker. That is the split [CONTRIBUTING](../CONTRIBUTING.md#disclosure)
+already draws for this repo, now stated by the upstream about itself.
+
+The runner facts the [participation lane](../fleet-operators/README.md#9-distributed-core-test-participation--public-evidence-scoped-honestly)
+pins to `64e9da98` were re-read at `c02dd6bf` rather than inferred from the file list.
+`functions.php` is blob `b8367c08` at both refs, `get_env_details()` still returns no `label`
+key, and the string `label` appears nowhere in the file. `LICENSE` (`23cb7903`) and
+`composer.json` (`97f3c0b0`) are unchanged, so the GPL-2.0-or-later verification carries
+forward to the new baseline. Checked and cleared.
+
+**What would move a limit, and has not yet.** Five PRs were open at the runner on review
+day. Two (#336, #337) change cleanup and say nothing about what a public result means.
+Three do:
+
+| Open PR | If it merges |
+|---|---|
+| [#333](https://github.com/WordPress/phpunit-test-runner/pull/333) multi-PHP, environment labels, commit tracking | The change `why_we_watch` names. "The stock runner never sends one" stops being true, and the participation lane's account-per-product rule and the collector's `environment_label: ""` assumption both need re-reading |
+| [#319](https://github.com/WordPress/phpunit-test-runner/pull/319) report the database server version, not the client binary | Today `mysql_version` is `shell_exec( 'mysql --version' )`, the client, with the `SELECT VERSION()` query commented out beneath it. Results before and after the merge would carry differently-sourced database strings under one taxonomy |
+| [#339](https://github.com/WordPress/phpunit-test-runner/pull/339) fail loudly when `junit.xml` is missing, empty, or unusable | Changes what a submitted result means when the suite produced no usable report |
+
+The next drift on this row is worth reading in full, not by subject line.
+
+Baselines moved with `--update --id=WPNEXT-TEST` and then `--update --id=PTR-RUNNER`, one
+row at a time, for the reason PR #15 gave. All four rows now say someone looked.
+
 ## Adding a row
 
 1. Verify the licence from the upstream's own LICENSE file. Check it against the table above.

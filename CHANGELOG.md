@@ -5,6 +5,22 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Changed — the upstream watch's first cycle ends with the other two rows reviewed (2026-09-03)
+
+`WPNEXT-TEST` moved from `ace214d8` to `1ae2026c`, one Dependabot bump of a Pantheon deploy
+action in a workflow this repo never adapted. `PTR-RUNNER` moved from `64e9da98` to
+`c02dd6bf`, a new `.github/SECURITY.md` plus its merge commit, routing runner vulnerabilities
+to the official WordPress channels, the split [CONTRIBUTING](CONTRIBUTING.md#disclosure)
+already draws. Both checked and cleared, receipts in
+[`sources/upstream-techniques.md`](sources/upstream-techniques.md#review-log--wpnext-test-and-phpunit-test-runner-2026-09-03).
+
+The runner facts the participation lane pins to `64e9da98` were re-read at the new HEAD rather
+than inferred: `functions.php`, `LICENSE` and `composer.json` are byte-identical across the
+range, and `get_env_details()` still sends no environment label. Three open runner PRs would
+change that if merged, #333 (environment labels), #319 (database server version instead of the
+client binary) and #339 (fail loudly on an unusable `junit.xml`); the review log names them so
+the next drift on this row gets read in full.
+
 ### Added — the probe's HTTP half, a third control, and four upstream fixes (2026-09-01)
 
 Worked from issue #8, the upstream watch's first real cycle. Seven CaptainCore commits since
