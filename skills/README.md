@@ -21,6 +21,8 @@ cp -R wp-release-audit-method/skills/wp-release-* ~/.claude/skills/
 Claude Code picks them up automatically. Then say *"prep for the release party"* or
 *"run the release day sweep"* and the matching skill loads.
 
+**Where the tests run is your call.** The skills take the driver and the install from your prompt, a path or a WP-CLI alias like `@staging` from your own `~/.wp-cli/config.yml`, and ask when you have not said. No host, alias, or credential is written into this repo. [`scripts/env/README.md`](../scripts/env/README.md) lists the drivers and what each one can and cannot do.
+
 Other assistants that support the skill format read the same `SKILL.md`; check your tool's
 documentation for where it looks.
 

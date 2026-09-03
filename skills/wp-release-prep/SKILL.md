@@ -1,6 +1,6 @@
 ---
 name: wp-release-prep
-description: Prepare WordPress Studio test environments before a release party, through control calibration. Trigger on "prep for the release party", "get environments ready", "wp release prep", "set up test sites for the beta/RC", or the day before a scheduled WordPress release.
+description: Prepare the test environments before a release party, on whichever driver the operator names, through control calibration. Trigger on "prep for the release party", "get environments ready", "wp release prep", "set up test sites for the beta/RC", or the day before a scheduled WordPress release.
 ---
 
 # wp-release-prep
@@ -10,6 +10,10 @@ Phase 0 of release testing. Ends with fixtures that are **built, seeded, asserte
 Never do this against production, WordPress.org infrastructure, third-party sites, or plugins or themes the operator doesn't own. All Studio sites use the `codex-` or `rel-` prefix. Read-only for external WordPress.org, Trac, and GitHub access.
 
 **Where paths point:** run commands from a clone of `wp-release-audit-method` — script and CSV paths are repo-relative. The repo carries the schemas and blank matrices; verdicts and evidence go in your run root's copies (`$WP_AUDIT_ROOT`), never the repo's. See [`pilots/README.md`](../../pilots/README.md).
+
+**Where it runs is the operator's call, every time.** The prompt names the driver and the install it points at: the suite scripts' `--env=<driver>` flag with a path (`--env=ddev ~/wp-test`, `--env=cli "~/Local Sites/<site>/app/public"`) or a WP-CLI alias from the operator's own `~/.wp-cli/config.yml` (`--env=cli @staging`). If the prompt names none and `WP_AUDIT_ENV` is unset, ask which before running anything; never pick a site for the operator. Nothing in this repo or this skill names a host. The alias, the path, and any credentials stay on the operator's machine, the same boundary the [run-root contract](../../pilots/README.md) draws for evidence. The `cli` driver is the only one that can reach a site somebody would miss, so it refuses to start until `WP_AUDIT_CLI_DISPOSABLE=1` says the install is expendable, and a remote alias is [untested by design](../../scripts/env/cli.sh): a first run there is an experiment on a site you own, not evidence.
+
+The steps below show Studio because that is where they were exercised. Under any other driver, every `studio-cli.sh wp …` is `env_wp …` after `env_init <driver> <path or @alias>`, and building the fixture itself is the driver's job ([`scripts/env/README.md`](../../scripts/env/README.md)).
 
 ## 0. Scan the ecosystem for what changed since last cycle
 

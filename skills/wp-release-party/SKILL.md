@@ -11,6 +11,8 @@ Assumes [`wp-release-prep`](../wp-release-prep/SKILL.md) has run — fixtures bu
 
 **Where paths point:** run commands from a clone of `wp-release-audit-method` — script and CSV paths are repo-relative. Record verdicts in your run root's copies of the matrices (`$WP_AUDIT_ROOT/pilots/release-day/`), not the repo's blank ones. See [`pilots/README.md`](../../pilots/README.md).
 
+**Where it runs is the operator's call, every time.** The prompt names the driver and the install it points at: the suite scripts' `--env=<driver>` flag with a path (`--env=ddev ~/wp-test`, `--env=cli "~/Local Sites/<site>/app/public"`) or a WP-CLI alias from the operator's own `~/.wp-cli/config.yml` (`--env=cli @staging`). If the prompt names none and `WP_AUDIT_ENV` is unset, ask which before running anything; never pick a site for the operator. Nothing in this repo or this skill names a host. The alias, the path, and any credentials stay on the operator's machine, the same boundary the [run-root contract](../../pilots/README.md) draws for evidence. The `cli` driver is the only one that can reach a site somebody would miss, so it refuses to start until `WP_AUDIT_CLI_DISPOSABLE=1` says the install is expendable, and a remote alias is [untested by design](../../scripts/env/cli.sh): a first run there is an experiment on a site you own, not evidence.
+
 | | |
 |---|---|
 | **Previous phase** | [`wp-release-prep`](../wp-release-prep/SKILL.md) — Act I, before the build drops |

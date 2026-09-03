@@ -10,6 +10,8 @@ gates the next.
 
 **Nothing is filed without the operator's explicit approval.** Draft issues, tickets, and security reports; never open, comment, or submit. External WordPress.org, Trac, and GitHub access stays read-only.
 
+Where cells run follows the same rule as [prep](../wp-release-prep/SKILL.md) and [party](../wp-release-party/SKILL.md): the operator names the driver and the install, a path or a WP-CLI alias from their own machine, and is asked when the prompt names none. No host lives in this repo.
+
 | | |
 |---|---|
 | **Previous phase** | [`wp-release-party`](../wp-release-party/SKILL.md) — Act II, the breadth sweep whose non-PASS cells feed this |

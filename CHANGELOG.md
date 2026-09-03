@@ -5,6 +5,21 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Changed — where the tests run is the operator's call, and the skills now say so (2026-09-03)
+
+The scripts already took the driver and the install as arguments, with no default site and
+the `cli` driver's `WP_AUDIT_CLI_DISPOSABLE=1` gate in front of anything real. The skills
+did not say so: `wp-release-prep` was written as a Studio procedure and `wp-release-party`
+never named where it runs. Both now carry one rule, and `wp-release-followup` points at it.
+The prompt names the driver and the install, a path or a WP-CLI alias like `@staging` from
+the operator's own `~/.wp-cli/config.yml`, and the skill asks when it names none. No host,
+alias, or credential lives in this repo. That is the run-root boundary
+[`pilots/README.md`](pilots/README.md) already draws for evidence, applied to where the run
+happens. A census of the repo the same day found no run destination to remove: the only
+`@staging` mentions are the `cli` driver's usage examples, and the hosting names that do
+appear (Kinsta, Rocket.net, Pantheon, WP Engine) describe upstream behaviour or future
+driver shapes, never a site to run against.
+
 ### Added — the probe's HTTP half, a third control, and four upstream fixes (2026-09-01)
 
 Worked from issue #8, the upstream watch's first real cycle. Seven CaptainCore commits since
