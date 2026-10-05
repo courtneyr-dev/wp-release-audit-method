@@ -93,7 +93,7 @@ You are **not** expected to read WordPress core code, write PHP, or know what a 
 | **Internationalization** | [i18n and RTL](i18n/) — ~200 locales, and the class of bug English-only testing cannot see |
 | **Get it right** | [Five ways your test can lie to you](#five-ways-your-test-can-lie-to-you) · [How to report](#how-to-report-what-you-find) · [Official sources](#where-official-information-lives) |
 | **Tooling** | [AI assistants](#using-ai-assistants) · [Tools and integrations](#tools-and-integrations) |
-| **Reference** | [What's in here](#whats-in-this-repository) · [The glossary](CONTEXT.md) — every term, used exactly · [Changelog](CHANGELOG.md) · [Safety](#safety-and-scope) · [Known gaps](#known-gaps) |
+| **Reference** | [What's in here](#whats-in-this-repository) · [The glossary](GLOSSARY.md) — every term, used exactly · [Changelog](CHANGELOG.md) · [Safety](#safety-and-scope) · [Known gaps](#known-gaps) |
 
 ---
 
@@ -1221,7 +1221,7 @@ lands.
 ## What's in this repository
 
 ```
-├── CONTEXT.md        the glossary — what every term here means, exactly
+├── GLOSSARY.md       the glossary — what every term here means, exactly
 ├── scripts/          the test scripts from Step 3
 ├── sources/          where official WordPress information lives, and what this repo borrows
 ├── accessibility/    a11y testing — layered method, tools, and where it's wired in

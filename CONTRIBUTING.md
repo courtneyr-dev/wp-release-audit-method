@@ -28,7 +28,7 @@ routine surfaces the ones that come from reading the news rather than running th
 feed the same [learning loop](method/release-audit-learning-loop.md). You don't need to
 adjudicate your own note — surfacing it is the contribution; adjudication happens here.
 
-**Writing prose for this repo?** [`CONTEXT.md`](CONTEXT.md) is the ubiquitous language —
+**Writing prose for this repo?** [`GLOSSARY.md`](GLOSSARY.md) is the ubiquitous language —
 cell, suite, lane, fixture, target, fleet variant, and the rest are used exactly, everywhere,
 and each entry lists the words to avoid. A PR that says "test case" where the repo says
 "cell" will get a rename request, so reading it first is the shorter path.

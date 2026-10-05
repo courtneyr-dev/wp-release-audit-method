@@ -5,6 +5,14 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Changed — the glossary is `GLOSSARY.md` now (2026-10-04)
+
+`CONTEXT.md` moved to [`GLOSSARY.md`](GLOSSARY.md) with `git mv`, so its history follows it.
+mattpocock/skills v1.3.0 renamed the domain-doc convention, and its skills (`domain-modeling`,
+`tdd`, `diagnosing-bugs`, `codebase-design` and seven others) now look only for `GLOSSARY.md`.
+README and CONTRIBUTING link to the new name. Earlier entries in this file still say
+`CONTEXT.md`, because that was the file's name when they were written.
+
 ### Changed — the upstream watch's first cycle ends with the other two rows reviewed (2026-09-03)
 
 `WPNEXT-TEST` moved from `ace214d8` to `1ae2026c`, one Dependabot bump of a Pantheon deploy
