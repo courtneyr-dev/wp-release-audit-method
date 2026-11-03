@@ -5,6 +5,10 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Changed — wp-release-party skill, from the 7.2 Beta 3 and 4 retro (2026-11-03)
+
+The skill now says to run `rc_build_identity.sh` itself at every start, lists the T1 cells `crud-suite.sh` observes but does not run, names the lane the ladder really runs (WP-CLI) and how to get the Core-updater lane, warns about stdin in chained scripts, says how to read Making WordPress Slack, and adds a second-drop procedure. Counts corrected to ~74 cells and 12 browser cells.
+
 ### Changed — the glossary is `GLOSSARY.md` now (2026-10-04)
 
 `CONTEXT.md` moved to [`GLOSSARY.md`](GLOSSARY.md) with `git mv`, so its history follows it.
