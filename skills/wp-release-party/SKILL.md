@@ -26,11 +26,11 @@ Assumes [`wp-release-prep`](../wp-release-prep/SKILL.md) has run — fixtures bu
 scripts/rc_build_identity.sh <VERSION> <LABEL>
 ```
 
-Even if prep passed it. Packages get republished and labels move. `WAITING` means stop the runtime cells — write the plan and report the block.
+Even if prep passed it. Packages get republished and labels move. Run the script itself, not a HEAD request: a drop can show the root URL 404 and the downloads URL 200 for several minutes (7.2 Beta 4 did). Pin the URL the script prints as `RELEASED`; while it prints `WAITING`, poll the script, not curl. `WAITING` means stop the runtime cells — write the plan and report the block.
 
-## 2. Run the T1 sweep (~72 cells)
+## 2. Run the T1 sweep (~74 cells)
 
-`pilots/release-day/sweep-matrix.csv`, `tier == T1`: 51 wp-cli + 10 browser + 3 ecosystem + 4 accessibility + 4 i18n, across single-site, multisite-subsite, and multisite-network. The ecosystem block is [its own lane](../../method/ecosystem-compatibility-lane.md); the i18n cells are gated by `scripts/preflight-sensitivity.sh --gate=i18n` — on an en_US-only environment they are `BLOCKED(locale-en_US)`, never SKIP and never PASS.
+`pilots/release-day/sweep-matrix.csv`, `tier == T1`: 51 wp-cli + 12 browser + 3 ecosystem + 4 accessibility + 4 i18n, across single-site, multisite-subsite, and multisite-network. The ecosystem block is [its own lane](../../method/ecosystem-compatibility-lane.md); the i18n cells are gated by `scripts/preflight-sensitivity.sh --gate=i18n` — on an en_US-only environment they are `BLOCKED(locale-en_US)`, never SKIP and never PASS.
 
 Order: CLI first (scriptable, parallel across fixtures), browser second (slow, and only the entities whose UI this release changes).
 
@@ -93,11 +93,17 @@ Refresh the tail of that list each cycle — the newest entry should be the **cu
 
 Per cell record `verdict` (`PASS` `FAIL` `PARTIAL` `BLOCKED` `SKIP` `INVALID`), `command`, `evidence_path`, `fixture_hash`, `cleanup_verified`. **These are smoke verdicts, not the finding vocabulary** — `CONFIRMED`/`REFUTED`/`INCONCLUSIVE` belong to chains and are reported separately.
 
+`crud-suite.sh` observes but does not run these T1 cells: T1-06, 19, 20, 28, 32, 34, 37, 40, 41, 42, and it leaves T1-04/05 PARTIAL (restore not exercised). After the scripts, list T1 cells with an empty verdict and cover them with one probe script saved as `evidence/probes-<fixture>.sh`. Scheduled-post cells need a publish date more than 60 seconds ahead (use +150 s, sleep 165 s) or WordPress publishes the post at once.
+
+Run each repo script with `</dev/null` when several start from one heredoc or `bash -s`: `users-pages-install.sh` and `wp-env run` read stdin and swallow the rest. A suite with no log file did not run; it did not fail.
+
 Rules that hold all day: serialize mutations against one fixture · controls before cells · a control miscalibration makes the whole batch `INVALID` (preserve it, exclude it from counts) · verify cleanup · a harness fault is never a product failure.
 
 ## 3. Run the T1 upgrade ladder (9 cells)
 
-`pilots/release-day/upgrade-ladder.csv`, `tier == T1`: 4.9, 5.0, 6.2, 6.3, 6.6, 6.9, 7.0.2 single-site, plus 4.9 and 7.0.2 multisite — all Core-updater lane.
+`pilots/release-day/upgrade-ladder.csv`, `tier == T1`: 4.9, 5.0, 6.2, 6.3, 6.6, 6.9, 7.0.2 single-site, plus 4.9 and 7.0.2 multisite — WP-CLI lane. `direct-jump-matrix.sh` runs `wp core update`. For the Core-updater lane, run the PHP `Core_Upgrader` class on a fresh source-version fixture and diff the tree against a clean install; this is how 10 stale files surfaced at 7.2 Beta 3. Record `updater_lane` per rung and say in the report which lane each rung used. Put current stable at the top of the ladder (7.1.4 for 7.2), not 7.0.2. The T1 subset's 6.3 and 6.6 are not in the series list above; use the latest patch of each (6.3.8, 6.6.5 this cycle).
+
+The 4.9 multisite rung has no script: `multisite-suite.sh` hard-codes 7.0.2. WP-CLI on 4.9 stores subsite domains without the port, so every subsite 404s until `wp_blogs` is repaired. A rung that fails that way is INVALID, not FAIL.
 
 Every ladder fixture pins **PHP 7.4** — the only band where the oldest source and the current target both run. This proves the *upgrade*, not the modern runtime; say so in the report.
 
@@ -116,7 +122,7 @@ python3 scripts/render_slack_checklist.py --from-results --tier T1 \
 
 Before posting, verify: the header names the build **actually tested** (beta ≠ RC), the method line names the upgrade lane, invalid batches are counted and excluded, no local filesystem paths, no credentials, and any confidential finding is reduced to a bare acknowledgment.
 
-**Claude does not post to Slack.** Output the text; the operator posts it. Making WordPress Slack is read-only under the standing source rules.
+**Claude does not post to Slack.** Output the text; the operator posts it. Making WordPress Slack is read-only under the standing source rules. Release-lead and core channels are read in the operator's signed-in Chrome, never through a connector. If a permalink drops the tab out of its group, open `app.slack.com/client/<team>/<channel>/thread/<channel>-<ts>` and use single calls, not `browser_batch`. Record each channel in the coverage register as read or unread.
 
 ### Example output
 
@@ -227,6 +233,19 @@ renderer's `--strict` flag an orphan? Fill in [`templates/skill-run-retro.md`](.
 shareable ones go to a [field report](../../CONTRIBUTING.md#suggesting-improvements-from-real-use).
 Method: [`retro`](../../method/retro.md). Keep it apart from the finding vocabulary — a cell that
 couldn't run is a tool `GAP`, not a WordPress `FAIL`.
+
+## A second drop (Beta 4, RC2)
+
+When a new build lands mid-cycle and an incremental update is asked for:
+
+1. Run the identity gate, not the full sweep.
+2. Upgrade each environment from the previous build and once from current stable by both lanes; record version, db revision and checksums.
+3. Re-test every open finding and say "still reproduces" or "fixed".
+4. Diff the two packages from fresh installs and report file counts.
+5. Re-run CRUD once on a fresh install and diff the normalized output against the prior run.
+6. Post in two messages, scope first with no results, results second. Map results into matrix cells and re-render under `--strict`, or label the report hand-built.
+
+Also on every drop: the SVN deletion diff (`svn diff --summarize` between the previous tag and the new source) beside the offline and tree-diff stale-file checks, a Beta Tester plugin upgrade (single and multisite subdirectory), a `core_updater.lock` check after each upgrade, a downgrade then upgrade sequence, and PHP 8.5 and MariaDB when the environment allows.
 
 ## Done when
 
