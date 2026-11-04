@@ -15,6 +15,14 @@ The bar is not "don't use AI" — it's "a human owns it, verified it, and made i
 How to use: walk the phases top to bottom. Every box is a gate. If a box fails, fix it before the
 next phase. The copy-paste template and the red-flag stop-list are at the bottom.
 
+**Read this first, even if you read nothing else.** The person filing has to explain every finding
+in their own words before it's filed: what breaks, for whom, whether it's specific to the release
+under test, who owns the fix, and which published page it's about. If they can't, the agent that
+drafted it explains it to them first. Reviewers will ask, often in a meeting minutes later, and
+"the model said" isn't an answer. (A 2026-11-04 docs issue failed exactly this: filed from a
+release test, defended as release-specific, and it wasn't.) The red flags at the bottom are the
+stop list; read them before drafting, not after.
+
 ---
 
 ## Phase 0 — Calibrate to the target project (30 seconds, do it first)
@@ -97,6 +105,10 @@ This is the pass that most separates a trusted human report from slop. Do it del
 - [ ] **Every ticket/PR/CVE number you cross-reference resolves** to the thing you say it is.
 - [ ] **Every quoted error string / output is copied from a real run**, not paraphrased from memory.
 - [ ] **Numbers are measured, not estimated** ("331 vs 88 = 243", not "~hundreds").
+- [ ] **A finding about a docs page links the published page readers see**, not only the source
+      file path, and that URL returns 200. Link both.
+- [ ] **The report says which versions it applies to**: the ones you ran and the ones you only read
+      in source. When the defect isn't from the release under test, say so in the first paragraph.
 
 ---
 
