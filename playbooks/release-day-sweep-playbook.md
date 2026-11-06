@@ -62,6 +62,13 @@ worked WP Rocket incident, and the honest limits (premium plugins read
 
 **Shape:** 22 source versions (4.9, 5.0–5.9, 6.0–6.9, 7.0.2) × {single, multisite} × {Core updater, WP-CLI updater} = 88 cells.
 
+**The updater paths aren't interchangeable.** Record which path each cell used, and don't let one stand in for another:
+
+- **Core updater (`Core_Upgrader`):** the Dashboard > Updates form, the Beta Tester plugin's UI path, and scripted `Core_Upgrader` runs. It loads the *new* `update-core.php` and deletes what the new `$_old_files` lists. On 7.1.4 → 7.2-beta4 every path of this kind (UI form, downgrade then re-upgrade, Beta 3 then Beta 4) left the same 10 files under `wp-includes/` that the package doesn't ship (Trac #66456), and the lock `core_updater.lock` was held from download to `upgrader_process_complete` and gone by shutdown.
+- **WP-CLI `wp core update`:** on the same jump the tree matched a clean install, because WP-CLI also deletes files that the old version's checksums list and the new version's don't (`cleanup_extra_files()` in `wp-cli/core-command`). A clean WP-CLI cell doesn't clear the Core updater cell.
+- **Direct `update_core()` call:** runs the *old* build's `$_old_files`. On 7.1.4 → 7.2-beta4 it deleted 11 icons Beta 4 restores. That's a harness artifact, useful only as a control; never report it as a core result.
+- **Upgraded vs fresh install:** some results exist only on upgraded sites. Upgraded 7.2-beta4 sites kept a leftover editor-styles file that fresh installs don't have, and `/random/` returned 404 until the first wp-admin request flushed rewrite rules. Run both.
+
 ### The PHP constraint that shapes everything
 
 WordPress 4.9 does not run on PHP 8.x. The target requires PHP ≥ 7.4 (`wp70-php-74-minimum`). **PHP 7.4 is the only band where both ends of the ladder run**, so every ladder fixture pins 7.4. Two consequences worth stating plainly:
@@ -122,6 +129,8 @@ not automatically a GA blocker — trunk usually has the fix and the next RC pic
 always worth a line to the release squad, and it becomes a blocker the moment the *final* build
 still flags VULNERABLE. Route specifics privately to the security channel, never a public tracker.
 
+Read the exit code before the verdict lines: 0 means every comparison ran with no VULNERABLE line diff (not "every fix present"), 4 means at least one VULNERABLE, 3 means the run is incomplete (a subprocess failed or zero comparisons ran) and says nothing either way, 2 is a setup error. The table and calibration notes are in the [security release audit playbook](security-release-audit-playbook.md#reading-the-exit-code).
+
 ### Fixture traps proven on 7.1-RC1 day
 
 **Parked fixtures self-upgrade.** Fresh installs since WordPress 5.6 default `auto_update_core_major` to enabled, so an old-version fixture left running quietly updates itself to current stable — two ladder cells were found sitting on 7.0.2 with their old `db_version` gone, which destroys the cell (the schema already migrated, so the old→target migration can no longer be proven). Pin `WP_AUTO_UPDATE_CORE=false` in the fixture config at build time, and **re-assert the before-state at run start, not fixture-build time** — the assertion that matters is the one taken the moment before the upgrade.
@@ -142,6 +151,7 @@ Unchanged from the standing method, and non-negotiable:
 4. **Serialize mutations** against one fixture; verify cleanup; rerun valid batches from the restored baseline and require matching observations.
 5. **Verdicts:** `CONFIRMED` `REFUTED` `INCONCLUSIVE` `BLOCKED` `INVALID`. Nothing else.
 6. **Harness-health precheck** before each batch. A harness fault is never a product result.
+7. **Keep errors in the log.** Write the command's full output and its own exit status to the raw log first, then filter the saved file: `cmd >raw.log 2>&1; echo "rc=$?" >>raw.log`, then `grep … raw.log`. A pipe such as `cmd | grep PATCHED` reports grep's status and drops the command's errors; that's how the fix-presence checker's grep and awk failures went unseen until exit 3 was added. A run with a missing exit status or a partial log is `INVALID` or `INCONCLUSIVE`, never a pass. If a broad command's errors were hidden this way, fix the logging before you repeat it.
 
 ## The checklist-first fast path
 

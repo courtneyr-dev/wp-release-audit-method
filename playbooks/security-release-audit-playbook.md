@@ -68,6 +68,19 @@ Honest limits carry over from the single-pair mode: it reads lines not semantics
 confined to a docblock reads VULNERABLE), DIVERGED needs a human, and for any high-severity
 fix confirm behaviorally rather than trusting the line diff.
 
+### Reading the exit code
+
+| Exit | Meaning | What you may say |
+|---|---|---|
+| 0 | Every comparison ran and none read VULNERABLE | "No VULNERABLE line diffs." Not "every fix is present": DIVERGED and MISSING-FILE rows still need a human read, and the checker doesn't look at files a fix adds |
+| 4 | Every comparison ran and at least one file read VULNERABLE | Name the row and file; confirm behaviorally before routing |
+| 3 | A diff, grep or awk subprocess failed, or zero comparisons ran | Nothing. The run is incomplete: fix the cause and rerun. Never count it as a pass or a fail |
+| 2 | Setup error: bad target, or a release couldn't be fetched or extracted | Nothing; fix the setup |
+
+Exit 3 exists because the earlier version swallowed its own errors: BSD grep failed on a 140,829-byte minified line and awk split on a space in the cache path, and the run still printed a verdict. Calibrated after the repair (PR 39): the pre-fix build exits 4, the fixed build exits 0, and both a zero-comparison run and a target path with a space and no files exit 3 with a message. Against 7.2-beta4, the 7.1 → 7.1.1 row, which failed before the repair, exits 0 with 15 DIVERGED files: that reads "check 15 files by hand", not "all fixes present".
+
+Keep the calibration controls with every run (the patched release expecting exit 0, the predecessor expecting exit 4), and record the edition and source limits the run had. Reporting pre-fix survivors as their own category is proposed, not built.
+
 ## Lanes: blind first-principles, changed-surface, reconcile
 
 Run two independent passes and reconcile only after both report — never mid-pass.
