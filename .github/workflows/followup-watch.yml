@@ -1,0 +1,128 @@
+# Watch for replies to release work you filed, commented on, or were pinged on.
+#
+# Release watch asks "did WordPress ship something"; this asks "did anyone answer
+# me." Twice a day, scripts/followup-watch.py checks Core Trac, GitHub, Make blog
+# comments and support-forum topics for new replies by anyone else since the last
+# run, plus @mentions anywhere on Core Trac. It keeps ONE open issue: the body
+# shows the last run and each source's status, and a comment arrives only when
+# there is something new, so GitHub's own notification is the alert.
+#
+# Configuration lives in repository variables, not in this file:
+#   WATCH_WPORG_USER   WordPress.org username
+#   WATCH_GITHUB_USER  GitHub username
+#   WATCH_SINCE        cycle start, YYYY-MM-DD (Beta 1 of the release in flight)
+#   WATCH_GITHUB_ORGS  optional, comma-separated (default WordPress)
+#
+# The window starts at the "last-run" marker in the issue body (36 hours back on
+# the first run, 14 days at most). A blocked source is posted as a comment naming
+# the window it missed; the next run moves on rather than re-reporting.
+#
+# Injection note: titles and links come from third-party feeds. The script renders
+# them inert, and they reach the issue only through --body-file, never through a
+# run: expression.
+
+name: Follow-up watch
+
+on:
+  schedule:
+    # 13:00 and 20:00 UTC: 8am and 3pm US Eastern standard time (9am and 4pm in
+    # daylight time). Cron has no time zones.
+    - cron: '0 13 * * *'
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+    inputs:
+      since:
+        description: 'Window start, e.g. 2026-11-06T13:00:00Z (blank = last run)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: followup-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    name: Check for follow-ups
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Control (no network)
+        run: python3 scripts/followup-watch.py --control
+
+      - name: Find the watch issue and the last run
+        id: issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_SINCE: ${{ inputs.since }}
+        run: |
+          num="$(gh issue list --state open --label followup-watch --limit 1 --json number --jq '.[0].number // empty')"
+          since=""
+          if [ -n "$num" ]; then
+            since="$(gh issue view "$num" --json body --jq .body \
+              | grep -oE 'followup-watch last-run: [0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z' \
+              | tail -1 | awk '{print $3}')"
+          fi
+          if [ -n "$INPUT_SINCE" ]; then since="$INPUT_SINCE"; fi
+          echo "number=$num" >> "$GITHUB_OUTPUT"
+          echo "since=$since" >> "$GITHUB_OUTPUT"
+
+      - name: Run the watch
+        id: run
+        env:
+          WATCH_WPORG_USER: ${{ vars.WATCH_WPORG_USER }}
+          WATCH_GITHUB_USER: ${{ vars.WATCH_GITHUB_USER }}
+          WATCH_SINCE: ${{ vars.WATCH_SINCE }}
+          WATCH_GITHUB_ORGS: ${{ vars.WATCH_GITHUB_ORGS }}
+          GITHUB_TOKEN: ${{ github.token }}
+          SINCE: ${{ steps.issue.outputs.since }}
+        run: |
+          rc=0
+          if [ -n "$SINCE" ]; then
+            python3 scripts/followup-watch.py --since "$SINCE" --out comment.md --status status.md --count-file count.txt || rc=$?
+          else
+            python3 scripts/followup-watch.py --out comment.md --status status.md --count-file count.txt || rc=$?
+          fi
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [ "$rc" != 0 ] && [ "$rc" != 2 ]; then
+            echo "::error::followup-watch exited $rc (set the WATCH_* repository variables?)"
+            exit 1
+          fi
+          cat status.md >> "$GITHUB_STEP_SUMMARY"
+          echo "Follow-ups: $(cat count.txt)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NUM: ${{ steps.issue.outputs.number }}
+          RC: ${{ steps.run.outputs.rc }}
+        run: |
+          {
+            echo "Twice-daily check for replies to release work: new comments by anyone else where you filed or commented this cycle, and @mentions on Core Trac. New follow-ups arrive as comments here. Close this issue to start a fresh one on the next run."
+            echo
+            cat status.md
+          } > body.md
+          if [ "$RC" = 2 ]; then
+            {
+              [ -s comment.md ] && { cat comment.md; echo; }
+              echo "Some sources didn't answer this run, so their part of this window wasn't checked:"
+              echo
+              grep -F 'BLOCKED' status.md
+            } > comment.tmp && mv comment.tmp comment.md
+          fi
+          if [ -z "$NUM" ]; then
+            gh label create followup-watch --color 0e8a16 --description "Follow-up watch" --force
+            NUM="$(gh issue create --title "Follow-up watch" --label followup-watch --body-file body.md | grep -oE '[0-9]+$')"
+          else
+            gh issue edit "$NUM" --body-file body.md
+          fi
+          if [ -s comment.md ]; then
+            gh issue comment "$NUM" --body-file comment.md
+            echo "Posted follow-ups to #$NUM." >> "$GITHUB_STEP_SUMMARY"
+          fi

@@ -5,6 +5,10 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — follow-up watch, twice daily (2026-11-07)
+
+[`scripts/followup-watch.py`](scripts/followup-watch.py) and [its workflow](.github/workflows/followup-watch.yml) report new replies by anyone else on Core Trac tickets, GitHub issues and pull requests, Make posts and forum topics you took part in since the cycle start, plus Core Trac @mentions, as comments on one open issue at 13:00 and 20:00 UTC. Accounts and the cycle start come from repository variables. The digest names no commenter and renders titles inert. `--control` runs 14 canned cases; three deliberately broken filters (own-comment, time window, mention neutralizing) each failed a control before the script was accepted. Core Trac's per-ticket RSS answers 403 to scripts, so the script reads the timeline feed (`authors=` and `max=` work; `author=` is ignored and the default cap is 50 items).
+
 ### Changed — wp-release-party skill, from the 7.2 Beta 3 and 4 retro (2026-11-03)
 
 The skill now says to run `rc_build_identity.sh` itself at every start, lists the T1 cells `crud-suite.sh` observes but does not run, names the lane the ladder really runs (WP-CLI) and how to get the Core-updater lane, warns about stdin in chained scripts, says how to read Making WordPress Slack, and adds a second-drop procedure. Counts corrected to ~74 cells and 12 browser cells.

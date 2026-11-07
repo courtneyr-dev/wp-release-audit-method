@@ -513,6 +513,14 @@ build exists" — then opens one tracking issue per build and dispatches the
 upgraded in place to the new build, CRUD suite against the result, output kept as an
 artifact. Fork the repo and both come with it.
 
+A third, the [follow-up watch](.github/workflows/followup-watch.yml), runs twice a day and
+answers "did anyone reply to me." [`followup-watch.py`](scripts/followup-watch.py) checks Core
+Trac, GitHub, Make blog comments and support-forum topics for new replies by anyone else
+where you filed or commented since the cycle's Beta 1, plus @mentions anywhere on Core Trac,
+and posts what's new as a comment on one open issue. It reads its accounts and cycle start
+from repository variables (`WATCH_WPORG_USER`, `WATCH_GITHUB_USER`, `WATCH_SINCE`), so a fork
+sets its own; `--control` runs its positive and negative cases with no network.
+
 ---
 
 ## Step 4: Check what your setup can detect
