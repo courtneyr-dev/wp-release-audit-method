@@ -62,7 +62,9 @@ class Fetcher:
         h = {"User-Agent": UA}
         if accept:
             h["Accept"] = accept
-        if self.token and url.startswith("https://api.github.com/"):
+        # Not on search: an Actions token limits search results to its own repository,
+        # which made the first hosted run report "ok (0 items)". Public search works anonymously.
+        if self.token and url.startswith("https://api.github.com/") and not url.startswith("https://api.github.com/search/"):
             h["Authorization"] = f"Bearer {self.token}"
         try:
             with urllib.request.urlopen(urllib.request.Request(url, headers=h), timeout=60) as r:
