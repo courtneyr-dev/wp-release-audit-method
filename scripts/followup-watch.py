@@ -113,6 +113,13 @@ def mentions(text, user):
     return bool(user) and re.search(rf"@{re.escape(user)}\b", html.unescape(text), re.I) is not None
 
 
+def parse_orgs(value):
+    """WATCH_GITHUB_ORGS -> list. Empty or blank means the default: an unset repository
+    variable reaches the workflow as an empty string, which once meant "search no orgs"."""
+    orgs = [o.strip() for o in (value or "").split(",") if o.strip()]
+    return orgs or ["WordPress"]
+
+
 def iso(t):
     return t.strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -222,7 +229,7 @@ def github_followups(f, cfg, start, now, status):
     except Blocked as e:
         status.append(("GitHub", f"BLOCKED ({e}) after {checked} items"))
         return out
-    status.append(("GitHub", f"ok ({checked} items updated in the window)"))
+    status.append(("GitHub", f"ok ({checked} items updated in the window; orgs: {', '.join(cfg['orgs'])})"))
     return out
 
 
@@ -365,6 +372,9 @@ def control():
             return super().get(url, accept)
     _, st2 = run(Broken(), cfg, start, now)
     checks.append(("a blocked source is reported as BLOCKED", any(n == "Core Trac" and v.startswith("BLOCKED") for n, v in st2)))
+    checks.append(("an empty or blank org variable searches the default org",
+                   parse_orgs("") == ["WordPress"] and parse_orgs(" , ") == ["WordPress"] and parse_orgs(None) == ["WordPress"]
+                   and parse_orgs("WordPress, Automattic") == ["WordPress", "Automattic"]))
     failed = [name for name, ok in checks if not ok]
     for name, ok in checks:
         print(("PASS " if ok else "FAIL ") + name)
@@ -384,7 +394,7 @@ def main():
 
     cfg = {"wporg": os.environ.get("WATCH_WPORG_USER", "").strip(), "github": os.environ.get("WATCH_GITHUB_USER", "").strip(),
            "since_date": os.environ.get("WATCH_SINCE", "").strip(), "register": REGISTER,
-           "orgs": [o.strip() for o in os.environ.get("WATCH_GITHUB_ORGS", "WordPress").split(",") if o.strip()]}
+           "orgs": parse_orgs(os.environ.get("WATCH_GITHUB_ORGS"))}
     if not re.fullmatch(r"[A-Za-z0-9._-]{1,60}", cfg["wporg"]) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", cfg["since_date"]):
         print("set WATCH_WPORG_USER and WATCH_SINCE (YYYY-MM-DD)", file=sys.stderr)
         return 1
