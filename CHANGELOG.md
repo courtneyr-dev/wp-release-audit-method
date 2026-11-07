@@ -5,6 +5,9 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — follow-up watch, twice daily (2026-11-07)
+
+[`scripts/followup-watch.py`](scripts/followup-watch.py) and [its workflow](.github/workflows/followup-watch.yml) report new replies by anyone else on Core Trac tickets, GitHub issues and pull requests, Make posts and forum topics you took part in since the cycle start, plus Core Trac @mentions, as comments on one open issue at 13:00 and 20:00 UTC. Accounts and the cycle start come from repository variables. The digest names no commenter and renders titles inert. `--control` runs 14 canned cases; three deliberately broken filters (own-comment, time window, mention neutralizing) each failed a control before the script was accepted. Core Trac's per-ticket RSS answers 403 to scripts, so the script reads the timeline feed (`authors=` and `max=` work; `author=` is ignored and the default cap is 50 items).
 ### Changed — upgrade cells, request logs and edge responses, from the 7.2 Beta 4 follow-up (2026-11-07)
 
 The sweep playbook adds three upgrade-cell rules: a third control after one wp-admin request (the `db_upgraded` flush), per-site state on multisite, and reading `db_version` after every step. Execution discipline gains items 8 (log request order) and 9 (save unexpected bodies; classify by content and origin headers; check the host's documented route). The tar-truncation trap records the 7.2 recurrence. `method/validation-and-proof.md` asks for a search of every code path before a "doesn't do X" claim, and no fix proposal before a control confirms the mechanism.
