@@ -319,6 +319,8 @@ watched for drift in [`sources/upstream-watch.csv`](../sources/upstream-watch.cs
 
 ## Related
 
+- [Testing WordPress 7.2 on a hosting fleet](wordpress-7-2-hosting-tests.md): what changed in 7.2 that behaves differently on a host, how to test it, and what one host's pre-release run found.
+
 [Preflight core probe](../method/preflight-core-probe.md) ·
 [Fleet release-readiness brief template](../templates/fleet-release-readiness-brief.md) ·
 [Participation request messages](../templates/participation-request-messages.md) ·
