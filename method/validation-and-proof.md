@@ -73,6 +73,8 @@ Prove **only**: reachability · attacker control · required privilege · bounda
 ## Finding-reporting standard
 Report, mechanism-first then proof: title · component · affected versions · target revision · distributed-artifact status · attacker access · required privileges · realistic prerequisites · uncommon-config requirements · source · sink/effect · broken invariant · exact execution path · boundary crossed · safe reproduction · negative control · role control · expected vs observed · independent verification · impact · severity rationale · confidence · remediation · regression test · related code · disclosure status. Avoid "it is possible that" when evidence exists; label as **hypothesis** when it doesn't.
 
+Before reporting that code doesn't do something, search for every path that could do it (callers of the function, readers of the option, hooks on the action), not only the function you expected. A 7.2 report read `upgrade_720()`, found no rewrite flush, and missed the one `wp-admin/admin.php` runs when `db_upgraded` is set. Don't propose a fix until a control has confirmed the mechanism.
+
 ---
 
 # Reusable templates
