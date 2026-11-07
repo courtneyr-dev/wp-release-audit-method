@@ -5,6 +5,10 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — a 7.2 guide for hosting teams (2026-11-07)
+
+[`fleet-operators/wordpress-7-2-hosting-tests.md`](fleet-operators/wordpress-7-2-hosting-tests.md) is for DevRel and SRE teams at hosts and agencies: how to run this method on 7.2, the 7.2 changes that behave differently on a hosting platform (the two upgrade paths, `/random/` per-site flushing, the Secrets API key source, client-side media's silent fallback and five smaller changes), edge and page-cache tests with one host's results, and what's still untested. It names no host and cites only public sources.
+
 ### Added — follow-up watch, twice daily (2026-11-07)
 
 [`scripts/followup-watch.py`](scripts/followup-watch.py) and [its workflow](.github/workflows/followup-watch.yml) report new replies by anyone else on Core Trac tickets, GitHub issues and pull requests, Make posts and forum topics you took part in since the cycle start, plus Core Trac @mentions, as comments on one open issue at 13:00 and 20:00 UTC. Accounts and the cycle start come from repository variables. The digest names no commenter and renders titles inert. `--control` runs 14 canned cases; three deliberately broken filters (own-comment, time window, mention neutralizing) each failed a control before the script was accepted. Core Trac's per-ticket RSS answers 403 to scripts, so the script reads the timeline feed (`authors=` and `max=` work; `author=` is ignored and the default cap is 50 items). The first hosted runs reported GitHub "ok (0 items)" because the unset `WATCH_GITHUB_ORGS` variable reached the script as an empty string, which it read as "search no orgs"; an empty value now means the default, the status line names the orgs searched, and a control case covers it. An earlier fix that dropped the workflow token from search calls was based on an untested guess and didn't change the result; search still runs without the token.
