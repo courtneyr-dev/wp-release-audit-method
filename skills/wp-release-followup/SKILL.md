@@ -158,7 +158,9 @@ drift the moment a chain executes. What each status means:
 
 **Run `X-SERIAL-01` first.** If re-saving unchanged content mutates bytes, every byte-diff assertion elsewhere is measuring noise.
 
-**Full media sweep.** Upload, then delete, every type in `get_allowed_mime_types()` (94 at 7.2 Beta 5). For each one, assert the stored MIME type, the sub-sizes produced and the attachment URL, and that the code types are refused for a user without `unfiltered_html`. Run it once on GD and once on Imagick, because the image stack decided 7.1's P0 media findings. Rerun it at RC1.
+**Full media sweep.** Upload, then delete, every type in `get_allowed_mime_types()` (94 at 7.2 Beta 5). For each one, assert the stored MIME type, the sub-sizes produced and the attachment URL, and that the code types are refused for a user without `unfiltered_html`. Run it once on GD and once on Imagick, because the image stack decided 7.1's P0 media findings. Rerun it at RC1. The script is `<method repo>/scripts/media-type-sweep.sh`: give it `--out` on the previous stable, then `--baseline` on the build under test.
+
+**Old-stack lanes, when the release touches them.** A bundled Requests update means rerunning outbound HTTP (update checks, `plugins_api`, `download_url` on both transports) on an old libcurl and comparing it with the previous stable; 6.4's Requests update broke updates on libcurl 7.29. A change to archive handling means replaying the install suite's zips on libzip older than 1.10.1. A Debian bookworm PHP image has libzip 1.7.3, and buster's PHP 7.4 image has libcurl 7.64.0. CentOS 7 (libcurl 7.29) needs an x86 host; emulating it on ARM failed at Beta 5.
 
 PHP is an axis, not a chain — multiply only the seven chains listed in `pilots/release-day/php-axis.csv`, on PHP-matched fixture pairs (`FX-10`..`FX-15`). Never compare a 7.4 multisite fixture against an 8.4 single-site one; that confounds runtime with site mode.
 

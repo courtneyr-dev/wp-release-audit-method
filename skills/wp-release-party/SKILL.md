@@ -61,7 +61,7 @@ Image editing: crop, rotate, flip and restore original, on GD and on Imagick whe
 
 Openverse (inserter, Media tab): first `curl` the API (`https://api.openverse.org/v1/images/?q=<term>`) and record the status code and time, then search in the editor. A 504 or a 10-second answer from the API is an Openverse outage, not a release result: at 7.2 Beta 5, 5 of 5 searches returned 504 and the editor code was unchanged. Mark the cell `BLOCKED(openverse-api)` and say so under "Not covered".
 
-Every type, both image stacks: that sweep is `wp-release-followup` §3's job, not the party's.
+Run it with `<method repo>/scripts/media-suite.sh` (single site, then `--site=<subsite url>`): about 20 seconds, with a negative control in its CHANGELOG entry. Plugin and theme installs run with `<method repo>/scripts/extension-install-suite.sh`, which covers the upload screens with each browser's zip MIME type, six zip shapes from macOS, Windows and PowerShell, both unzip libraries, and a `CHECKCONS` control for the 6.4.3 Finder-zip failure. Read its `env-libzip` line: on libzip 1.10.1 or newer it can't show that bug, so replay the zips (`--keep-zips`) on an old-libzip stack when a release touches archive handling. Every type, both image stacks: that sweep is `wp-release-followup` §3's job (`<method repo>/scripts/media-type-sweep.sh`), not the party's.
 
 In the paste these lines go in a Media group after Content and users, one site-mode emoji per line.
 
