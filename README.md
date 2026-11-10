@@ -463,6 +463,9 @@ bash scripts/crud-suite.sh ~/wp-test http://localhost:8888
 | `fast-triage.sh` | Build identity, changed files. **No site needed** | 1 min |
 | `preflight-sensitivity.sh` | What your environment can and can't detect | 1 min |
 | `crud-suite.sh` | Posts, comments, media, categories | 5 min |
+| `media-suite.sh` | One file per media display path, embedded with 10 blocks, 5 shortcodes, oEmbed, site logo and icon; library, REST and image editing; front-end `srcset`, lazy loading and `fetchpriority` | 1 min |
+| `extension-install-suite.sh` | Every way a plugin or theme gets installed, six zip shapes (macOS, Windows, PowerShell backslashes) through ZipArchive and PclZip, the upload screens with each browser MIME type | 1 min |
+| `media-type-sweep.sh` | Every allowed upload type (128 extensions at 7.2), compared with a baseline from the previous stable | 1 min |
 | `users-pages-install.sh` | Users, pages, installs, password-protected content | 10 min |
 | `verify.sh` | One upgrade, captured cleanly | 5 min |
 | `direct-jump-matrix.sh` | Upgrading from each older WordPress series | 30 min+ |
