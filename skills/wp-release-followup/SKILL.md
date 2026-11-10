@@ -5,8 +5,10 @@ description: Follow up after a WordPress release party — recheck filed tickets
 
 # wp-release-followup
 
-Phase 2. Depth, after the party. §0 pins the host context, then four jobs in order — each
+Phase 2. Depth, after the party. §0 pins the host context, then five jobs in order — each
 gates the next.
+
+When the party hands over specific non-green items, run §1, §2 and §4 on those items first. The closing message then names which of §3 and §5 haven't run, and which register writes are pending (including §2's negative controls).
 
 **Nothing is filed without the operator's explicit approval.** Draft issues, tickets, and security reports; never open, comment, or submit. External WordPress.org, Trac, and GitHub access stays read-only.
 
@@ -116,17 +118,21 @@ the operator must confirm. Method: [the participation lane](../../fleet-operator
 
 ## 1. Did previously filed issues get resolved?
 
-Read `pilots/filed-issues-register.csv` (create it if missing — columns: `filed_id,date_filed,system,url,title,our_verdict_at_filing,status_now,retested_build,retest_verdict,notes`). Seed it from the vault's existing drafts and submissions under `WordPress 7.1/testing/`.
+Read `pilots/filed-issues-register.csv` (create it if missing — columns: `filed_id,date_filed,system,url,title,our_verdict_at_filing,status_now,retested_build,retest_verdict,notes`). Seed it from the vault's existing drafts and submissions under the current cycle's `1. Projects/WordPress <version>/` (`findings/` and `testing/`).
 
 For each open row: check current status through an allowed route — Trac via the MCP for status/milestone/owner (its `component` is always blank and `searchTickets` can't filter by milestone; don't fight the bot challenge), GitHub via `gh`, HackerOne through the operator only.
 
 **A ticket marked fixed is not a fixed behavior.** Every closed item goes to step 2 for a runtime retest. Record the status check and the retest separately.
+
+The register is tracked in the public method repo. Log each check and verdict in the cycle's `run-log.md` as you go, and write them to the register in one commit after the operator files.
 
 ## 2. Retest everything newly resolved since the last release
 
 Build the list from: closed tickets on the milestone, changesets in the release branch since the prior tag, and the register rows that flipped to closed.
 
 For each, reproduce the **original** failing condition on the new build with calibrated controls. Verdicts: `CONFIRMED` (still broken), `REFUTED` (genuinely fixed), `INCONCLUSIVE`, `BLOCKED`, `INVALID`.
+
+Rerun the recipe recorded with the original finding (the party's lane script or the draft's rerun recipe) rather than retyping it. Before reading any result, log `wp core version` and `wp option get db_version` and check both match the target build. `Core_Upgrader` run from WP-CLI skips the database step, because `update_core()` posts to `upgrade.php?step=upgrade_db` and nothing answers, so follow it with `wp core update-db`.
 
 Two failure modes to avoid: don't accept a source diff as proof of a runtime fix, and don't declare a fix from a passing test whose *original* reproduction was never re-established — if you can't reproduce the old failure on the old build, you can't claim the new build fixed it.
 
@@ -184,6 +190,8 @@ One draft per confirmed defect, routed by system:
 
 - **Trac** — check for duplicates first; summary, steps to reproduce, expected vs actual, environment (build, PHP, site mode, theme), and the exact rerun recipe
 - **GitHub** (Gutenberg, Learn, docs) — same, in the owning repo
+- **Stale files before RC1** — no draft. `$_old_files` is updated in the run-up to RC1. Before RC1, files the Core updater leaves behind are expected: report them as "expected before RC1" (never ❌), keep the path list in the run's evidence, and draft no ticket or comment. From RC1 on, a removed path still missing from `$_old_files` is a finding; file it once, with the whole beta-cycle list.
+- **Hosted services** (Openverse, api.wordpress.org) — an outage isn't a release defect. Say how the release calls the service (browser `fetch` or server-side PHP) so nobody blames a bundled library, recheck the endpoint right before the operator posts, and route to the service's own tracker.
 - **Security** — never public. Draft into `private/security/` (mode 700) with attacker position, boundary, required capability, default-config reachability, and executed proof. Reduce to a bare acknowledgment in any general report. Never include credentials
 
 **Every AI-assisted Trac/GitHub draft carries a disclosure block**, per the [WordPress AI Guidelines §1.2](https://make.wordpress.org/ai/handbook/ai-guidelines/) — disclosure is required when AI meaningfully contributed, in the Trac ticket comment or the GitHub issue/PR body (the locations the guideline names). The three official fields, appended to the draft:
@@ -197,7 +205,7 @@ Used for: <what the assistant did; what you, the human, reviewed, tested, and ta
 
 The `## Use of AI Tools` heading and a `Model(s):` line are an optional committer convention, not policy — fine to add, never cited as required. Run the [pre-filing checklist](../../method/ai-issue-writing/checklist.md) before the operator files.
 
-Every draft states its **evidence ceiling** — what was proven, what wasn't, and what would change the verdict. An internal API footgun is not a vulnerability; a result needing a custom capability mapping is configuration-dependent.
+Every draft states its **evidence ceiling** — what was proven, what wasn't, and what would change the verdict. Every number, time and "none found" in the public text comes from a command logged in this run: a "none found" names where you searched (core only, or plugins too), and a time comes from `date -u` in the probe log. Read the pre-filing checklist before the first draft, not after. An internal API footgun is not a vulnerability; a result needing a custom capability mapping is configuration-dependent.
 
 Update `filed-issues-register.csv` when the operator confirms a filing.
 

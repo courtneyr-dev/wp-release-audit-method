@@ -1,6 +1,6 @@
 ---
 name: wp-release-party
-description: Run the release-day smoke sweep and produce the Slack-formatted test report. Trigger on "release party", "run the release day sweep", "wp release party", "test the RC and post results", or during a live WordPress release party.
+description: Run the release-day smoke sweep and produce the Slack-formatted test report. Trigger on "release party", "run the release day sweep", "wp release party", "test the RC and post results", "basic upgrades", "Slack checklist", when a watcher started in prep sees the build land, or during a live WordPress release party.
 ---
 
 # wp-release-party
@@ -20,6 +20,80 @@ Assumes [`wp-release-prep`](../wp-release-prep/SKILL.md) has run — fixtures bu
 | **Scripts** | [`crud-suite.sh`](../../scripts/crud-suite.sh) · [`users-pages-install.sh`](../../scripts/users-pages-install.sh) · [`multisite-suite.sh`](../../scripts/multisite-suite.sh) · [`direct-jump-matrix.sh`](../../scripts/direct-jump-matrix.sh) · [`stepped-chain.sh`](../../scripts/stepped-chain.sh) |
 | **Why these rules** | [release-audit learning loop](../../method/release-audit-learning-loop.md) — the five laws and the calibrated detectors |
 
+## 0. The first paste: grouped, green, fast
+
+The output with a deadline is the [fast block](../../playbooks/slack-test-report-template.md#the-fast-block--post-this-first), handed over in chat within 5 minutes of `RELEASED`. The operator pastes it into Slack by hand, so:
+
+- Plain text: no `*bold*`, no `•`, no code fence, no Markdown links.
+- One check per line, ending in its Slack emoji code (`:white_check_mark:`, `:warning:`, `:x:`).
+- Short plain-word group headers with a blank line between groups, in this order: Upgrades, Basics, Hosted, Multisite upgrade, Content and users, Media, Network admin, Not covered.
+- Put each site mode's emoji on the line (`single :white_check_mark: main :white_check_mark: subsite :white_check_mark:`) instead of a parenthetical.
+- Put the multisite denominator on its line ("2 of 5 sites upgraded, 3 held back").
+
+Media is part of the CRUD level at every party, on single site and on a subsite:
+
+- Media library: upload, edit details (alt text, caption), search, grid and list views, delete; library paging if the release changes it.
+- Image editing: crop, rotate, flip (GD and Imagick when both are available), restore original.
+- Formats: JPEG, PNG, WebP, AVIF and HEIC upload, with sub-sizes generated; PDF, audio and video upload and their previews.
+- Openverse (inserter, Media tab): first `curl` the API (`https://api.openverse.org/v1/images/?q=<term>`) and record the status code and time, then search in the editor. A 504 or a 10-second answer from the API is an Openverse outage, not a release result (7.2 Beta 5: 5 of 5 searches returned 504, and the editor code was unchanged). Mark the cell `BLOCKED(openverse-api)` and say so in "Not covered".
+
+In the paste these lines go in a Media group after Content and users, one site-mode emoji each.
+
+
+The paste holds green lines only. Non-green lines go below it, under "Held for follow-up", after the register check in "A second drop" step 3; they're handed to `wp-release-followup`, not pasted.
+
+Don't wait for slow lanes: at 7.2 Beta 5 the hosted multisite upgrade took 6 minutes. Hand over the lines already proven, and send the rest as a second paste for the thread. Depth work (probes, diff reads, Site Health calls) waits until the first paste is out.
+
+The shape, from 7.2 Beta 5's real results:
+
+```
+WordPress 7.2 Beta 5 · official zip, sha256 43ab43ff…a793 · db 64486
+
+Upgrades
+7.2 Beta 4 -> 7.2 Beta 5 via Beta Tester :white_check_mark:
+7.2 Beta 4 -> 7.2 Beta 5 via WP-CLI :white_check_mark:
+7.1.4 -> 7.2 Beta 5 via Core updater :white_check_mark:
+Front end, login and REST API load :white_check_mark:
+Security fixes from all 7 security releases present :white_check_mark:
+
+Basics (single site)
+Create Post :white_check_mark:
+Create Page :white_check_mark:
+Delete Post :white_check_mark:
+Delete Page :white_check_mark:
+Install and Uninstall Plugin :white_check_mark:
+```
+
+Second paste, for the thread:
+
+```
+Hosted
+Single site, Beta 4 -> Beta 5 :white_check_mark:
+Multisite, Beta 4 -> Beta 5, 3 of 3 sites upgraded :white_check_mark:
+
+Multisite upgrade
+Local network: 2 of 5 sites upgraded, 3 held back (archived, spam, deleted) as designed :white_check_mark:
+
+Content and users
+Categories: single :white_check_mark: main :white_check_mark: subsite :white_check_mark:
+Tags: single :white_check_mark: main :white_check_mark: subsite :white_check_mark:
+Custom post type and taxonomy: single :white_check_mark: main :white_check_mark: subsite :white_check_mark:
+Comments: single :white_check_mark: main :white_check_mark: subsite :white_check_mark:
+Users: single :white_check_mark: main :white_check_mark: subsite :white_check_mark:
+Media upload and sub-sizes: single :white_check_mark: main :white_check_mark: subsite :white_check_mark:
+Menus: single :white_check_mark: main :white_check_mark: subsite :white_check_mark:
+
+Network admin
+Sites: create, archive, spam, delete :white_check_mark:
+Network users and super admin :white_check_mark:
+Plugins: network and per-site activate, uninstall :white_check_mark:
+Themes: network enable and disable :white_check_mark:
+
+Not covered: Dashboard Updates click · Beta Tester on multisite · browser UI checks · local subsite page loads
+```
+
+Held for follow-up, shown in chat and not pasted: `WP_SECRETS_KEY absent on upgraded sites :warning:`. The 13 stale files were reported as "expected before RC1", and `/random/` got no line because the register marks it REFUTED.
+
 ## 1. Re-run the build-identity gate
 
 ```bash
@@ -27,6 +101,8 @@ scripts/rc_build_identity.sh <VERSION> <LABEL>
 ```
 
 Even if prep passed it. Packages get republished and labels move. Run the script itself, not a HEAD request: a drop can show the root URL 404 and the downloads URL 200 for several minutes (7.2 Beta 4 did). Pin the URL the script prints as `RELEASED`; while it prints `WAITING`, poll the script, not curl. `WAITING` means stop the runtime cells — write the plan and report the block.
+
+As a background watcher: `while bash scripts/rc_build_identity.sh <VERSION> <LABEL> >/dev/null; [ $? -eq 3 ]; do sleep 30; done`.
 
 ## 2. Run the T1 sweep (~74 cells)
 
@@ -98,6 +174,15 @@ Per cell record `verdict` (`PASS` `FAIL` `PARTIAL` `BLOCKED` `SKIP` `INVALID`), 
 Run each repo script with `</dev/null` when several start from one heredoc or `bash -s`: `users-pages-install.sh` and `wp-env run` read stdin and swallow the rest. A suite with no log file did not run; it did not fail.
 
 Rules that hold all day: serialize mutations against one fixture · controls before cells · a control miscalibration makes the whole batch `INVALID` (preserve it, exclude it from counts) · verify cleanup · a harness fault is never a product failure.
+
+Harness traps seen at 7.2 Beta 5:
+
+- Log `wp`'s own exit code. `wp … | grep` reports grep's; use `${PIPESTATUS[0]}`, or run `wp` unpiped.
+- WP-CLI 2.12 on PHP 8.5 prints `PHP Deprecated:` lines to stdout. Run `php -d display_errors=0 $(which wp)` rather than filtering them.
+- Stop test servers by port (`lsof -ti tcp:<port> | xargs kill`), not with `pkill -f localhost:<port>`.
+- `wp server` doesn't route subdirectory multisite, so a subsite page 404 there is `INVALID`. Check subsites with `wp --url=`, and log the `--url` on every command line.
+- `Core_Upgrader` run from WP-CLI skips the database step (`update_core()` posts to `upgrade.php?step=upgrade_db` and nothing answers), so follow it with `wp core update-db`.
+- In zsh, quote globs in flags (`--include='*.md'`) and don't run a command stored in a `$VAR`; use a function.
 
 ## 3. Run the T1 upgrade ladder (9 cells)
 
@@ -239,11 +324,11 @@ couldn't run is a tool `GAP`, not a WordPress `FAIL`.
 When a new build lands mid-cycle and an incremental update is asked for:
 
 1. Run the identity gate, not the full sweep.
-2. Upgrade each environment from the previous build and once from current stable by both lanes; record version, db revision and checksums.
-3. Re-test every open finding and say "still reproduces" or "fixed".
+2. Upgrade each environment from the previous build and once from current stable by both lanes; record version, db revision and checksums. Stage this before the zip lands as one runner, in this order: Beta Tester upgrade on its fixture, the five basics (create and delete a post and a page, install and uninstall a plugin), the WP-CLI and Core-updater lanes, multisite, then the Media group. Start hosted lanes in the background; they never hold up the first paste.
+3. Before re-testing an open finding, read its row in `pilots/filed-issues-register.csv` (verdict and notes) and the ticket's newest comments. Rerun the original reproduction from that row, including any step that heals it (for #64498, one logged-out `/wp-admin/` request). Never carry a claim forward from a previous drop's Slack draft. A finding the register marks REFUTED gets no line. `$_old_files` is updated in the run-up to RC1. Before RC1, files the Core updater leaves behind are expected: report them as "expected before RC1" (never ❌), keep the path list in the run's evidence, and draft no ticket or comment. From RC1 on, a removed path still missing from `$_old_files` is a finding; file it once, with the whole beta-cycle list.
 4. Diff the two packages from fresh installs and report file counts.
 5. Re-run CRUD once on a fresh install and diff the normalized output against the prior run.
-6. Post in two messages, scope first with no results, results second. Map results into matrix cells and re-render under `--strict`, or label the report hand-built.
+6. Hand over §0's first paste, then a second paste for the slower lanes. Map results into matrix cells and re-render under `--strict` when time allows; until then, record "hand-built" in the run log, not in the paste.
 
 Also on every drop: the SVN deletion diff (`svn diff --summarize` between the previous tag and the new source) beside the offline and tree-diff stale-file checks, a Beta Tester plugin upgrade (single and multisite subdirectory), a `core_updater.lock` check after each upgrade, a downgrade then upgrade sequence, and PHP 8.5 and MariaDB when the environment allows.
 

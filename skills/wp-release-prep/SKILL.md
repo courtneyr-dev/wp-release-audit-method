@@ -67,7 +67,7 @@ Add from `methods/test-and-fixture-registry.csv` when the release calls for it: 
 
 If the release adds a PHP version, confirm a runtime for it the day before. Studio's driver accepts 8.2 to 8.5 only (`env_php_set`); use Docker `php:<ver>-rc-cli` or `wordpressdevelop/php:<ver>-fpm`, and label results `<ver> RC`.
 
-**Keep Core-updater and WP-CLI-updater lanes separate.** They produce different file trees — that's how the 243-stale-file finding surfaced.
+**Keep Core-updater and WP-CLI-updater lanes separate.** They produce different file trees — that's how the 243-stale-file finding surfaced. `$_old_files` is updated in the run-up to RC1. Before RC1, files the Core updater leaves behind are expected: report them as "expected before RC1" (never ❌), keep the path list in the run's evidence, and draft no ticket or comment. From RC1 on, a removed path still missing from `$_old_files` is a finding; file it once, with the whole beta-cycle list.
 
 ## 3. Seed content — the canonical corpora
 
