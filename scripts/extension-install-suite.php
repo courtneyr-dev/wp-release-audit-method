@@ -43,6 +43,14 @@ if ( ! current_user_can( 'install_plugins' ) ) {
 WP_Filesystem();
 ex_cell( 'env', 'INFO', 'ziparchive=' . ( class_exists( 'ZipArchive' ) ? 'yes' : 'no' ) . ' transports=' . implode( ',', array_filter( array( 'curl', 'streams' ), function ( $t ) { $c = 'WpOrg\\Requests\\Transport\\' . ucfirst( $t ); return class_exists( $c ) && $c::test(); } ) ) . ' multisite=' . ( is_multisite() ? 'yes' : 'no' ) );
 
+// WordPress 6.4.3 (r57388, Trac #60398) opens every upload with ZipArchive::CHECKCONS.
+// libzip older than 1.10.1 fails that check for zips written by macOS Archive Utility
+// (ditto, which Finder > Compress runs) and GNOME Files. Newer libzip passes them, so a
+// host on newer libzip CANNOT show that bug: report it, so a clean run isn't read as coverage.
+$libzip    = class_exists( 'ZipArchive' ) && defined( 'ZipArchive::LIBZIP_VERSION' ) ? ZipArchive::LIBZIP_VERSION : 'none';
+$sensitive = 'none' !== $libzip && version_compare( $libzip, '1.10.1', '<' );
+ex_cell( 'env-libzip', 'INFO', "libzip=$libzip " . ( $sensitive ? 'older than 1.10.1: can show the CHECKCONS bug class' : 'not sensitive to the CHECKCONS bug class (needs libzip < 1.10.1)' ) );
+
 $tmpdir = trailingslashit( get_temp_dir() ) . 'ext-suite-' . getmypid();
 wp_mkdir_p( $tmpdir );
 
@@ -148,6 +156,25 @@ foreach ( $EX_ZIPS as $key => $b64 ) {
 	}
 	$zip = "$tmpdir/$kind-$variant.zip";
 	file_put_contents( $zip, base64_decode( $b64 ) );
+	// The two checks core makes before unzipping, recorded per archive shape.
+	if ( class_exists( 'ZipArchive' ) ) {
+		$za    = new ZipArchive();
+		$cc    = $za->open( $zip, ZipArchive::CHECKCONS );
+		$valid = function_exists( 'wp_zip_file_is_valid' ) ? wp_zip_file_is_valid( $zip ) : null;
+		if ( true === $cc ) {
+			$za->close();
+		}
+		if ( 'header-mismatch' === $variant ) {
+			// The control must FAIL CHECKCONS (or it isn't reaching the fallback path) and still validate through PclZip.
+			$judge  = ( true !== $cc && true === $valid ) ? 'PASS' : 'FAIL';
+			$prefix = true === $cc ? 'control did not fire: ' : 'control fired, PclZip fallback validated it: ';
+		} else {
+			$ok_cc  = true === $cc && false !== $valid;
+			$judge  = $ok_cc ? 'PASS' : ( in_array( $variant, array( 'windows-backslash', 'no-top-folder' ), true ) ? 'INFO' : 'FAIL' );
+			$prefix = '';
+		}
+		ex_cell( "$kind-zip-$variant-checkcons", $judge, $prefix . 'ZipArchive::CHECKCONS=' . ( true === $cc ? 'ok' : "error $cc" ) . ' wp_zip_file_is_valid=' . var_export( $valid, true ) . " libzip=$libzip" );
+	}
 	foreach ( array( 'ziparchive', 'pclzip' ) as $backend ) {
 		if ( 'ziparchive' === $backend && ! class_exists( 'ZipArchive' ) ) {
 			ex_cell( "$kind-zip-$variant-$backend", 'BLOCKED(no-ziparchive)' );

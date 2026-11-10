@@ -7,6 +7,8 @@
 # Options:
 #   --no-network   mark WordPress.org, URL and REST-install cells BLOCKED instead of downloading
 #   --out=<dir>    also write the cell table to <dir>/extension-install-suite.tsv
+#   --keep-zips=<dir>  copy the built archives there, to replay them on another stack (an old
+#                  libzip container, for the CHECKCONS bug class; see env-libzip in the output)
 #
 # Methods covered:
 #   upload screen over HTTP   Plugins > Add New > Upload, Themes > Add New > Upload, the real
@@ -31,6 +33,12 @@
 #   windows-explorer   no directory entries, DOS attributes
 #   windows-backslash  PowerShell 5.1 Compress-Archive: BACKSLASH path separators
 #   no-top-folder      files at the archive root, a common hand-made zip
+#   header-mismatch    the CHECKCONS control: a valid zip whose central-directory time for one
+#                      file differs from its local header. ZipArchive::CHECKCONS rejects it (error
+#                      21) on old and new libzip alike, so it drives the path that broke Finder
+#                      zips in 6.4.3 (Trac #60398): CHECKCONS fails, then the PclZip fallback
+#                      (r57537) must still validate and unzip it. A real Finder zip only fails
+#                      CHECKCONS on libzip < 1.10.1; this control fails it everywhere.
 # The last two are recorded as INFO (no OS tool should produce them, people upload them anyway);
 # compare them with the previous stable rather than judging them alone.
 
@@ -43,6 +51,7 @@ for a in "$@"; do
     --env=*)      DRIVER="${a#--env=}" ;;
     --no-network) NETWORK=0 ;;
     --out=*)      OUT="${a#--out=}" ;;
+    --keep-zips=*) KEEPZIPS="${a#--keep-zips=}" ;;
     *)            ARGS+=("$a") ;;
   esac
 done
@@ -111,6 +120,18 @@ def build(path, files, variant, v="1.0"):
 for variant in ("infozip", "macos-finder", "windows-explorer", "windows-backslash", "no-top-folder"):
     build(f"{out}/plugin-{variant}.zip", PLUGIN, variant)
     build(f"{out}/theme-{variant}.zip", THEME, variant)
+
+def header_mismatch(src, dst):
+    # Zero the last-modified time in the central directory record of the second entry (the
+    # first file after the folder entry); its local header keeps the real time.
+    b = bytearray(open(src, "rb").read())
+    i = -1
+    for _ in range(2):
+        i = b.find(b"PK\x01\x02", i + 1)
+    b[i + 12:i + 14] = b"\x00\x00"
+    open(dst, "wb").write(bytes(b))
+header_mismatch(f"{out}/plugin-infozip.zip", f"{out}/plugin-header-mismatch.zip")
+header_mismatch(f"{out}/theme-infozip.zip", f"{out}/theme-header-mismatch.zip")
 build(f"{out}/plugin-v2.zip", PLUGIN, "infozip", "2.0")
 build(f"{out}/theme-v2.zip", THEME, "infozip", "2.0")
 build(f"{out}/plugin-dependent.zip", DEPENDENT, "infozip")
@@ -130,6 +151,7 @@ if command -v ditto >/dev/null 2>&1; then
   done
 fi
 
+[ -n "${KEEPZIPS:-}" ] && mkdir -p "$KEEPZIPS" && cp "$TMP"/plugin-*.zip "$TMP"/theme-*.zip "$KEEPZIPS"/
 zips=""
 for f in "$TMP"/plugin-*.zip "$TMP"/theme-*.zip; do
   b="$(basename "$f" .zip)"; kind="${b%%-*}"; variant="${b#*-}"
