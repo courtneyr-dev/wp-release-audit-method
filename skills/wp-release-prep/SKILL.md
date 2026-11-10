@@ -11,6 +11,18 @@ Never do this against production, WordPress.org infrastructure, third-party site
 
 **Where paths point:** run commands from a clone of `wp-release-audit-method` — script and CSV paths are repo-relative. The repo carries the schemas and blank matrices; verdicts and evidence go in your run root's copies (`$WP_AUDIT_ROOT`), never the repo's. See [`pilots/README.md`](../../pilots/README.md).
 
+## Per-drop readiness (fixtures already built, a later beta or RC)
+
+Mid-cycle, when the party starts on a new drop and the fixtures exist from an earlier one, run only:
+
+- the step 1 gate, polled as `bash scripts/rc_build_identity.sh <V> <L>; echo "exit=$?"` with no pipe, so `$?` is the gate's exit code
+- `git fetch && git status -sb` in the method repo; run from `main`
+- a version read of every `rel-*` fixture (`$wp_version` and `$wp_db_version` from `wp-includes/version.php`)
+- the step 4 harness-health precheck
+- the step 6 controls
+
+Skip steps 0, 3, 5 and 7 unless the change ledger moved, and say which you skipped in the handoff. Report three lists: Ready now, Fix before testing, Waiting.
+
 ## 0. Scan the ecosystem for what changed since last cycle
 
 Before building anything, run the ecosystem-signals scan — the change ledger that selects this
@@ -39,7 +51,7 @@ When the target exists, pin it before touching a fixture: package URL, sha256/md
 
 ## 2. Fixtures to build
 
-Studio CLI: `/Applications/Studio.app/Contents/Resources/bin/studio-cli.sh` — run `wp` commands **from the site directory**.
+Studio CLI: the `studio` binary (npm `wp-studio`), driven through `<method repo>/scripts/env/studio.sh` (`--env=studio`; `$STUDIO_CLI` overrides). Check first: `command -v studio`. Don't call files inside `Studio.app`: `bin/studio-cli.sh` is gone, and `bin/studio-cli-launcher.js` fails without its bundled Node (`Node.js runtime not found`, 2026-11-10). Fallback that works on the SQLite fixtures: a standalone `wp`, run from the site directory. It uses that machine's PHP, not the site's, so record `php -v` with each result.
 
 Minimum set for a release party:
 
@@ -53,6 +65,8 @@ Minimum set for a release party:
 
 Add from `methods/test-and-fixture-registry.csv` when the release calls for it: PHP-matched pairs (FX-10..FX-14), the large network (FX-15), a classic-theme site, a block-theme site.
 
+If the release adds a PHP version, confirm a runtime for it the day before. Studio's driver accepts 8.2 to 8.5 only (`env_php_set`); use Docker `php:<ver>-rc-cli` or `wordpressdevelop/php:<ver>-fpm`, and label results `<ver> RC`.
+
 **Keep Core-updater and WP-CLI-updater lanes separate.** They produce different file trees — that's how the 243-stale-file finding surfaced.
 
 ## 3. Seed content — the canonical corpora
@@ -61,15 +75,15 @@ Import both into every content fixture. The second is derived from the first, so
 deduplicates on import; the items that don't are the point.
 
 ```bash
-studio-cli.sh wp plugin install wordpress-importer --activate
+studio wp --path=<site> plugin install wordpress-importer --activate
 
 curl -sL -o /tmp/theme-test-data.xml \
   https://raw.githubusercontent.com/WordPress/theme-test-data/master/themeunittestdata.wordpress.xml
-studio-cli.sh wp import /tmp/theme-test-data.xml --authors=create
+studio wp --path=<site> import /tmp/theme-test-data.xml --authors=create
 
 curl -sL -o /tmp/a11y-test-data.xml \
   https://raw.githubusercontent.com/wpaccessibility/a11y-theme-unit-test/master/a11y-theme-unit-test-data.xml
-studio-cli.sh wp import /tmp/a11y-test-data.xml --authors=create
+studio wp --path=<site> import /tmp/a11y-test-data.xml --authors=create
 ```
 
 It covers markup edge cases, nested/long menus, embeds, image alignments, unicode and RTL strings, sticky/password/scheduled posts, and deep page hierarchies — the shapes hand-made content never has.
@@ -108,6 +122,7 @@ Before the party, prove the instruments work:
 - `scripts/stale_file_check.py <prior_tree> <target_tree>` — offline, predicts the upgrade answer
 - a native-control keyboard check if any accessibility cell is planned (it must PASS before product results count)
 - one positive and one negative control per planned batch
+- `scripts/security_fix_presence.sh <zip> --all` on the latest stable (expect exit 0) and on its predecessor (expect exit 4 with VULNERABLE rows). Reuse the zips in `~/.wp-secfix-cache` (`$WP_SECFIX_CACHE`); don't download them again. Any `grep:` line on stderr means the result is incomplete
 
 ## 7. Regenerate the matrices
 
@@ -116,6 +131,8 @@ python3 scripts/build_release_day_matrices.py --browser-t1 <this release's ledge
 ```
 
 Re-derive `BROWSER_T1` in that script from **this** release's change ledger — the entities whose UI the release actually touches. It's the one input that must not carry forward.
+
+To list a drop's changes, use the git mirror: `gh api --paginate repos/WordPress/wordpress-develop/commits -f sha=trunk -f since=<previous drop's tag time>`, then drop revisions at or below the previous tag. Trac's query CSV serves a browser check to curl, and the Trac timeline runs to about 530k characters a day near a drop, so use it a day at a time and only for wontfix or duplicate closures. Compare Gutenberg pins by full SHA taken from the `wp/X.Y` branch; a short SHA returns 404 or 422.
 
 ## 8. Retro — before you hand off
 
