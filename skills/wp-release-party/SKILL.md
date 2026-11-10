@@ -30,14 +30,40 @@ The output with a deadline is the [fast block](../../playbooks/slack-test-report
 - Put each site mode's emoji on the line (`single :white_check_mark: main :white_check_mark: subsite :white_check_mark:`) instead of a parenthetical.
 - Put the multisite denominator on its line ("2 of 5 sites upgraded, 3 held back").
 
-Media is part of the CRUD level at every party, on single site and on a subsite:
+Media is part of the CRUD level at every party. Run it on single site and on a subsite. "Supported" means four different things in core, so test one file per display path, not one per format. 7.2 Beta 5 lets an administrator upload 94 MIME types in 9 groups (`wp_get_ext_types()`), and only some of them display.
 
-- Media library: upload, edit details (alt text, caption), search, grid and list views, delete; library paging if the release changes it.
-- Image editing: crop, rotate, flip (GD and Imagick when both are available), restore original.
-- Formats: JPEG, PNG, WebP, AVIF and HEIC upload, with sub-sizes generated; PDF, audio and video upload and their previews.
-- Openverse (inserter, Media tab): first `curl` the API (`https://api.openverse.org/v1/images/?q=<term>`) and record the status code and time, then search in the editor. A 504 or a 10-second answer from the API is an Openverse outage, not a release result (7.2 Beta 5: 5 of 5 searches returned 504, and the editor code was unchanged). Mark the cell `BLOCKED(openverse-api)` and say so in "Not covered".
+| Display path | Party sample | What to assert |
+|---|---|---|
+| Image with sub-sizes (GD: JPEG, PNG, GIF, WebP, AVIF) | all five | every registered sub-size exists; `srcset` and `sizes` on the front end |
+| Image without sub-sizes on this stack (HEIC/HEIF, BMP, TIFF, ICO on GD) | HEIC | upload result (converted, original kept, or rejected), recorded per image stack |
+| Audio with a player (`wp_get_audio_extensions()`: mp3, ogg, flac, m4a, wav) | mp3 | player markup renders and the source URL is unchanged |
+| Video with a player (`wp_get_video_extensions()`: mp4, m4v, webm, ogv, flv) | mp4 | player markup renders and the source URL is unchanged |
+| Audio or video without a player | mov | stored, and linked as a file |
+| PDF | one PDF | File block inline preview; thumbnail when Imagick can render it |
+| Upload only (documents, spreadsheets, presentations, text, archives) | docx | stored and linked; code types (css, htm, html, php, js) refused for a user without `unfiltered_html` |
 
-In the paste these lines go in a Media group after Content and users, one site-mode emoji each.
+Embed each sample the ways content really carries it:
+
+- **Blocks:** Image, Gallery, Cover, Media & Text, Audio, Video, File, Featured Image, Site Logo, and an inline image in a paragraph.
+- **Shortcodes,** for classic and migrated content: `[gallery]`, `[audio]`, `[video]`, `[playlist]`, `[caption]`, `[embed]`.
+- **oEmbed:** a pasted URL and the Embed block variations.
+- **Site surfaces:** site icon, custom header and background images, attachment pages.
+
+On the front end, assert the output, not only that the page renders: `srcset` and `sizes`, `loading="lazy"`, and `fetchpriority="high"` on the first image.
+
+Media library operations:
+
+- upload, edit details (alt text, caption), search, grid and list views, delete
+- the REST `/wp/v2/media` create, update and delete endpoints the editor uses
+- library paging if the release changes it
+
+Image editing: crop, rotate, flip and restore original, on GD and on Imagick when both are available.
+
+Openverse (inserter, Media tab): first `curl` the API (`https://api.openverse.org/v1/images/?q=<term>`) and record the status code and time, then search in the editor. A 504 or a 10-second answer from the API is an Openverse outage, not a release result: at 7.2 Beta 5, 5 of 5 searches returned 504 and the editor code was unchanged. Mark the cell `BLOCKED(openverse-api)` and say so under "Not covered".
+
+Every type, both image stacks: that sweep is `wp-release-followup` §3's job, not the party's.
+
+In the paste these lines go in a Media group after Content and users, one site-mode emoji per line.
 
 
 The paste holds green lines only. Non-green lines go below it, under "Held for follow-up", after the register check in "A second drop" step 3; they're handed to `wp-release-followup`, not pasted.

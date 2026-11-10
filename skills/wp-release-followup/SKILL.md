@@ -158,6 +158,8 @@ drift the moment a chain executes. What each status means:
 
 **Run `X-SERIAL-01` first.** If re-saving unchanged content mutates bytes, every byte-diff assertion elsewhere is measuring noise.
 
+**Full media sweep.** Upload, then delete, every type in `get_allowed_mime_types()` (94 at 7.2 Beta 5). For each one, assert the stored MIME type, the sub-sizes produced and the attachment URL, and that the code types are refused for a user without `unfiltered_html`. Run it once on GD and once on Imagick, because the image stack decided 7.1's P0 media findings. Rerun it at RC1.
+
 PHP is an axis, not a chain — multiply only the seven chains listed in `pilots/release-day/php-axis.csv`, on PHP-matched fixture pairs (`FX-10`..`FX-15`). Never compare a 7.4 multisite fixture against an 8.4 single-site one; that confounds runtime with site mode.
 
 Sweep the remaining tiers too: sweep-matrix T2/T3 and upgrade-ladder T2/T3, including the WP-CLI-updater lane.
