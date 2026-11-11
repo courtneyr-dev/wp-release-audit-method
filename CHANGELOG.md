@@ -5,6 +5,14 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Changed — WordPress 7.2 hosting guide updated for Beta 5 (2026-11-10)
+
+[`fleet-operators/wordpress-7-2-hosting-tests.md`](fleet-operators/wordpress-7-2-hosting-tests.md):
+- The Secrets API section is rewritten for changesets 65385, 65389 and 65390: no salt fallback, the Site Health key line, key rules, recovery of Beta 4 secrets, drop-in behavior and a leak test.
+- WP-CLI upgrades delete `default-editor-styles.css`, so only Core-updater sites keep the editor styles.
+- Beta 4 to Beta 5 upgrades leave 3 more files, and WP-CLI upgrades from 7.0.2 leave 21.
+- New: `/random/` opt-out, load and purge timing; the post-upgrade cached-404 result; the Requests library update; and the PHP coverage of the upgrade ladder (7.4 only).
+
 ### Added — media and plugin/theme install suites (2026-11-10)
 
 Three scripts, each with a positive and a negative control, run on 7.2-beta5 and on a 7.1.4 fixture:
