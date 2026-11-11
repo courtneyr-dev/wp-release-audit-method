@@ -2,7 +2,7 @@
 
 *For DevRel and SRE teams at hosts and agencies who want to test 7.2 before it reaches their customers.*
 
-WordPress 7.2 ships on December 8, 2026 (RC1 November 17). This page lists what changed in 7.2 that behaves differently on a hosting platform than on a laptop, how to test each change with this repository, and what one host's pre-release testing on 7.2-beta4 already found. Every claim links to a public WordPress source. Run what applies to your platform, and share what you find in the places listed at the end.
+WordPress 7.2 ships on December 8, 2026 (RC1 November 17). This page lists what changed in 7.2 that behaves differently on a hosting platform than on a laptop, how to test each change with this repository, and what one host's pre-release testing on 7.2-beta4 and 7.2-beta5 already found (updated November 10, 2026, for Beta 5). Every claim links to a public WordPress source. Run what applies to your platform, and share what you find in the places listed at the end.
 
 ## Contents
 
@@ -32,10 +32,10 @@ The repository's own rule applies to everything below: a finding is a claim unti
 
 ### The two upgrade paths leave different file trees
 
-- **What changed:** `$_old_files` in `wp-admin/includes/update-core.php` hasn't been updated for 7.2 yet. Upgrading from 7.1.4 through the Dashboard, auto-update or the Beta Tester plugin (all `Core_Upgrader`) leaves 10 files under `wp-includes/` that the 7.2 package doesn't ship. WP-CLI's `wp core update` removes them, because it also deletes files the old version's checksums list and the new version's don't. Tracked in [Trac #66456](https://core.trac.wordpress.org/ticket/66456).
+- **What changed:** `$_old_files` in `wp-admin/includes/update-core.php` hasn't been updated for 7.2 yet. Upgrading from 7.1.4 through the Dashboard, auto-update or the Beta Tester plugin (all `Core_Upgrader`) leaves 10 files under `wp-includes/` that the 7.2 package doesn't ship. WP-CLI's `wp core update` removes them, because it also deletes files the old version's checksums list and the new version's don't. Tracked in [Trac #66456](https://core.trac.wordpress.org/ticket/66456). Beta 5 leaves the same 10 on an upgrade from 7.1.4. A site upgraded from a 7.2 prerelease through `Core_Upgrader` also keeps three Secrets API files that Beta 5 renamed (`wp-includes/secrets/interface-wp-secrets-{store,keyring,provider}.php`), 13 in all; WP-CLI removed them. In a local upgrade ladder, WP-CLI upgrades from 7.0.2 still left 21 other stale files, so check the WP-CLI path too.
 - **Why a host cares:** integrity monitoring keyed to WordPress.org checksums flags those files on every site upgraded the first way, and on none upgraded the second way.
 - **How to test:** upgrade one site each way, then run `scripts/stale_file_check.py <prior_tree> <target_tree>` and `wp core verify-checksums` on both. Record which path each result used: the [sweep playbook's upgrade ladder](../playbooks/release-day-sweep-playbook.md#phase-1b--upgrade-ladder) explains why one path never stands in for another.
-- **Check on RC1:** whether `$_old_files` lists the 10 files, and whether it also removes `default-editor-styles.css`. 7.2 no longer ships that file, but `wp-includes/block-editor.php` still reads it, so upgraded sites keep the editor's default styles only because the old copy is still on disk.
+- **Check on RC1:** whether `$_old_files` lists the 10 files, and whether it also removes `default-editor-styles.css`. 7.2 no longer ships that file, but `wp-includes/block-editor.php` still reads it, so sites upgraded through `Core_Upgrader` keep the editor's default styles only because the old copy is still on disk. WP-CLI upgrades delete that file, so those sites, like fresh installs, already lose the styles. Still true in Beta 5.
 
 ### `/random/` returns 404 after an upgrade, per site, until a wp-admin request
 
@@ -43,14 +43,22 @@ The repository's own rule applies to everything below: a finding is a claim unti
 - **On multisite it's per site.** A local subdirectory network upgraded from 7.1.4 with `wp core update-db --network`, and again with Network Admin > Upgrade Network, left every site at 404. Requests to the main site's wp-admin, Network Admin screens included, fixed only the main site. Each subsite stayed at 404 until a request reached its own `/sitename/wp-admin/` ([Trac #64498 comment 73](https://core.trac.wordpress.org/ticket/64498#comment:73)).
 - **Why a host cares:** fleet upgrades by WP-CLI or automation, and subsites whose administrators rarely log in, can sit at 404 indefinitely. An edge cache can then keep the 404 for its full lifetime: see [Edge and page-cache tests](#edge-and-page-cache-tests).
 - **How to test:** before upgrading, confirm each site has stored rewrite rules (`wp option get rewrite_rules`) with no random entries. After upgrading, check `db_upgraded`, the rule count and `/random/` on every site, then request one site's `/wp-admin/` and check them all again.
-- **Mitigation:** after each upgrade, run `wp rewrite flush` on every site (`wp site list --field=url` on a network), then purge the edge cache.
+- **Mitigation:** after each upgrade, run `wp rewrite flush` on every site (`wp site list --field=url` on a network), then purge the edge cache. Purge after the flush, not at deploy: core fires the `after_db_upgrade` action right after the flush in `wp-admin/admin.php`, which makes it a good place for a platform purge. See the post-upgrade test in [Edge and page-cache tests](#edge-and-page-cache-tests).
+- **Turning it off:** the `wp_enable_random_content_redirect` filter disables both `/random/` and `?random`. Add it before the upgrade. Added afterwards, it leaves the stored rule in place: `/random/` then serves a copy of the home page with a 200 until rewrite rules are flushed, and on 7.2-beta5 a wp-admin request didn't flush them. Flush, then purge.
+- **Load:** every `/random/` request, and `?random` on any archive URL, runs an `ORDER BY RAND()` query that isn't cached, and the 302 isn't cached at the edge either. On large sites, a crawler hitting it is a cheap way to load the database. Not measured yet.
 
-### Secrets API: the encryption key comes from the salts unless you set one
+### Secrets API: no key, no Secrets API (changed in Beta 5)
 
-- **What changed:** 7.2 adds encrypted secret storage. The key comes from `WP_SECRETS_KEY` when it's defined, and otherwise is derived from the site's salts ([Trac #66187](https://core.trac.wordpress.org/ticket/66187), [proposal](https://make.wordpress.org/core/2026/08/25/proposal-a-secrets-api-for-wordpress-7-2/)). 7.2 has no supported way to move secrets to a new key: re-wrapping is planned for 7.3 ([Trac #66399](https://core.trac.wordpress.org/ticket/66399)). Two open pull requests would make `WP_SECRETS_KEY` required ([PR 15258](https://github.com/WordPress/wordpress-develop/pull/15258)) or generate it at install ([PR 15124](https://github.com/WordPress/wordpress-develop/pull/15124)). Recheck both at RC1.
-- **Why a host cares:** if your platform supplies the salts, your platform owns every customer's key. Any salt change (support rotation, migration, rebuild), or defining `WP_SECRETS_KEY` after secrets exist, makes stored secrets unreadable, and new writes fail with `secret_key_unavailable`.
-- **How to test:** store a secret on site A, copy A's database to site B, and read it on B, once with different salts on B, once with identical salts, and once with the same `WP_SECRETS_KEY` on both. In local testing on 7.2-beta4, different keys blocked reads and new writes alike, while identical salts or a shared `WP_SECRETS_KEY` kept secrets readable. Site Health's key-source check still reported "good" when nothing could be decrypted, so don't rely on it as a monitor.
-- **Decide before December 8:** whether to set `WP_SECRETS_KEY` on new 7.2 sites before any secret is stored, and what your environment-copy and salt-rotation procedures do to it.
+- **What changed:** 7.2 adds encrypted secret storage ([Trac #66187](https://core.trac.wordpress.org/ticket/66187), [proposal](https://make.wordpress.org/core/2026/08/25/proposal-a-secrets-api-for-wordpress-7-2/)). Beta 4 derived the key from the site's salts when `WP_SECRETS_KEY` wasn't defined. Beta 5 removed that fallback ([changeset 65385](https://core.trac.wordpress.org/changeset/65385)): without a usable `WP_SECRETS_KEY`, the Secrets API is off and every call that needs the key returns `secret_key_unavailable`. Only the browser installer writes a key ([changeset 65389](https://core.trac.wordpress.org/changeset/65389)); existing sites and `wp config create` get none. Two upgraded sites checked on one host's platform had no key, and `wp_is_secrets_api_available()` returned false on both.
+- **Why a host cares:** after upgrading, every site without a key shows a Site Health recommendation that includes a ready-to-paste `define()` line with a newly generated random key. That key is different on every page load and per environment, so customers who paste it get a key their other environments don't share. Nothing in core 7.2 calls the API yet, so this isn't an outage on day one, but plugins that move credentials into it will fail on sites without a key.
+- **What counts as a usable key:** the recommended form is base64 of 32 random bytes. An empty value, the `wp-config-sample.php` placeholder, or a value equal to any of the keys and salts is rejected. Any other string is hashed into a key, so stray whitespace silently produces a different key: trim values read from a secrets store.
+- **The key can't change once secrets exist.** A database copied to an environment with a different key can't read its secrets. Core still has no command or admin screen for re-wrapping secrets under a new key (planned for 7.3, [Trac #66399](https://core.trac.wordpress.org/ticket/66399)). Secrets stored under Beta 4's salt-derived key can be recovered: set the new `WP_SECRETS_KEY`, set `WP_SECRETS_KEY_PREVIOUS` to the old `LOGGED_IN_KEY . LOGGED_IN_SALT`, and call `WP_Secrets_Key_Manager::rotate_site_key()` with the old and new keyrings from code, for example `wp eval`. That worked on one host's single site on Beta 5; multisite isn't tested.
+- **Drop-ins:** a `wp-content/secrets.php` drop-in loads after `wp-config.php` and before mu-plugins, and can override the provider, the store or the keyring. In Beta 5 those are abstract classes ([changeset 65390](https://core.trac.wordpress.org/changeset/65390)), so a drop-in written against Beta 4's interfaces is a fatal error until it uses `extends`. Core reports the API as available for any custom provider or keyring without testing it. So a read-only provider set as a platform default would let plugins try to save and then fail with `secret_provider_read_only`. The lowest-risk platform default is a drop-in that only defines `WP_SECRETS_KEY` from your secrets store and leaves core's encryption in place.
+- **How to test:**
+  - **Clone:** store a secret on site A, copy A's database to site B, and read it on B with the same and with a different `WP_SECRETS_KEY`.
+  - **Leak check:** store a unique test value through `wp_set_secret()`, then search your object cache and database for it in raw, base64 and hex form. Store the same kind of value as a plain option as the positive control. On one host with a Redis object cache, the secret's plaintext reached neither Redis nor the database, while the plain-option control was found in both.
+  - **Plugin pitfall:** passing a `WP_Secret` object to `wp_cache_set()` throws an uncaught `LogicException` ("WP_Secret cannot be cloned"). Nothing leaks, but the request fails.
+- **Decide before December 8:** where each site's key comes from, whether one key covers all of a site's environments (clones keep working) or live gets its own (clones lose their secrets), and that the key is never regenerated by migrations or rebuilds.
 
 ### Client-side media processing falls back silently
 
@@ -63,6 +71,7 @@ The repository's own rule applies to everything below: a finding is a claim unti
 - **KSES rewritten with the HTML API, on by default** ([Trac #66208](https://core.trac.wordpress.org/ticket/66208)). Content saved by users without `unfiltered_html` comes back with attributes sorted, entities decoded and tag names lowercased. On multisite that includes Editors and site administrators. Opt out with a later filter on `wp_kses_force_legacy_parser` returning true.
 - **Admin script and style concatenation retired** ([changeset 64585](https://core.trac.wordpress.org/changeset/64585)). `wp-admin/load-scripts.php` and `load-styles.php` answer 410, and `CONCATENATE_SCRIPTS` is no longer read. Check edge rules, monitors and plugins that call those URLs.
 - **Network upgrade edge cases.** Archived, spam and deactivated subsites keep the old database version, and their administrators don't get `manage_secrets`, because the role update runs inside the per-site upgrade. Run `wp core update-db --url=<site>` when you reactivate one. Separately, Upgrade Network can report "All done!" when a subsite's upgrade request returned an HTTP error ([Trac #66477](https://core.trac.wordpress.org/ticket/66477)); check `db_version` per site after every network upgrade.
+- **Requests HTTP library 2.0.17 to 2.0.21** in Beta 5. On old system libraries, outbound HTTP on libcurl 7.64.0 matched 7.1.4 request for request, and plugin and theme zips installed on libzip 1.7.3, including one that needs the PclZip fallback. libcurl 7.29 wasn't tested.
 - **Application password email.** Creating an application password now sends an "Application Password Created" email. Expect support questions when it arrives unexpectedly.
 - **`NO_BACKSLASH_ESCAPES` removed from WordPress's own database session** ([dev note](https://make.wordpress.org/core/2026/10/09/no_backslash_escapes-sql-mode-is-now-turned-off-by-default-in-wordpress-7-2/)). Only matters where the server sets that SQL mode globally; check yours.
 - **Admin icons are inline SVG.** Sites running the Gutenberg plugin 23.7.2 get notices and missing admin-bar icons ([Trac #66344](https://core.trac.wordpress.org/ticket/66344)); 22.8.0 and 24.3.1 are fine.
@@ -80,6 +89,8 @@ One host ran a 28-test suite for 7.2-beta4 behind its default CDN on November 7,
 - **The CDN added its bot-management cookie to cached responses,** cache hits included. WordPress set no cookie on any cached response. Worth a line in your cookie-consent documentation.
 - **Loopbacks passed through the edge without a challenge,** and Site Health's REST and loopback checks were good. Check that your bot protection doesn't challenge a site's requests to itself.
 - **Large uploads:** one 50 MB raw-body request to the new `/sideload` route got a 503 generated in front of WordPress, while the same request on another site got WordPress's own 400. Unexplained: a body-size limit or a transient failure. Check the size limits in front of WordPress for the new routes.
+
+**After an upgrade (7.2-beta5, November 10):** on one host's default CDN, a `/random/` 404 cached two days before the upgrade, with a 7-day lifetime, was still served after the code update to Beta 5, the database upgrade and the first wp-admin request, while the origin already answered 302. A request that bypassed the cache between the code update and the rule flush got a fresh 404 that was cached for 7 days too. An environment cache purge ended it; no other remedy was tried. So purge after the flush, and treat it as required.
 
 **Running these tests without tripping your own protection:**
 
@@ -114,13 +125,16 @@ Testing a release means filing tickets and leaving test reports, and then missin
 These weren't tested in the pre-release work this page draws on. A result on any of them, pass or fail, is worth sharing:
 
 - Subdomain multisite networks.
-- PHP 8.1, 8.2 and the 7.4 floor on 7.2; MySQL 8 on a hosted platform.
-- Persistent object caches (Redis, Memcached) with 7.2, including comment counts with Notes reactions.
+- Upgrades on PHP 8.x. One host's local upgrade ladder (22 source versions, 4.9 to 7.0.2, both upgrade paths) passed 79 of 79 on PHP 7.4 only; PHP 8.1, 8.2 and 8.4 got fresh installs and one network upgrade. MySQL 8 on a hosted platform.
+- Platform-managed upgrade paths other than the Dashboard and WP-CLI.
+- Memcached and other persistent object caches with 7.2 (one host tested Redis), including comment counts with Notes reactions.
 - HEIC and AVIF uploads per image library and delegate.
 - Client-side media in real Firefox and Safari on a hosted site.
 - Cron after upgrade: scheduled publishing and cleanup.
 - Screen-reader passes on the reorganized Options menu and the new admin icons.
-- Edge tiers with a web application firewall or image optimization in front of WordPress.
+- Edge tiers with a web application firewall or image optimization in front of WordPress, and `/random/` load on large sites.
+- The Secrets API on multisite (network secrets, recovery), and a key read from a platform secrets store inside `wp-config.php`.
+- Hosts still on libcurl 7.29.
 
 ## Where to share results
 
