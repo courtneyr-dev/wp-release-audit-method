@@ -5,6 +5,14 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Changed — wordpress-audit-handoff: updating an existing brief (2026-11-10)
+
+[`skills/wordpress-audit-handoff/SKILL.md`](skills/wordpress-audit-handoff/SKILL.md), from a retro on a Beta 5 update to a hosted SRE brief, where an audit found 5 wrong, 8 stale and 5 unsupported statements after the update:
+- New section, "Updating a brief that already exists": the live copy is the record, replace superseded text instead of appending beside it, sweep the whole brief after every update, and run the confidentiality grep on the read-back.
+- Mode B §3: cite the raw artifact for each axis value; a run log, recap or earlier brief isn't evidence. The brief had claimed PHP 7.4 to 8.4 for a ladder that ran on 7.4 only.
+- Output rules: save each live re-check to the evidence folder, and fix a claim at once when a re-check contradicts it.
+- Done when: a fresh read-only agent audits every added or touched claim before the brief is called done.
+
 ### Changed — WordPress 7.2 hosting guide updated for Beta 5 (2026-11-10)
 
 [`fleet-operators/wordpress-7-2-hosting-tests.md`](fleet-operators/wordpress-7-2-hosting-tests.md):

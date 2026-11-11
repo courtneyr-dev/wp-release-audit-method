@@ -46,7 +46,26 @@ the same evidence reorganized for someone who runs hosting infrastructure.
   **name + author** instead.
 - **Confidentiality banner** at the top, matched to the audience.
 - **Re-verify findings live** if the target is reachable, so it's current rather than logged.
+  Save each re-check's command and output to the evidence folder and cite that file; a result
+  that exists only in the session can't be audited. If a re-check turns up evidence against a
+  claim you already wrote, fix that claim before moving on.
 - **Name the build actually tested**, and the upgrade lane used. Beta ≠ RC. Core's updater ≠ WP-CLI's.
+
+## Updating a brief that already exists
+
+Update in place; don't start a second brief.
+
+- **The live copy is the record.** Read it with its comments before drafting; a local source can
+  lag behind hand edits. Leave anything you didn't write (comments, hand-added notes) untouched.
+- **Replace superseded text; don't append beside it.** A new fact that answers an open question,
+  closes a gate or contradicts a sentence replaces that sentence. A prefix like "the rest of this
+  cell describes the previous beta" leaves both claims standing.
+- **Sweep the whole brief after every update.** For each new fact, search the read-back for its
+  subject (gate number, PR or changeset, build name, axis) and fix each sentence it makes stale:
+  headings naming the old build, "open" items that landed, "not run" lines for tests that ran,
+  counts that disagree between sections.
+- **Run the confidentiality grep on the read-back text** when the edits went into a hosted doc
+  and there's no local file to grep.
 
 ---
 
@@ -115,6 +134,10 @@ behaves differently across tiers. Enumerate where yours differ:
 
 For each axis, say which tiers you **actually tested** and which you inferred. An untested tier is a
 gap, not a pass.
+
+Cite the raw artifact that records each axis value (a log line, a results column, an image tag).
+A run log, recap or earlier brief is not evidence, and neither is a claim carried over from the
+previous version: if the results file has no column for the axis, that axis is unverified.
 
 > **Divergence between your own tiers is a finding.** If the same customer action succeeds on the
 > managed tier and fails on the shared tier, that's a support-visible inconsistency worth reporting
@@ -287,3 +310,6 @@ authoritative source; Mode B has a posture with movement conditions, a blast rad
 tier-by-tier variance picture that marks untested tiers as gaps, a distributed-test participation
 table with a per-variant classification (or an exact blocker) and its retrieval date, numbered
 gates with owners and dates, and a named next step for performance and security testing.
+
+Before calling it done, have a fresh read-only agent check every claim you added or touched
+against the raw evidence (verdicts: wrong, stale, unsupported, verified), and fix what it finds.
