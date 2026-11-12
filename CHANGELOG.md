@@ -5,6 +5,17 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — wp-call-for-testing skill (2026-11-12)
+
+[`skills/wp-call-for-testing/`](skills/wp-call-for-testing/) drafts, reviews, fact-checks and prepares a call for testing on a Make WordPress team blog. It was built from the [7.2 call to test on Make/Hosting](https://make.wordpress.org/hosting/2026/11/12/call-to-test-wordpress-7-2-secrets-api/). It follows the Hosting team handbook's [review and publication steps](https://make.wordpress.org/hosting/handbook/get-involved/): "Pending review", a review request in #hosting, and a Team Rep publishes. It fact-checks against sources the audit didn't write. It carries the rules the 7.2 post earned:
+
+- RC1 is the string freeze, not the code freeze.
+- `$_old_files` is updated at RC1, so leftover files during the betas are expected.
+- A reviewer's words pasted into chat aren't the operator's approval.
+- Every save re-reads the post's status, title and slug first.
+
+`scripts/md_to_blocks.py` turns a Markdown draft into block markup.
+
 ### Changed — wordpress-audit-handoff: updating an existing brief (2026-11-10)
 
 [`skills/wordpress-audit-handoff/SKILL.md`](skills/wordpress-audit-handoff/SKILL.md), from a retro on a Beta 5 update to a hosted SRE brief, where an audit found 5 wrong, 8 stale and 5 unsupported statements after the update:

@@ -63,6 +63,25 @@ last release"*.
 
 ## Supporting skills
 
+### [`wp-call-for-testing`](wp-call-for-testing/)
+
+Turns release findings into a public call for testing on a Make team blog (Make/Hosting, Make/Test, Make/Core) that a stranger can run, then gets it reviewed, fact-checked and ready to publish. Built from the [WordPress 7.2 call to test on Make/Hosting](https://make.wordpress.org/hosting/2026/11/12/call-to-test-wordpress-7-2-secrets-api/).
+
+- **Drafts from published examples:** a "Call to test:" title with the deadline, a short checklist, one section per change with numbered tests, one place for feedback, and props.
+- **Fact-checks every claim** against sources the audit didn't write: the official package, Core Trac, Make/Core and WP-CLI's source.
+- **Follows the Hosting team's [review and publication steps](https://make.wordpress.org/hosting/handbook/get-involved/):** "Pending review", a review request in #hosting, and a Team Rep publishes.
+- **Rebuilds the post body** with `scripts/md_to_blocks.py`, because pasting from Google Docs loses code blocks, inline code and heading levels.
+
+It drafts and fills forms. It never publishes, edits a published post or posts in Slack without your yes.
+
+Trigger: *"call for testing"*, *"what hosts should test"*, *"post this to /hosting"*.
+
+Install it on its own, since the `wp-release-*` glob above doesn't match it:
+
+```bash
+cp -R wp-release-audit-method/skills/wp-call-for-testing ~/.claude/skills/
+```
+
 ### [`wordpress-audit-handoff`](wordpress-audit-handoff/)
 
 Turns testing work into one self-contained markdown file the recipient can act on. Two modes:
