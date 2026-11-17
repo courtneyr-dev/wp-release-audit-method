@@ -5,6 +5,14 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — wp-docs-release-audit skill (2026-11-17)
+
+[`skills/wp-docs-release-audit/`](skills/wp-docs-release-audit/) checks a release's documentation plan against what shipped and drafts one comment of only what's missing. It was built from the [7.2 docs checklist](https://github.com/WordPress/Documentation-Issue-Tracker/issues/2567) audited at RC1, which found a reverted feature still listed, a wrong ticket, four of seven "(verify)" items that weren't new, didn't exist or weren't in the build, and missing items in Media, Advanced Administration and developer docs.
+
+- Sources and traps, from the 7.2 run: Trac only through its MCP (the site challenges scripts); blessed tasks as their own query, because the checklist's source query excluded the Random content redirect and the new MySQL recommendation; read the ticket's type before citing a number; dev notes lag later commits; reverts after the dev note.
+- Five scripts: `fetch-issue.sh` (saves an issue and says whether it changed), `check-gutenberg-refs.sh`, `check-doc-urls.sh`, `devnotes.py` and `topic-overlap.py`.
+- Read-only. The operator pastes the comment.
+
 ### Added — wp-call-for-testing skill (2026-11-12)
 
 [`skills/wp-call-for-testing/`](skills/wp-call-for-testing/) drafts, reviews, fact-checks and prepares a call for testing on a Make WordPress team blog. It was built from the [7.2 call to test on Make/Hosting](https://make.wordpress.org/hosting/2026/11/12/call-to-test-wordpress-7-2-secrets-api/). It follows the Hosting team handbook's [review and publication steps](https://make.wordpress.org/hosting/handbook/get-involved/): "Pending review", a review request in #hosting, and a Team Rep publishes. It fact-checks against sources the audit didn't write. It carries the rules the 7.2 post earned:

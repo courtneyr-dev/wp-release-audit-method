@@ -82,6 +82,25 @@ Install it on its own, since the `wp-release-*` glob above doesn't match it:
 cp -R wp-release-audit-method/skills/wp-call-for-testing ~/.claude/skills/
 ```
 
+### [`wp-docs-release-audit`](wp-docs-release-audit/)
+
+Checks a release's documentation plan against what actually shipped, then drafts one comment with only what the plan doesn't say yet. Built from the WordPress 7.2 docs checklist ([Documentation-Issue-Tracker#2567](https://github.com/WordPress/Documentation-Issue-Tracker/issues/2567)) at RC1.
+
+- **Reads everything on the issue first,** then checks each topic as `item`, `discussed` or `NOT THERE`, so the comment never repeats the thread.
+- **Sweeps the whole milestone,** including blessed tasks, which carry features such as the Random content redirect and a new recommended MySQL version.
+- **Resolves every cited number:** Gutenberg PRs (merged or not), doc URLs (moved, deprecated, 404), Trac tickets (feature or follow-up), and each "(verify)" item against the RC source.
+- **Catches reverts.** The 7.2 Secrets API left the release on RC1 day.
+
+It reads only. It never posts, labels or edits a tracker issue, files a Trac ticket, or edits HelpHub or DevHub. Trac goes through its MCP, because the site challenges scripts.
+
+Trigger: *"docs audit for 7.3"*, *"what docs are missing for the release"*, *"check the release docs checklist"*.
+
+Install it on its own, since the `wp-release-*` glob above doesn't match it:
+
+```bash
+cp -R wp-release-audit-method/skills/wp-docs-release-audit ~/.claude/skills/
+```
+
 ### [`wordpress-audit-handoff`](wordpress-audit-handoff/)
 
 Turns testing work into one self-contained markdown file the recipient can act on. Two modes:
