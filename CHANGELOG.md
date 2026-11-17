@@ -5,6 +5,15 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added — wp-docs-draft skill (2026-11-17)
+
+[`skills/wp-docs-draft/`](skills/wp-docs-draft/) drafts or revises an official WordPress documentation article and prepares its screenshots. Built from the 7.2 docs checklist work and three read-throughs of the Docs team's own pages: the Documentation Style Guide (104 subpages), the workflows handbook plus the tracker's templates and automation, and the screenshot rules checked against 109 live HelpHub images.
+
+- References: style rules with the conflicts between pages and a governing pick for each; the path to live (tracker issue, `/assign` and `/review`, a team member with HelpHub access publishes); screenshots (where they're stored, the rules, what no page specifies); article structures.
+- `scripts/check-draft.py` runs 43 mechanical style checks; `scripts/tests/test-check-draft.sh` proves a clean draft has none and a bad draft trips every one. `scripts/style-guide-pin.sh` reports whether the Style Guide repo moved since a pinned commit.
+- Screenshots use the generic `wp-screenshots` skill and WordPress.org conventions.
+- Drafts and checks only. It never posts, labels, uploads or publishes.
+
 ### Added — wp-docs-release-audit skill (2026-11-17)
 
 [`skills/wp-docs-release-audit/`](skills/wp-docs-release-audit/) checks a release's documentation plan against what shipped and drafts one comment of only what's missing. It was built from the [7.2 docs checklist](https://github.com/WordPress/Documentation-Issue-Tracker/issues/2567) audited at RC1, which found a reverted feature still listed, a wrong ticket, four of seven "(verify)" items that weren't new, didn't exist or weren't in the build, and missing items in Media, Advanced Administration and developer docs.

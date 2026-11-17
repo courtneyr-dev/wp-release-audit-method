@@ -14,6 +14,7 @@ Checks a release's documentation plan against what actually shipped, then drafts
 | **Sources and traps** | `references/sources-and-traps.md`: where each fact comes from, and what misled the 7.2 run |
 | **Comment shape** | `references/comment-template.md` |
 | **Scripts** | `scripts/fetch-issue.sh`, `check-gutenberg-refs.sh`, `check-doc-urls.sh`, `devnotes.py`, `topic-overlap.py`; `references/topics-example.tsv` is the topic file format |
+| **Feeds** | [`wp-docs-draft`](../wp-docs-draft/SKILL.md): writes the pages this audit says are missing or stale |
 | **Related** | [`wp-call-for-testing`](../wp-call-for-testing/SKILL.md) uses the same dev notes; [`wp-release-followup`](../wp-release-followup/SKILL.md) is the testing equivalent |
 
 ## What stays with the operator
