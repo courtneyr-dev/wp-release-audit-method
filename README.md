@@ -1180,6 +1180,7 @@ Entirely optional — everything they do can be done by hand.
 | [`wp-release-followup`](skills/wp-release-followup/) | III — recheck, retest, deep audit, draft |
 | [`wp-call-for-testing`](skills/wp-call-for-testing/) | After III — turn findings into a Make call for testing |
 | [`wp-docs-release-audit`](skills/wp-docs-release-audit/) | After III, or any time — check a release's documentation plan against what shipped |
+| [`wp-docs-draft`](skills/wp-docs-draft/) | After the audit — draft or revise a WordPress.org docs article, with screenshots |
 | [`wordpress-audit-handoff`](skills/wordpress-audit-handoff/) | Package findings for a colleague |
 | [`wp-screenshots`](skills/wp-screenshots/) | Clean admin and front-end captures |
 

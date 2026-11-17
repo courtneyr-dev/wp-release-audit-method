@@ -1,0 +1,22 @@
+# Media Library screen
+
+The Media Library lists every file you upload to your site. Use it to find, filter, and delete files.
+
+## Open the Media Library
+
+To open the Media Library, go to **Media > Library**. The grid view shows each file as a thumbnail.
+
+![Media items in grid view.](media-library-grid-view.png)
+
+## [Filter your files](#filter-your-files)
+
+1. Select a file type from the first list.
+2. Select a date from the second list.
+3. Enter a word in **Search media items**.
+
+Each choice narrows the results. For more information about uploads, see [Add New Media File](/documentation/article/media-add-new-screen/).
+
+## Changelog
+
+Updated 2026-11-17
+- Added the grid view screenshot.
