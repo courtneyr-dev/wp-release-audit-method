@@ -4,7 +4,7 @@
 # Usage: check-gutenberg-refs.sh FILE...
 # Output: number|PR or issue|state|merged at|title, then FLAG lines.
 set -euo pipefail
-[ "$#" -ge 1 ] || { sed -n '2,5p' "$0"; exit 2; }
+[ "$#" -ge 1 ] || { sed -n '2,/^set /{/^set /!p;}' "$0"; exit 2; }
 command -v gh >/dev/null || { echo "gh is required" >&2; exit 2; }
 nums=$(cat "$@" | grep -oE 'gutenberg#[0-9]+|gutenberg/(pull|issues)/[0-9]+' |
   grep -oE '[0-9]+$' | sort -un)

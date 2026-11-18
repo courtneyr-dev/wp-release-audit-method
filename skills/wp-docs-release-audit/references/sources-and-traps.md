@@ -18,7 +18,7 @@ Core Trac answers scripts and browsers with a "Checking your browser" page and t
 
 ## Dev notes
 
-`scripts/devnotes.py dev-notes+7-N --out DIR` lists the notes on the Make Core tag feed (paged) and saves each body. Make isn't bot-protected. Read the bodies: headings hid the multisite quota effect and the auto-attach rules in 7.2. A post tagged for the release can also be a roadmap or announcement post; look at what it changes for a reader.
+`scripts/devnotes.py dev-notes+7-N --out DIR` lists the notes on the Make Core tag feed (paged) and saves each body. Make isn't bot-protected. Read the bodies: a heading names a change and its body carries the limits and opt-outs. In 7.2 the media dev note's headings already named the multisite upload-space change and auto-attach, so a heading-only pass finds the topics but not their limits. A post tagged for the release can also be a roadmap or announcement post; look at what it changes for a reader.
 
 ## Gutenberg
 

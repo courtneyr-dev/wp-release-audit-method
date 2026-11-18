@@ -5,7 +5,7 @@
 # FLAG lines: non-200, redirected to a different page, or a "(Deprecated)" title.
 # developer.wordpress.org reference pages 404 until the post-release build.
 set -euo pipefail
-[ "$#" -ge 1 ] || { sed -n '2,6p' "$0"; exit 2; }
+[ "$#" -ge 1 ] || { sed -n '2,/^set /{/^set /!p;}' "$0"; exit 2; }
 urls=$(cat "$@" | grep -oE "https://(wordpress\.org/(documentation|support)|developer\.wordpress\.org)[^) >\"']*" |
   sed -E 's/[.,;]+$//; s/#.*$//' | sort -u)
 [ -n "$urls" ] || { echo "no documentation URLs found"; exit 0; }
