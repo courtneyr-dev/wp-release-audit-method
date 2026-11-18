@@ -101,6 +101,23 @@ Install it on its own, since the `wp-release-*` glob above doesn't match it:
 cp -R wp-release-audit-method/skills/wp-docs-release-audit ~/.claude/skills/
 ```
 
+### [`wp-docs-draft`](wp-docs-draft/)
+
+Drafts a new article, or revises an existing one, for the official WordPress documentation (HelpHub and the Docs team handbooks) in WordPress.org style, and prepares the screenshots the way the Docs team makes them. It comes after `wp-docs-release-audit`, which finds what needs writing.
+
+- **Follows the official [Documentation Style Guide](https://make.wordpress.org/docs/style-guide/)** and the Docs handbook pages, with the conflicts between them listed and a governing pick for each.
+- **Checks the draft:** `scripts/check-draft.py` runs 43 mechanical checks (heading levels, sentence case, alt text, link text, hotlinked images, word-list terms), and its test proves each one fires.
+- **Knows the path to live:** a tracker issue, a draft in the issue or a Google Doc, `/review`, and a team member with HelpHub access publishes. It hands over a package and never posts.
+- **Screenshots the Docs team's way:** fresh install, current default theme, no plugins, PNG, same area as the old image, alt text, a solid fill (never blur) for anything private, and a hand-off comment per image. Capture uses [`wp-screenshots`](wp-screenshots/).
+
+Trigger: *"draft the docs for"*, *"update the HelpHub article"*, *"write this up for the Docs team"*.
+
+Install it on its own, since the `wp-release-*` glob above doesn't match it:
+
+```bash
+cp -R wp-release-audit-method/skills/wp-docs-draft ~/.claude/skills/
+```
+
 ### [`wordpress-audit-handoff`](wordpress-audit-handoff/)
 
 Turns testing work into one self-contained markdown file the recipient can act on. Two modes:
