@@ -9,7 +9,7 @@ One comment, pasted by the operator. It contains only what the issue doesn't say
    - *Stale or wrong:* a reverted feature, a wrong ticket, a cited issue that isn't a PR, a source list that stops early.
    - *Items marked "(verify)", now checked:* one line each, CONFIRMED, REFUTED or UNCLEAR, with the ticket or source.
    - *Add detail to existing items:* the item's name, then what to add, then the page it affects.
-3. **B. New checklist items.** One per missing change: what changed, the ticket, the page it affects.
+3. **B. New checklist items.** One per missing change: what changed, the ticket, the page it affects. If there are none, say so and name the Field Guide items you judged developer-only.
 4. **C. Page links for checklist items that have none.** Only verified URLs. Note deprecated or moved pages.
 5. **D. Question: other documentation.** Only when the issue has no section for it and the tracker README says it takes it (for 7.2: developer docs). Ask whether the checklist should grow a section or another owner covers it, then list what's missing.
 6. **How this was checked.** What you read in full, what you read from titles only, what you skipped and why, what you didn't test.
@@ -24,4 +24,4 @@ One comment, pasted by the operator. It contains only what the issue doesn't say
 - Tag a person only when a line affects their task (the Field Guide author, for a stale dev note).
 - Use checkboxes (`- [ ]`) so the issue's author can copy lines into the body.
 - Plain American English, active voice, no marketing words. See the repo's [`GLOSSARY.md`](https://github.com/courtneyr-dev/wp-release-audit-method/blob/main/GLOSSARY.md) for repo terms; don't use them in the comment, because the tracker's readers haven't seen them.
-- Don't mention the tools that did the work. Say what was checked, not who checked it.
+- Don't name the tools in the body. One exception, as the last line: when the issue's discussion has raised AI use, or the operator's earlier comment mentioned it, end with "Use of AI tools: I used <tool> to <task>. [I checked ... myself.]". Leave the bracketed half for the operator and never write what they checked. List the line under "Your calls" at hand-off. Keep the comment short: in 7.2 the length of the checklist was itself the objection.

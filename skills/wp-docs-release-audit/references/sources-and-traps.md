@@ -8,12 +8,16 @@ Core Trac answers scripts and browsers with a "Checking your browser" page and t
 
 - **Closed, fixed, in the milestone:** `searchTickets` with `milestone` `7.2`, `status` `closed`, `resolution` `fixed`, `query` `type!=task (blessed)&component!=Build/Test Tools&order=component`, `limit` 50, then `page` 2, 3 and so on. The 7.2 total was 346 tickets (7 pages, about 15k tokens a page), so fan the pages out to subagents.
 - **Blessed tasks, as their own query:** `query` `type=task (blessed)`, same milestone. The 7.2 total was 60, mostly build and test work. The blessed type is also where features that arrive as umbrella tasks live: the Random content redirect (#64498), the recommended MySQL version (#66637), the Ipsum theme (#66352), the jQuery Migrate bump (#66203). The checklist's own source query excluded them, so it missed the first two.
+- **Reopened and reverted tickets aren't closed.** #65116 (On This Day, reverted in r65732) and #66208 were reopened with milestone 7.2, so a `status=closed` query never lists them. Also query the `milestone` with `status!=closed` (52 tickets on 2026-11-23) and re-open each feature you describe.
+- **`getTicket` is large.** About 35 KB for #65116 and for #66208, half of it linked PR bodies, and `commentLimit` trims only comments. Check a cited number with `searchTickets` (about 700 characters), read a commit with `getChangeset` and `includeDiff` false, and spend `getTicket` only on a ticket whose newest comments or changesets you need.
+- **`searchTickets` with `order=changetime` returns no change date**, so it can't answer what changed since the last audit.
 - `getTicket` returns type, milestone, comments (human only), changesets and linked PRs. `getChangeset` with `includeDiff` false is cheap and carries the commit message.
 
 ## Check the ticket behind every number
 
 - **Feature versus follow-up.** The checklist cited #66625 for the Random base field. That ticket is a bug about cache headers; the feature is #64498. Read the ticket's type and title, and its "Follow-up to" line.
 - **Reverts.** The Secrets API was reverted from 7.2 on the day RC1 shipped ([r65538](https://core.trac.wordpress.org/changeset/65538)), and "On This Day" had a proposal to move to 7.3 with an open revert PR. A merged feature and its dev note can both be wrong a week later. Search the milestone for the feature's name, read the newest comments, and write the date you checked.
+- **Read the last changeset.** Opening the changeset you cited proves only what it says. In 7.2 the first comment said `CONCATENATE_SCRIPTS` "defaults to off" ([r64320](https://core.trac.wordpress.org/changeset/64320)). [#57548](https://core.trac.wordpress.org/ticket/57548) is titled "Stop concatenating scripts and stylesheets in wp-admin and retire load-scripts.php and load-styles.php", and [r64585](https://core.trac.wordpress.org/changeset/64585) (Oct 19) says the constant "is no longer read". Read the ticket's title and every changeset on it before writing "now defaults to". If the operator keeps a claim ledger for the release, search it for each ticket number you cite.
 - **Dev notes lag.** A note can describe code a later commit changed (the Random note still said `ORDER BY RAND()` after [r65542](https://core.trac.wordpress.org/changeset/65542)). Read the ticket's changesets dated after the note.
 
 ## Dev notes
