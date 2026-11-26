@@ -5,6 +5,14 @@ cadence rather than its own, so entries are grouped by what changed.
 
 ## Unreleased
 
+### Added: T2 browser cells script (2026-11-26)
+
+[`scripts/t2-browser-cells.mjs`](scripts/t2-browser-cells.mjs) runs the 16 T2 cells of `pilots/release-day/sweep-matrix.csv` in a real admin UI, 14 on a single site and 2 on a subdirectory network. Run it on the build under test and on the prior stable, then compare the two `.jsonl` files. Each cell reads its result back through WP-CLI, so a page that looks right but saved nothing fails.
+
+- Controls from the 7.2 RC3 run: the same cells pass on RC3 and on 7.1.5 scratch copies (14 and 14 single-site, 2 and 2 on a network). A 7.1.5 copy that still held RC3's `db_version` fails all 14, which is the negative control.
+- Limits: headless Chromium needs view transitions off (the script does it at launch), each cell exercises one path, and no build produced a console error, so the console-error check has no positive control yet.
+- Eight lessons from the run are in `learning/failure-mode-register.csv` (FM-63 to FM-70) and `learning/method-change-proposals.csv` (MC-30 to MC-37), all PROPOSED.
+
 ### Added — wp-docs-draft skill (2026-11-17)
 
 [`skills/wp-docs-draft/`](skills/wp-docs-draft/) drafts or revises an official WordPress documentation article and prepares its screenshots. Built from the 7.2 docs checklist work and three read-throughs of the Docs team's own pages: the Documentation Style Guide (104 subpages), the workflows handbook plus the tracker's templates and automation, and the screenshot rules checked against 109 live HelpHub images.
